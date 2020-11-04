@@ -280,7 +280,7 @@ func (e *Exporter) checkMapVersions(ch chan<- prometheus.Metric, server *Server)
 	}
 	// Check if semantic version changed and recalculate maps if needed.
 	if semanticVersion.NE(server.lastMapVersion) || server.queryInstanceMap == nil {
-		log.Infof("Semantic Version Changed on %q: %s -> %s", server, server.lastMapVersion, semanticVersion)
+		log.Infof("Semantic Version Changed on %s: %s -> %s", server, server.lastMapVersion, semanticVersion)
 		server.mappingMtx.Lock()
 		server.queryInstanceMap = e.metricMap
 		server.lastMapVersion = semanticVersion

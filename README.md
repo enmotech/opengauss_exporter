@@ -124,3 +124,7 @@ To scrape metrics from all databases on a database server, the database DSN's ca
 result a new set of DSN's is created for which the metrics are scraped.
 
 In addition, the option `--exclude-databases` adds the possibily to filter the result from the auto discovery to discard databases you do not need.
+
+
+
+docker run -p 9004:9187 -e DATA_SOURCE_NAME="postgresql://gaussdb:mtkOP@123@192.168.1.209:6432/postgres?sslmode=disable" mogdb/opengauss_exporter

@@ -163,6 +163,108 @@ pg_stat_activity:
   status: enable
   ttl: 60
   timeout: 0.1
+pg_stat_database:
+  name: pg_stat_database
+  query:
+  - name: pg_stat_database
+    sql: select * from pg_stat_database
+    version: '>=0.0.0'
+    timeout: 0.1
+    status: enable
+  metrics:
+  - name: datid
+    description: OID of a database
+    usage: LABEL
+  - name: datname
+    description: Name of this database
+    usage: LABEL
+  - name: numbackends
+    description: Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
+    usage: GAUGE
+  - name: xact_commit
+    description: Number of transactions in this database that have been committed
+    usage: COUNTER
+  - name: xact_rollback
+    description: Number of transactions in this database that have been rolled back
+    usage: COUNTER
+  - name: blks_read
+    description: Number of disk blocks read in this database
+    usage: COUNTER
+  - name: blks_hit
+    description: Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the PostgreSQL buffer cache, not the operating system's file system cache)
+    usage: COUNTER
+  - name: tup_returned
+    description: Number of rows returned by queries in this database
+    usage: COUNTER
+  - name: tup_fetched
+    description: Number of rows fetched by queries in this database
+    usage: COUNTER
+  - name: tup_inserted
+    description: Number of rows inserted by queries in this database
+    usage: COUNTER
+  - name: tup_updated
+    description: Number of rows updated by queries in this database
+    usage: COUNTER
+  - name: tup_deleted
+    description: Number of rows deleted by queries in this database
+    usage: COUNTER
+  - name: conflicts
+    description: Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
+    usage: COUNTER
+  - name: temp_files
+    description: Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
+    usage: COUNTER
+  - name: temp_bytes
+    description: Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
+    usage: COUNTER
+  - name: deadlocks
+    description: Number of deadlocks detected in this database
+    usage: COUNTER
+  - name: blk_read_time
+    description: Time spent reading data file blocks by backends in this database, in milliseconds
+    usage: COUNTER
+  - name: blk_write_time
+    description: Time spent writing data file blocks by backends in this database, in milliseconds
+    usage: COUNTER
+  - name: stats_reset
+    description: Time at which these statistics were last reset
+    usage: COUNTER
+  status: enable
+  ttl: 60
+  timeout: 0.1
+pg_stat_database_conflicts:
+  name: pg_stat_database_conflicts
+  query:
+  - name: pg_stat_database_conflicts
+    sql: select * from pg_stat_database_conflicts
+    version: '>=0.0.0'
+    timeout: 0.1
+    status: enable
+  metrics:
+  - name: datid
+    description: OID of a database
+    usage: LABEL
+  - name: datname
+    description: Name of this database
+    usage: LABEL
+  - name: confl_tablespace
+    description: Number of queries in this database that have been canceled due to dropped tablespaces
+    usage: COUNTER
+  - name: confl_lock
+    description: Number of queries in this database that have been canceled due to lock timeouts
+    usage: COUNTER
+  - name: confl_snapshot
+    description: Number of queries in this database that have been canceled due to old snapshots
+    usage: COUNTER
+  - name: confl_bufferpin
+    description: Number of queries in this database that have been canceled due to pinned buffers
+    usage: COUNTER
+  - name: confl_deadlock
+    description: Number of queries in this database that have been canceled due to deadlocks
+    usage: COUNTER
+  status: enable
+  ttl: 60
+  timeout: 0.1
 pg_stat_replication:
   name: pg_stat_replication
   query:
