@@ -13,8 +13,6 @@ docker run --net=host -e DATA_SOURCE_NAME="postgresql://postgres:password@localh
 
 ## Building and running
 
-The build system is based on [Mage](https://magefile.org)
-
 The default make file behavior is to build the binary:
 ```
 $ go get github.com/mogdb/opengauss_exporter
@@ -45,7 +43,7 @@ To build the dockerfile, run `make docker`.
   Whether to discover the databases on a server dynamically.
 
 * `config`
-  Path to a YAML file containing queries to run. Check out [`og_exoprter.yaml`](og_exoprter.yaml)
+  Path to a YAML file containing queries to run. Check out [`og_exporter.yaml`](og_exporter.yaml)
   for examples of the format.
 
 * `--dry-run`
