@@ -127,8 +127,8 @@ LEFT JOIN
 			{Name: "size_bytes", Usage: GAUGE, Desc: "Disk space used by the database"},
 		},
 	}
-	pgBgWriter = &QueryInstance{
-		Name: "pg_bgwriter",
+	pgStatBgWriter = &QueryInstance{
+		Name: "pg_stat_bgwriter",
 		Desc: "",
 		Queries: []*Query{
 			{
@@ -219,7 +219,7 @@ var (
 		"pg_stat_replication":        pgStatReplication,
 		"pg_stat_activity":           pgStatActivity,
 		"pg_database":                pgDatabase,
-		"pg_bgwriter":                pgBgWriter,
+		"pg_bgwriter":                pgStatBgWriter,
 		"pg_stat_database":           pgStatDatabase,
 		"pg_stat_database_conflicts": pgStatDatabaseConflicts,
 	}
