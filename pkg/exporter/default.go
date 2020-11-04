@@ -11,26 +11,29 @@ var (
 		Name: "pg_lock",
 		Desc: "OpenGauss lock distribution by mode",
 		QuerySQLS: []*QuerySQL{
-			&QuerySQL{
+			{
 				SupportedVersions: ">=0.0.0",
-				SQL: `SELECT pg_database.datname,tmp.mode,COALESCE(count,0) as count
-			FROM
-				(
-				  VALUES ('accesssharelock'),
-				         ('rowsharelock'),
-				         ('rowexclusivelock'),
-				         ('shareupdateexclusivelock'),
-				         ('sharelock'),
-				         ('sharerowexclusivelock'),
-				         ('exclusivelock'),
-				         ('accessexclusivelock')
-				) AS tmp(mode) CROSS JOIN pg_database
-			LEFT JOIN
-			  (SELECT database, lower(mode) AS mode,count(*) AS count
-			  FROM pg_locks WHERE database IS NOT NULL
-			  GROUP BY database, lower(mode)
-			) AS tmp2
-			ON tmp.mode=tmp2.mode and pg_database.oid = tmp2.database ORDER BY 1`,
+				SQL: `SELECT
+  pg_database.datname,
+  tmp.mode,
+  COALESCE(count,0) as count
+FROM
+    (
+      VALUES ('accesssharelock'),
+             ('rowsharelock'),
+             ('rowexclusivelock'),
+             ('shareupdateexclusivelock'),
+             ('sharelock'),
+             ('sharerowexclusivelock'),
+             ('exclusivelock'),
+             ('accessexclusivelock')
+    ) AS tmp(mode) CROSS JOIN pg_database
+LEFT JOIN
+  (SELECT database, lower(mode) AS mode,count(*) AS count
+  FROM pg_locks WHERE database IS NOT NULL
+  GROUP BY database, lower(mode)
+) AS tmp2
+ON tmp.mode=tmp2.mode and pg_database.oid = tmp2.database ORDER BY 1`,
 			},
 		},
 		Metrics: []*Column{
@@ -46,9 +49,9 @@ var (
 			{
 				Name: "pg_stat_replication",
 				SQL: `SELECT *,
-				(case pg_is_in_recovery() when 't' then null else pg_current_xlog_location() end) AS pg_current_xlog_location,
-				(case pg_is_in_recovery() when 't' then null else pg_xlog_location_diff(pg_current_xlog_location(), receiver_replay_location)::float end) AS pg_xlog_location_diff
-			FROM pg_stat_replication`,
+  (case pg_is_in_recovery() when 't' then null else pg_current_xlog_location() end) AS pg_current_xlog_location,
+  (case pg_is_in_recovery() when 't' then null else pg_xlog_location_diff(pg_current_xlog_location(), receiver_replay_location)::float end) AS pg_xlog_location_diff
+FROM pg_stat_replication`,
 				SupportedVersions: ">=1.0.0",
 			},
 		},
@@ -78,28 +81,28 @@ var (
 		QuerySQLS: []*QuerySQL{
 			{
 				SQL: `SELECT
-				pg_database.datname,
-				tmp.state,
-				COALESCE(count,0) as count,
-				COALESCE(max_tx_duration,0) as max_tx_duration
-			FROM
-				(
-				  VALUES ('active'),
-				  		 ('idle'),
-				  		 ('idle in transaction'),
-				  		 ('idle in transaction (aborted)'),
-				  		 ('fastpath function call'),
-				  		 ('disabled')
-				) AS tmp(state) CROSS JOIN pg_database
-			LEFT JOIN
-			(
-				SELECT
-					datname,
-					state,
-					count(*) AS count,
-					MAX(EXTRACT(EPOCH FROM now() - xact_start))::float AS max_tx_duration
-				FROM pg_stat_activity GROUP BY datname,state) AS tmp2
-				ON tmp.state = tmp2.state AND pg_database.datname = tmp2.datname`,
+  pg_database.datname,
+  tmp.state,
+  COALESCE(count,0) as count,
+  COALESCE(max_tx_duration,0) as max_tx_duration
+FROM
+  (
+    VALUES ('active'),
+         ('idle'),
+         ('idle in transaction'),
+         ('idle in transaction (aborted)'),
+         ('fastpath function call'),
+         ('disabled')
+  ) AS tmp(state) CROSS JOIN pg_database
+LEFT JOIN
+(
+  SELECT
+    datname,
+    state,
+    count(*) AS count,
+    MAX(EXTRACT(EPOCH FROM now() - xact_start))::float AS max_tx_duration
+  FROM pg_stat_activity GROUP BY datname,state) AS tmp2
+  ON tmp.state = tmp2.state AND pg_database.datname = tmp2.datname`,
 				SupportedVersions: ">=1.0.0",
 			},
 		},

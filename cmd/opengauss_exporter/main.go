@@ -134,7 +134,7 @@ func initArgs(args *Args) {
 		Default("/metrics").
 		Envar("OG_EXPORTER_WEB_TELEMETRY_PATH").
 		String()
-	args.DryRun = kingpin.Flag("dry-run", "dry run and print raw configs").
+	args.DryRun = kingpin.Flag("dry-run", "dry run and print default configs and user config").
 		Bool()
 
 	args.DisableSettingsMetrics = kingpin.Flag("disable-settings-metrics",
@@ -178,6 +178,7 @@ func main() {
 	ogExporter, err := newExporter(args)
 	if err != nil {
 		log.Errorf("fail to reload exporter: %s", err.Error())
+		return
 	}
 	if err := ogExporter.Check(); err != nil {
 		log.Fatalf("fail creating og_exporter: %s", err.Error())
@@ -185,6 +186,9 @@ func main() {
 	}
 	if *args.DryRun {
 		queryList := ogExporter.GetConfigList()
+		if queryList == nil {
+			return
+		}
 		buf, err := yaml.Marshal(&queryList)
 		if err != nil {
 			log.Error(err)

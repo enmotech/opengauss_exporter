@@ -74,6 +74,9 @@ func (e *Exporter) loadConfig() error {
 }
 
 func (e *Exporter) GetConfigList() map[string]*Query {
+	if e.metricMap == nil {
+		return nil
+	}
 	return e.metricMap
 }
 func (e *Exporter) setupInternalMetrics() {

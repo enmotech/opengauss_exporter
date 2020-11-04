@@ -39,9 +39,11 @@ changelog:
   sort: asc
   filters:
     exclude:
+      -
       - '^docs:'
       - '^test:'
       - '^build:'
       - Merge pull request
       - Merge branch
       - go mod tidy
+      - bump version
