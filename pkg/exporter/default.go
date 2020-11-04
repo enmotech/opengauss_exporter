@@ -14,26 +14,15 @@ var (
 			{
 				SupportedVersions: ">=0.0.0",
 				SQL: `SELECT
-  pg_database.datname,
-  tmp.mode,
-  COALESCE(count,0) as count
-FROM
-    (
-      VALUES ('accesssharelock'),
-             ('rowsharelock'),
-             ('rowexclusivelock'),
-             ('shareupdateexclusivelock'),
-             ('sharelock'),
-             ('sharerowexclusivelock'),
-             ('exclusivelock'),
-             ('accessexclusivelock')
-    ) AS tmp(mode) CROSS JOIN pg_database
-LEFT JOIN
-  (SELECT database, lower(mode) AS mode,count(*) AS count
-  FROM pg_locks WHERE database IS NOT NULL
-  GROUP BY database, lower(mode)
-) AS tmp2
-ON tmp.mode=tmp2.mode and pg_database.oid = tmp2.database ORDER BY 1`,
+  datname, mode, coalesce(count, 0) AS count
+FROM (
+  SELECT d.oid AS database, d.datname, l.mode FROM pg_database d,
+           unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock',
+               'ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']
+               ) l(mode)
+WHERE d.datname NOT IN ('postgres','template0','template1')) base
+LEFT JOIN (SELECT database, mode, count(*) AS count FROM pg_locks
+WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);`,
 			},
 		},
 		Metrics: []*Column{
@@ -77,32 +66,28 @@ FROM pg_stat_replication`,
 	}
 	pgStatActivity = &QueryInstance{
 		Name: "pg_stat_activity",
-		Desc: "",
+		Desc: "OpenGauss backend activity group by state",
 		Queries: []*Query{
 			{
-				SQL: `SELECT
-  pg_database.datname,
-  tmp.state,
-  COALESCE(count,0) as count,
-  COALESCE(max_tx_duration,0) as max_tx_duration
-FROM
-  (
-    VALUES ('active'),
-         ('idle'),
-         ('idle in transaction'),
-         ('idle in transaction (aborted)'),
-         ('fastpath function call'),
-         ('disabled')
-  ) AS tmp(state) CROSS JOIN pg_database
-LEFT JOIN
-(
-  SELECT
-    datname,
-    state,
-    count(*) AS count,
-    MAX(EXTRACT(EPOCH FROM now() - xact_start))::float AS max_tx_duration
-  FROM pg_stat_activity GROUP BY datname,state) AS tmp2
-  ON tmp.state = tmp2.state AND pg_database.datname = tmp2.datname`,
+				SQL: `SELECT datname,
+       state,
+       coalesce(count, 0)             AS count,
+       coalesce(max_duration, 0)      AS max_duration,
+       coalesce(max_tx_duration, 0)   AS max_tx_duration,
+       coalesce(max_conn_duration, 0) AS max_conn_duration
+FROM (SELECT d.oid AS database, d.datname, a.state
+      FROM pg_database d,
+           unnest(ARRAY ['active','idle','idle in transaction','idle in transaction (aborted)','fastpath function call','disabled']) a(state)
+      WHERE d.datname NOT IN ('template0','template1')) base
+         LEFT JOIN (
+    SELECT datname, state,
+           count(*) AS count,
+           max(extract(epoch from now() - state_change)) AS max_duration,
+           max(extract(epoch from now() - xact_start))   AS max_tx_duration,
+           max(extract(epoch from now() - backend_start)) AS max_conn_duration
+    FROM pg_stat_activity WHERE pid <> pg_backend_pid()
+    GROUP BY datname, state
+) a USING (datname, state);`,
 				SupportedVersions: ">=1.0.0",
 			},
 		},
@@ -110,15 +95,17 @@ LEFT JOIN
 			{Name: "datname", Usage: LABEL, Desc: "Name of this database"},
 			{Name: "state", Usage: LABEL, Desc: "connection state"},
 			{Name: "count", Usage: GAUGE, Desc: "number of connections in this state"},
+			{Name: "max_duration", Usage: GAUGE, Desc: "max duration since state change among (datname, state)"},
 			{Name: "max_tx_duration", Usage: GAUGE, Desc: "max duration in seconds any active transaction has been running"},
+			{Name: "max_conn_duration", Usage: GAUGE, Desc: "max backend session duration since state change among (datname, state)"},
 		},
 	}
 	pgDatabase = &QueryInstance{
 		Name: "pg_database",
-		Desc: "",
+		Desc: "OpenGauss Database size",
 		Queries: []*Query{
 			{
-				SQL:               `SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database`,
+				SQL:               `SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database where datname NOT IN ('template0','template1')`,
 				SupportedVersions: ">=0.0.0",
 			},
 		},
@@ -129,7 +116,7 @@ LEFT JOIN
 	}
 	pgStatBgWriter = &QueryInstance{
 		Name: "pg_stat_bgwriter",
-		Desc: "",
+		Desc: "OpenGauss background writer metrics",
 		Queries: []*Query{
 			{
 				SQL: `SELECT checkpoints_timed,
@@ -143,7 +130,7 @@ LEFT JOIN
     buffers_backend_fsync,
     buffers_alloc,
     stats_reset
-FROM pg_stat_bgwriter;;`,
+FROM pg_stat_bgwriter`,
 				SupportedVersions: ">=0.0.0",
 			},
 		},
@@ -163,10 +150,10 @@ FROM pg_stat_bgwriter;;`,
 	}
 	pgStatDatabase = &QueryInstance{
 		Name: "pg_stat_database",
-		Desc: "",
+		Desc: "OpenGauss database statistics",
 		Queries: []*Query{
 			{
-				SQL:               "select * from pg_stat_database",
+				SQL:               "select * from pg_stat_database where datname NOT IN ('template0','template1')",
 				SupportedVersions: ">=0.0.0",
 			},
 		},
@@ -194,10 +181,10 @@ FROM pg_stat_bgwriter;;`,
 	}
 	pgStatDatabaseConflicts = &QueryInstance{
 		Name: "pg_stat_database_conflicts",
-		Desc: "",
+		Desc: "OpenGauss database statistics conflicts",
 		Queries: []*Query{
 			{
-				SQL:               "select * from pg_stat_database_conflicts",
+				SQL:               "select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1')",
 				SupportedVersions: ">=0.0.0",
 			},
 		},
