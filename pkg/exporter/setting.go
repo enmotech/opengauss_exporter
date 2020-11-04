@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// Query the pg_settings view containing runtime variables
+// QueryInstance the pg_settings view containing runtime variables
 func (s *Server) querySettings(ch chan<- prometheus.Metric) error {
 	log.Debugf("Querying pg_setting view on %q", s.String())
 

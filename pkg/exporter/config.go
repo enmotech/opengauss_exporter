@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func LoadConfig(configPath string) (queries map[string]*Query, err error) {
+func LoadConfig(configPath string) (queries map[string]*QueryInstance, err error) {
 	stat, err := os.Stat(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("invalid config path: %s: %w", configPath, err)
@@ -34,7 +34,7 @@ func LoadConfig(configPath string) (queries map[string]*Query, err error) {
 
 		// make global config map and assign priority according to config file alphabetic orders
 		// priority is an integer range from 1 to 999, where 1 - 99 is reserved for user
-		queries = make(map[string]*Query)
+		queries = make(map[string]*QueryInstance)
 		var queryCount, configCount int
 		for _, confPath := range confFiles {
 			if singleQueries, err := LoadConfig(confPath); err != nil {
@@ -68,9 +68,9 @@ func LoadConfig(configPath string) (queries map[string]*Query, err error) {
 
 }
 
-// ParseConfig turn config content into Query struct
-func ParseConfig(content []byte, path string) (queries map[string]*Query, err error) {
-	queries = make(map[string]*Query)
+// ParseConfig turn config content into QueryInstance struct
+func ParseConfig(content []byte, path string) (queries map[string]*QueryInstance, err error) {
+	queries = make(map[string]*QueryInstance)
 	if err = yaml.Unmarshal(content, &queries); err != nil {
 		return nil, fmt.Errorf("malformed config: %w", err)
 	}

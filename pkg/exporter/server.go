@@ -39,8 +39,8 @@ type Server struct {
 	// then maps are recalculated.
 	lastMapVersion semver.Version
 	// Currently active metric map
-	metricMap  map[string]*Query
-	mappingMtx sync.RWMutex
+	queryInstanceMap map[string]*QueryInstance
+	mappingMtx       sync.RWMutex
 	// Currently cached metrics
 	metricCache map[string]cachedMetrics
 	cacheMtx    sync.Mutex
@@ -123,14 +123,15 @@ func (s *Server) Scrape(ch chan<- prometheus.Metric, disableSettingsMetrics bool
 	return err
 }
 
+// 查询监控指标. 先判断是否读取缓存. 禁用缓存或者缓存超时,则读取数据库
 func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]error {
 	namespaceErrors := make(map[string]error)
 
 	scrapeStart := time.Now()
-	for name, query := range s.metricMap {
+	for name, queryInstance := range s.queryInstanceMap {
 		log.Debugf("Querying namespace: %s", name)
 
-		querySQL := query.GetQuerySQL(s.lastMapVersion)
+		querySQL := queryInstance.GetQuerySQL(s.lastMapVersion)
 		if querySQL == nil {
 			log.Errorf("Querying namespace:%s not define querySQL for version %s", name, s.lastMapVersion.String())
 			continue
@@ -151,7 +152,7 @@ func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]
 			s.cacheMtx.Unlock()
 			// If found, check if needs refresh from cache
 			if found {
-				if scrapeStart.Sub(cachedMetric.lastScrape).Seconds() > query.TTL {
+				if scrapeStart.Sub(cachedMetric.lastScrape).Seconds() > queryInstance.TTL {
 					scrapeMetric = true
 				}
 			} else {
@@ -161,7 +162,7 @@ func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]
 			scrapeMetric = true
 		}
 		if scrapeMetric {
-			metrics, nonFatalErrors, err = s.queryNamespaceMapping(name, query)
+			metrics, nonFatalErrors, err = s.queryNamespaceMapping(name, queryInstance)
 		} else {
 			metrics = cachedMetric.metrics
 		}
@@ -185,7 +186,7 @@ func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]
 
 		if scrapeMetric {
 			// Only cache if metric is meaningfully cacheable
-			if query.TTL > 0 {
+			if queryInstance.TTL > 0 {
 				s.cacheMtx.Lock()
 				s.metricCache[name] = cachedMetrics{
 					metrics:    metrics,
@@ -199,10 +200,11 @@ func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]
 	return namespaceErrors
 }
 
-func (s *Server) queryNamespaceMapping(namespace string, query *Query) ([]prometheus.Metric, []error, error) {
+// 连接数据查询监控指标
+func (s *Server) queryNamespaceMapping(namespace string, queryInstance *QueryInstance) ([]prometheus.Metric, []error, error) {
 	// 根据版本获取查询sql
-	q := query.GetQuerySQL(s.lastMapVersion)
-	if q == nil {
+	query := queryInstance.GetQuerySQL(s.lastMapVersion)
+	if query == nil {
 		// Return success (no pertinent data)
 		return []prometheus.Metric{}, []error{}, nil
 	}
@@ -212,21 +214,21 @@ func (s *Server) queryNamespaceMapping(namespace string, query *Query) ([]promet
 	var err error
 	var ctx context.Context
 
-	if q.Timeout != 0 { // if timeout is provided, use context
+	if query.Timeout != 0 { // if timeout is provided, use context
 		var cancel context.CancelFunc
-		log.Debugf("query [%s] executing begin with time limit: %v", q.Name, q.TimeoutDuration())
-		ctx, cancel = context.WithTimeout(context.Background(), q.TimeoutDuration())
+		log.Debugf("queryInstance [%s] executing begin with time limit: %v", query.Name, query.TimeoutDuration())
+		ctx, cancel = context.WithTimeout(context.Background(), query.TimeoutDuration())
 		defer cancel()
 
 	} else {
 		ctx = context.Background()
 		defer ctx.Done()
 	}
-	log.Debugf("query [%s] executing begin", query.Name)
+	log.Debugf("queryInstance [%s] executing begin", queryInstance.Name)
 
-	rows, err = s.db.QueryContext(ctx, q.SQL)
+	rows, err = s.db.QueryContext(ctx, query.SQL)
 	if err != nil {
-		return []prometheus.Metric{}, []error{}, fmt.Errorf("Error running query on database %q: %s %v ", s, namespace, err)
+		return []prometheus.Metric{}, []error{}, fmt.Errorf("Error running queryInstance on database %query: %s %v ", s, namespace, err)
 	}
 	defer rows.Close() // nolint: errcheck
 
@@ -259,8 +261,8 @@ func (s *Server) queryNamespaceMapping(namespace string, query *Query) ([]promet
 		}
 
 		// Get the label values for this row.
-		labels := make([]string, len(query.LabelNames))
-		for idx, label := range query.LabelNames {
+		labels := make([]string, len(queryInstance.LabelNames))
+		for idx, label := range queryInstance.LabelNames {
 			labels[idx], _ = dbToString(columnData[columnIdx[label]])
 		}
 
@@ -269,7 +271,7 @@ func (s *Server) queryNamespaceMapping(namespace string, query *Query) ([]promet
 		// converted to float64s. NULLs are allowed and treated as NaN.
 		for idx, columnName := range columnNames {
 			var metric prometheus.Metric
-			col := query.GetColumn(columnName, s.labels)
+			col := queryInstance.GetColumn(columnName, s.labels)
 			if col != nil {
 				if col.DisCard {
 					continue
@@ -285,7 +287,7 @@ func (s *Server) queryNamespaceMapping(namespace string, query *Query) ([]promet
 			} else {
 				// Unknown metric. Report as untyped if scan to float64 works, else note an error too.
 				metricLabel := fmt.Sprintf("%s_%s", namespace, columnName)
-				desc := prometheus.NewDesc(metricLabel, fmt.Sprintf("Unknown metric from %s", namespace), query.LabelNames, s.labels)
+				desc := prometheus.NewDesc(metricLabel, fmt.Sprintf("Unknown metric from %s", namespace), queryInstance.LabelNames, s.labels)
 
 				// Its not an error to fail here, since the values are
 				// unexpected anyway.

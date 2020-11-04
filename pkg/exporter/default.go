@@ -7,10 +7,10 @@ package exporter
 // )
 
 var (
-	pgLock = &Query{
+	pgLock = &QueryInstance{
 		Name: "pg_lock",
 		Desc: "OpenGauss lock distribution by mode",
-		QuerySQLS: []*QuerySQL{
+		Queries: []*Query{
 			{
 				SupportedVersions: ">=0.0.0",
 				SQL: `SELECT
@@ -42,10 +42,10 @@ ON tmp.mode=tmp2.mode and pg_database.oid = tmp2.database ORDER BY 1`,
 			{Name: "count", Desc: "Number of locks", Usage: GAUGE},
 		},
 	}
-	pgStatReplication = &Query{
+	pgStatReplication = &QueryInstance{
 		Name: "pg_stat_replication",
 		Desc: "",
-		QuerySQLS: []*QuerySQL{
+		Queries: []*Query{
 			{
 				Name: "pg_stat_replication",
 				SQL: `SELECT *,
@@ -75,10 +75,10 @@ FROM pg_stat_replication`,
 			{Name: "pg_xlog_location_diff", Usage: GAUGE, Desc: "Lag in bytes between master and slave"},
 		},
 	}
-	pgStatActivity = &Query{
+	pgStatActivity = &QueryInstance{
 		Name: "pg_stat_activity",
 		Desc: "",
-		QuerySQLS: []*QuerySQL{
+		Queries: []*Query{
 			{
 				SQL: `SELECT
   pg_database.datname,
@@ -113,12 +113,62 @@ LEFT JOIN
 			{Name: "max_tx_duration", Usage: GAUGE, Desc: "max duration in seconds any active transaction has been running"},
 		},
 	}
+	pgDatabase = &QueryInstance{
+		Name: "pg_database",
+		Desc: "",
+		Queries: []*Query{
+			{
+				SQL:               `SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database`,
+				SupportedVersions: ">=0.0.0",
+			},
+		},
+		Metrics: []*Column{
+			{Name: "datname", Usage: LABEL, Desc: "Name of this database"},
+			{Name: "size_bytes", Usage: GAUGE, Desc: "Disk space used by the database"},
+		},
+	}
+	pgBgWriter = &QueryInstance{
+		Name: "pg_bgwriter",
+		Desc: "",
+		Queries: []*Query{
+			{
+				SQL: `SELECT checkpoints_timed,
+    checkpoints_req,
+    checkpoint_write_time,
+    checkpoint_sync_time,
+    buffers_checkpoint,
+    buffers_clean,
+    buffers_backend,
+    maxwritten_clean,
+    buffers_backend_fsync,
+    buffers_alloc,
+    stats_reset
+FROM pg_stat_bgwriter;;`,
+				SupportedVersions: ">=0.0.0",
+			},
+		},
+		Metrics: []*Column{
+			{Name: "checkpoints_timed", Usage: COUNTER, Desc: "scheduled checkpoints that have been performed"},
+			{Name: "checkpoints_req", Usage: COUNTER, Desc: "requested checkpoints that have been performed"},
+			{Name: "checkpoint_write_time", Usage: COUNTER, Desc: "time spending on writing files to disk, in µs"},
+			{Name: "checkpoint_sync_time", Usage: COUNTER, Desc: "time spending on syncing files to disk, in µs"},
+			{Name: "buffers_checkpoint", Usage: COUNTER, Desc: "buffers written during checkpoints"},
+			{Name: "buffers_clean", Usage: COUNTER, Desc: "buffers written by the background writer"},
+			{Name: "buffers_backend", Usage: COUNTER, Desc: "buffers written directly by a backend"},
+			{Name: "maxwritten_clean", Usage: COUNTER, Desc: "times that bgwriter stopped a cleaning scan"},
+			{Name: "buffers_backend_fsync", Usage: COUNTER, Desc: "times a backend had to execute its own fsync"},
+			{Name: "buffers_alloc", Usage: COUNTER, Desc: "buffers allocated"},
+			{Name: "stats_reset", Usage: COUNTER, Desc: "time when statistics were last reset"},
+		},
+	}
 )
 
 var (
-	defaultMonList = map[string]*Query{
+	defaultMonList = map[string]*QueryInstance{
 		"pg_lock":             pgLock,
 		"pg_stat_replication": pgStatReplication,
 		"pg_stat_activity":    pgStatActivity,
+		"pg_database":         pgDatabase,
+		"pg_bgwriter":         pgBgWriter,
 	}
 )

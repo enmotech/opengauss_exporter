@@ -28,16 +28,16 @@ func CheckStatus(s string) (string, error) {
 	}
 }
 
-// Query hold the information of how to fetch metric and parse them
-type Query struct {
-	Name      string      `yaml:"name,omitempty"`      // actual query name, used as metric prefix
-	Desc      string      `yaml:"desc,omitempty"`      // description of this metric query
-	QuerySQLS []*QuerySQL `yaml:"querySQLS,omitempty"` // 采集SQL
-	Metrics   []*Column   `yaml:"metrics,omitempty"`   // metric definition list
-	Status    string      `yaml:"status,omitempty"`    // 状态是否开启
-	TTL       float64     `yaml:"ttl,omitempty"`       // caching ttl in seconds
-	Priority  int         `yaml:"priority,omitempty"`  // 权重,暂时不用
-	Timeout   float64     `yaml:"timeout,omitempty"`   // query execution timeout in seconds
+// QueryInstance hold the information of how to fetch metric and parse them
+type QueryInstance struct {
+	Name     string    `yaml:"name,omitempty"`     // actual query name, used as metric prefix
+	Desc     string    `yaml:"desc,omitempty"`     // description of this metric query
+	Queries  []*Query  `yaml:"query,omitempty"`    // 采集SQL
+	Metrics  []*Column `yaml:"metrics,omitempty"`  // metric definition list
+	Status   string    `yaml:"status,omitempty"`   // 状态是否开启
+	TTL      float64   `yaml:"ttl,omitempty"`      // caching ttl in seconds
+	Priority int       `yaml:"priority,omitempty"` // 权重,暂时不用
+	Timeout  float64   `yaml:"timeout,omitempty"`  // query execution timeout in seconds
 	// metrics parsing auxiliaries
 	Path        string             `yaml:"-"` // where am I from ?
 	Columns     map[string]*Column `yaml:"-"` // column map
@@ -46,7 +46,7 @@ type Query struct {
 	MetricNames []string           `yaml:"-"` // column (name) that used as metric
 }
 
-type QuerySQL struct {
+type Query struct {
 	Name              string       `yaml:"name,omitempty"`    // actual query name, used as metric prefix
 	SQL               string       `yaml:"sql,omitempty"`     // 查询sql
 	SupportedVersions string       `yaml:"version,omitempty"` // 支持版本
@@ -57,7 +57,7 @@ type QuerySQL struct {
 	Status            string       `yaml:"status,omitempty"`  // 状态是否开启
 }
 
-func (q *Query) ToYaml() string {
+func (q *QueryInstance) ToYaml() string {
 	buf, err := yaml.Marshal(q)
 	if err != nil {
 		return ""
@@ -65,12 +65,15 @@ func (q *Query) ToYaml() string {
 	return string(buf)
 }
 
-func (q *Query) Check() error {
+func (q *QueryInstance) Check() error {
 	if q.Timeout == 0 {
 		q.Timeout = 0.1
 	}
 	if q.Timeout < 0 {
 		q.Timeout = 0
+	}
+	if q.TTL == 0 {
+		q.TTL = 60
 	}
 	if status, err := CheckStatus(q.Status); err != nil {
 		return err
@@ -79,22 +82,25 @@ func (q *Query) Check() error {
 	}
 	// parse query column info
 	columns := make(map[string]*Column, len(q.Metrics))
-	for _, querySQL := range q.QuerySQLS {
-		if querySQL.Timeout == 0 {
-			querySQL.Timeout = q.Timeout
+	for _, query := range q.Queries {
+		if query.Timeout == 0 {
+			query.Timeout = q.Timeout
 		}
-		if querySQL.SupportedVersions != "" {
-			querySQL.versionRange = semver.MustParseRange(querySQL.SupportedVersions)
+		if query.SupportedVersions != "" {
+			query.versionRange = semver.MustParseRange(query.SupportedVersions)
 		}
-		if status, err := CheckStatus(querySQL.Status); err != nil {
+		if status, err := CheckStatus(query.Status); err != nil {
 			return err
 		} else {
-			querySQL.Status = status
+			query.Status = status
 		}
-		if querySQL.Status == "" {
-			querySQL.Status = q.Status
+		if query.Status == "" {
+			query.Status = q.Status
 		}
-		querySQL.Name = q.Name
+		if q.TTL == 0 {
+			q.TTL = 60
+		}
+		query.Name = q.Name
 	}
 
 	var allColumns, labelColumns, metricColumns []string
@@ -121,18 +127,18 @@ func (q *Query) Check() error {
 	return nil
 }
 
-func (q *Query) GetQuerySQL(ver semver.Version) *QuerySQL {
-	for _, q := range q.QuerySQLS {
-		if q.versionRange == nil {
-			return q
+func (q *QueryInstance) GetQuerySQL(ver semver.Version) *Query {
+	for _, Query := range q.Queries {
+		if Query.versionRange == nil {
+			return Query
 		}
-		if q.versionRange(ver) {
-			return q
+		if Query.versionRange(ver) {
+			return Query
 		}
 	}
 	return nil
 }
-func (q *Query) GetColumn(colName string, serverLabels prometheus.Labels) *Column {
+func (q *QueryInstance) GetColumn(colName string, serverLabels prometheus.Labels) *Column {
 	if col, ok := q.Columns[colName]; ok {
 		switch col.Usage {
 		case LABEL:
@@ -156,9 +162,9 @@ func (q *Query) GetColumn(colName string, serverLabels prometheus.Labels) *Colum
 	return nil
 }
 
-func (q *Query) TimeoutDuration() time.Duration {
+func (q *QueryInstance) TimeoutDuration() time.Duration {
 	return time.Duration(float64(time.Second) * q.Timeout)
 }
-func (q *QuerySQL) TimeoutDuration() time.Duration {
+func (q *Query) TimeoutDuration() time.Duration {
 	return time.Duration(float64(time.Second) * q.Timeout)
 }

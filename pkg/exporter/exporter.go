@@ -22,7 +22,7 @@ type Exporter struct {
 	tags                   []string
 	namespace              string
 	servers                *Servers
-	metricMap              map[string]*Query
+	metricMap              map[string]*QueryInstance
 
 	constantLabels   prometheus.Labels
 	duration         prometheus.Gauge
@@ -73,7 +73,7 @@ func (e *Exporter) loadConfig() error {
 	return nil
 }
 
-func (e *Exporter) GetConfigList() map[string]*Query {
+func (e *Exporter) GetConfigList() map[string]*QueryInstance {
 	if e.metricMap == nil {
 		return nil
 	}
@@ -279,10 +279,10 @@ func (e *Exporter) checkMapVersions(ch chan<- prometheus.Metric, server *Server)
 		return fmt.Errorf("Error parsing version string on %q: %v ", server, err)
 	}
 	// Check if semantic version changed and recalculate maps if needed.
-	if semanticVersion.NE(server.lastMapVersion) || server.metricMap == nil {
+	if semanticVersion.NE(server.lastMapVersion) || server.queryInstanceMap == nil {
 		log.Infof("Semantic Version Changed on %q: %s -> %s", server, server.lastMapVersion, semanticVersion)
 		server.mappingMtx.Lock()
-		server.metricMap = e.metricMap
+		server.queryInstanceMap = e.metricMap
 		server.lastMapVersion = semanticVersion
 		server.mappingMtx.Unlock()
 
