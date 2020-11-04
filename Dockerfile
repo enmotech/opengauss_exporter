@@ -7,7 +7,7 @@ RUN make build
 # Distribution
 FROM debian:10-slim
 COPY --from=builder /go/src/opengauss_exporter/bin/opengauss_exporter /bin/opengauss_exporter
-COPY og_exporter.yaml  /etc/og_exporter/
+COPY og_exporter_default.yaml  /etc/og_exporter/
 
 EXPOSE 9187
 CMD [ "opengauss_exporter" ]

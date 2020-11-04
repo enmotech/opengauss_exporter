@@ -43,7 +43,7 @@ To build the dockerfile, run `make docker`.
   Whether to discover the databases on a server dynamically.
 
 * `config`
-  Path to a YAML file containing queries to run. Check out [`og_exporter.yaml`](og_exporter.yaml)
+  Path to a YAML file containing queries to run. Check out [`og_exporter.yaml`](og_exporter_default.yaml)
   for examples of the format.
 
 * `--dry-run`
@@ -82,10 +82,10 @@ The following environment variables configure the exporter:
   Path under which to expose metrics. Default is `/metrics`.
 
 * `OG_EXPORTER_DISABLE_SETTINGS_METRICS`
-  Use the flag if you don't want to scrape `pg_settings`. Value can be `true` or `false`. Defauls is `false`.
+  Use the flag if you don't want to scrape `pg_settings`. Value can be `true` or `false`. Default is `false`.
 
 * `OG_EXPORTER_AUTO_DISCOVER_DATABASES`
-  Whether to discover the databases on a server dynamically. Value can be `true` or `false`. Defauls is `false`.
+  Whether to discover the databases on a server dynamically. Value can be `true` or `false`. Default is `false`.
 
 
 * `OG_EXPORTER_CONSTANT_LABELS`
@@ -111,31 +111,12 @@ Also, you can set a list of sources to scrape different instances from the one e
 
 See the [github.com/lib/pq](http://github.com/lib/pq) module for other ways to format the connection string.
 
-### Adding new metrics
-
-The exporter will attempt to dynamically export additional metrics if they are added in the
-future, but they will be marked as "untyped". Additional metric maps can be easily created
-from Postgres documentation by copying the tables and using the following Python snippet:
-
-```python
-x = """tab separated raw text of a documentation table"""
-for l in StringIO(x):
-    column, ctype, description = l.split('\t')
-    print """"{0}" : {{ prometheus.CounterValue, prometheus.NewDesc("pg_stat_database_{0}", "{2}", nil, nil) }}, """.format(column.strip(), ctype, description.strip())
-```
-Adjust the value of the resultant prometheus value type appropriately. This helps build
-rich self-documenting metrics for the exporter.
 
 ### Adding new metrics via a config file
 
 The --config command-line argument specifies a YAML file containing additional queries to run.
-Some examples are provided in [og_exporter.yaml](og_exporter.yaml).
+Some examples are provided in [og_exporter.yaml](og_exporter_default.yaml).
 
-### Disabling default metrics
-To work with non-officially-supported postgres versions you can try disabling (e.g. 8.2.15)
-or a variant of postgres (e.g. Greenplum) you can disable the default metrics with the `--disable-default-metrics`
-flag. This removes all built-in metrics, and uses only metrics defined by queries in the `queries.yaml` file you supply
-(so you must supply one, otherwise the exporter will return nothing but internal statuses and not your database).
 
 ### Automatically discover databases
 To scrape metrics from all databases on a database server, the database DSN's can be dynamically discovered via the 
