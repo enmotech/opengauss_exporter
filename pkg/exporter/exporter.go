@@ -24,21 +24,25 @@ type Exporter struct {
 	servers                *Servers
 	metricMap              map[string]*QueryInstance
 
-	constantLabels   prometheus.Labels
-	duration         prometheus.Gauge
-	error            prometheus.Gauge
-	up               prometheus.Gauge
-	userQueriesError *prometheus.GaugeVec
-	totalScrapes     prometheus.Counter
+	constantLabels  prometheus.Labels    // 用户定义标签
+	duration        prometheus.Gauge     // 采集时间
+	error           prometheus.Gauge     // 采集指标时错误统计
+	up              prometheus.Gauge     //
+	configFileError *prometheus.GaugeVec // 读取配置文件失败采集
+	totalScrapes    prometheus.Counter   // 采集次数
 }
 
+// NewExporter New Exporter
 func NewExporter(opts ...Opt) (e *Exporter, err error) {
 	e = &Exporter{
-		metricMap: defaultMonList,
+		metricMap: defaultMonList, // default metric
 	}
 	for _, opt := range opts {
 		opt(e)
 	}
+
+	e.initDefaultMetric()
+
 	if err := e.loadConfig(); err != nil {
 		return nil, err
 	}
@@ -46,11 +50,18 @@ func NewExporter(opts ...Opt) (e *Exporter, err error) {
 	e.setupServers()
 	return e, nil
 }
+
+// initDefaultMetric init default metric
+func (e *Exporter) initDefaultMetric() {
+	for _, q := range e.metricMap {
+		_ = q.Check()
+	}
+}
+
+// loadConfig Load the configuration file, the same indicator in the configuration file overwrites the default configuration
+// 加载配置文件,配置文件里相同指标覆盖默认配置
 func (e *Exporter) loadConfig() error {
 	if e.configPath == "" {
-		for _, q := range e.metricMap {
-			_ = q.Check()
-		}
 		return nil
 	}
 	queryList, err := LoadConfig(e.configPath)
@@ -73,12 +84,15 @@ func (e *Exporter) loadConfig() error {
 	return nil
 }
 
-func (e *Exporter) GetConfigList() map[string]*QueryInstance {
+// GetMetricsList Get Metrics List
+func (e *Exporter) GetMetricsList() map[string]*QueryInstance {
 	if e.metricMap == nil {
 		return nil
 	}
 	return e.metricMap
 }
+
+// setupInternalMetrics setup Internal Metrics
 func (e *Exporter) setupInternalMetrics() {
 
 	e.duration = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -95,6 +109,7 @@ func (e *Exporter) setupInternalMetrics() {
 		Help:        "Total number of times OpenGauss was scraped for metrics.",
 		ConstLabels: e.constantLabels,
 	})
+	// 采集指标错误
 	e.error = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace:   e.namespace,
 		Subsystem:   "exporter",
@@ -108,11 +123,11 @@ func (e *Exporter) setupInternalMetrics() {
 		Help:        "Whether the last scrape of metrics from OpenGauss was able to connect to the server (1 for yes, 0 for no).",
 		ConstLabels: e.constantLabels,
 	})
-	e.userQueriesError = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	e.configFileError = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   e.namespace,
 		Subsystem:   "exporter",
-		Name:        "user_queries_load_error",
-		Help:        "Whether the user queries file was loaded and parsed successfully (1 for error, 0 for success).",
+		Name:        "use_config_load_error",
+		Help:        "Whether the user config file was loaded and parsed successfully (1 for error, 0 for success).",
 		ConstLabels: e.constantLabels,
 	}, []string{"filename", "hashsum"})
 }
@@ -126,7 +141,6 @@ func (e *Exporter) setupServers() {
 }
 
 // Describe implement prometheus.Collector
-
 // -> Collect
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	metricCh := make(chan prometheus.Metric)
@@ -158,10 +172,11 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	ch <- e.totalScrapes
 	ch <- e.error
 	ch <- e.up
-	e.userQueriesError.Collect(ch)
+	e.configFileError.Collect(ch)
 }
 
 func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
+	// 设置采集持续时间指标
 	defer func(begun time.Time) {
 		e.duration.Set(time.Since(begun).Seconds())
 	}(time.Now())
@@ -263,7 +278,7 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 		log.Warnln("Proceeding with outdated query maps, as the Postgres version could not be determined:", err)
 	}
 
-	return server.Scrape(ch, false)
+	return server.Scrape(ch)
 }
 
 func (e *Exporter) checkMapVersions(ch chan<- prometheus.Metric, server *Server) error {

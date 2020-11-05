@@ -3,9 +3,7 @@
 package exporter
 
 import (
-	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
-	"strings"
 )
 
 const (
@@ -30,22 +28,4 @@ type Column struct {
 	DisCard        bool                 `yaml:"-"`
 	PrometheusDesc *prometheus.Desc     `yaml:"-"`
 	PrometheusType prometheus.ValueType `yaml:"-"`
-}
-
-// PrometheusValueType returns column's corresponding prometheus value type
-func (c *Column) PrometheusValueType() prometheus.ValueType {
-	switch strings.ToUpper(c.Usage) {
-	case GAUGE:
-		return prometheus.GaugeValue
-	case COUNTER:
-		return prometheus.CounterValue
-	default:
-		// it's user's responsibility to make sure this is a value column
-		panic(fmt.Errorf("column %s does not have a valid value type %s", c.Name, c.Usage))
-	}
-}
-
-// String turns column into a one-line text representation
-func (c *Column) String() string {
-	return fmt.Sprintf("%-8s %-20s %s", c.Usage, c.Name, c.Desc)
 }

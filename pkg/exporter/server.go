@@ -27,12 +27,46 @@ type cachedMetrics struct {
 	metrics    []prometheus.Metric
 	lastScrape time.Time
 }
+
+// ServerOpt configures a server.
+type ServerOpt func(*Server)
+
+// ServerWithLabels configures a set of labels.
+func ServerWithLabels(labels prometheus.Labels) ServerOpt {
+	return func(s *Server) {
+		for k, v := range labels {
+			s.labels[k] = v
+		}
+	}
+}
+
+// ServerWithNamespace will specify metric namespace, by default is pg or pgbouncer
+func ServerWithNamespace(namespace string) ServerOpt {
+	return func(s *Server) {
+		s.namespace = namespace
+	}
+}
+
+// ServerWithDisableSettingsMetrics will specify metric namespace, by default is pg or pgbouncer
+func ServerWithDisableSettingsMetrics(b bool) ServerOpt {
+	return func(s *Server) {
+		s.disableSettingsMetrics = b
+	}
+}
+
+// ServerWithDisableSettingsMetrics will specify metric namespace, by default is pg or pgbouncer
+func ServerWithDisableCache(b bool) ServerOpt {
+	return func(s *Server) {
+		s.disableCache = b
+	}
+}
+
 type Server struct {
 	dsn                    string
 	db                     *sql.DB
 	labels                 prometheus.Labels
 	master                 bool
-	namespace              string
+	namespace              string // default prometheus namespace from cmd args
 	disableSettingsMetrics bool
 	disableCache           bool
 	// Last version used to calculate metric map. If mismatch on scrape,
@@ -44,38 +78,6 @@ type Server struct {
 	// Currently cached metrics
 	metricCache map[string]cachedMetrics
 	cacheMtx    sync.Mutex
-}
-
-func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
-	fingerprint, err := parseFingerprint(dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return nil, err
-	}
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
-
-	log.Infof("Established new database connection to %q.", fingerprint)
-
-	s := &Server{
-		db:     db,
-		dsn:    dsn,
-		master: false,
-		labels: prometheus.Labels{
-			serverLabelName: fingerprint,
-		},
-		metricCache: make(map[string]cachedMetrics),
-	}
-
-	for _, opt := range opts {
-		opt(s)
-	}
-
-	return s, nil
 }
 
 // Close disconnects from Postgres.
@@ -103,7 +105,7 @@ func (s *Server) String() string {
 }
 
 // Scrape loads metrics.
-func (s *Server) Scrape(ch chan<- prometheus.Metric, disableSettingsMetrics bool) error {
+func (s *Server) Scrape(ch chan<- prometheus.Metric) error {
 	s.mappingMtx.RLock()
 	defer s.mappingMtx.RUnlock()
 
@@ -115,40 +117,42 @@ func (s *Server) Scrape(ch chan<- prometheus.Metric, disableSettingsMetrics bool
 		}
 	}
 
-	errMap := s.queryNamespaceMappings(ch)
+	errMap := s.queryMetrics(ch)
 	if len(errMap) > 0 {
-		err = fmt.Errorf("queryNamespaceMappings returned %d errors", len(errMap))
+		err = fmt.Errorf("queryMetrics returned %d errors", len(errMap))
 	}
 
 	return err
 }
 
 // 查询监控指标. 先判断是否读取缓存. 禁用缓存或者缓存超时,则读取数据库
-func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]error {
-	namespaceErrors := make(map[string]error)
+func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
+	metricErrors := make(map[string]error)
 
+	// Start time of collecting metric  采集指标开始时间
 	scrapeStart := time.Now()
-	for name, queryInstance := range s.queryInstanceMap {
-		log.Debugf("Querying namespace: %s", name)
+	for metric, queryInstance := range s.queryInstanceMap {
+		log.Debugf("Querying metric : %s", metric)
 
 		querySQL := queryInstance.GetQuerySQL(s.lastMapVersion)
 		if querySQL == nil {
-			log.Errorf("Querying namespace:%s not define querySQL for version %s", name, s.lastMapVersion.String())
+			log.Errorf("Querying Metric:%s not define querySQL for version %s", metric, s.lastMapVersion.String())
 			continue
 		}
 
 		var (
-			scrapeMetric   = false
+			scrapeMetric   = false // Whether to collect indicators from the database 是否从数据库里采集指标
 			cachedMetric   cachedMetrics
-			found          bool
 			metrics        []prometheus.Metric
 			nonFatalErrors []error
 			err            error
 		)
+		// Determine whether to enable caching and cache expiration 判断是否启用缓存和缓存过期
 		if !s.disableCache {
+			var found bool
 			// Check if the metric is cached
 			s.cacheMtx.Lock()
-			cachedMetric, found = s.metricCache[name]
+			cachedMetric, found = s.metricCache[metric]
 			s.cacheMtx.Unlock()
 			// If found, check if needs refresh from cache
 			if found {
@@ -162,20 +166,20 @@ func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]
 			scrapeMetric = true
 		}
 		if scrapeMetric {
-			metrics, nonFatalErrors, err = s.queryNamespaceMapping(name, queryInstance)
+			metrics, nonFatalErrors, err = s.queryMetric(metric, queryInstance)
 		} else {
 			metrics = cachedMetric.metrics
 		}
 
 		// Serious error - a namespace disappeared
 		if err != nil {
-			namespaceErrors[name] = err
-			log.Infoln(err)
+			metricErrors[metric] = err
+			log.Errorf("collect metric %s err %s", metric, err)
 		}
 		// Non-serious errors - likely version or parsing problems.
 		if len(nonFatalErrors) > 0 {
 			for _, err := range nonFatalErrors {
-				log.Infoln(err.Error())
+				log.Errorf("collect metric nonFatalErrors %s err %s", metric, err)
 			}
 		}
 
@@ -188,7 +192,7 @@ func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]
 			// Only cache if metric is meaningfully cacheable
 			if queryInstance.TTL > 0 {
 				s.cacheMtx.Lock()
-				s.metricCache[name] = cachedMetrics{
+				s.metricCache[metric] = cachedMetrics{
 					metrics:    metrics,
 					lastScrape: scrapeStart,
 				}
@@ -197,11 +201,11 @@ func (s *Server) queryNamespaceMappings(ch chan<- prometheus.Metric) map[string]
 		}
 	}
 
-	return namespaceErrors
+	return metricErrors
 }
 
 // 连接数据查询监控指标
-func (s *Server) queryNamespaceMapping(namespace string, queryInstance *QueryInstance) ([]prometheus.Metric, []error, error) {
+func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([]prometheus.Metric, []error, error) {
 	// 根据版本获取查询sql
 	query := queryInstance.GetQuerySQL(s.lastMapVersion)
 	if query == nil {
@@ -216,7 +220,7 @@ func (s *Server) queryNamespaceMapping(namespace string, queryInstance *QueryIns
 
 	if query.Timeout != 0 { // if timeout is provided, use context
 		var cancel context.CancelFunc
-		log.Debugf("queryInstance [%s] executing begin with time limit: %v", query.Name, query.TimeoutDuration())
+		log.Debugf("queryMetric [%s] executing begin with time limit: %v", query.Name, query.TimeoutDuration())
 		ctx, cancel = context.WithTimeout(context.Background(), query.TimeoutDuration())
 		defer cancel()
 
@@ -224,18 +228,18 @@ func (s *Server) queryNamespaceMapping(namespace string, queryInstance *QueryIns
 		ctx = context.Background()
 		defer ctx.Done()
 	}
-	log.Debugf("queryInstance [%s] executing begin", queryInstance.Name)
+	log.Debugf("queryMetric [%s] executing begin", queryInstance.Name)
 
 	rows, err = s.db.QueryContext(ctx, query.SQL)
 	if err != nil {
-		return []prometheus.Metric{}, []error{}, fmt.Errorf("Error running queryInstance on database %query: %s %v ", s, namespace, err)
+		return []prometheus.Metric{}, []error{}, fmt.Errorf("Error running queryMetric on database %q query: %s %v ", s, metricName, err)
 	}
 	defer rows.Close() // nolint: errcheck
 
 	var columnNames []string
 	columnNames, err = rows.Columns()
 	if err != nil {
-		return []prometheus.Metric{}, []error{}, errors.New(fmt.Sprintln("Error retrieving column list for: ", namespace, err))
+		return []prometheus.Metric{}, []error{}, errors.New(fmt.Sprintln("Error retrieving column list for: ", metricName, err))
 	}
 
 	// Make a lookup map for the column indices
@@ -257,7 +261,7 @@ func (s *Server) queryNamespaceMapping(namespace string, queryInstance *QueryIns
 	for rows.Next() {
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			return []prometheus.Metric{}, []error{}, errors.New(fmt.Sprintln("Error retrieving rows:", namespace, err))
+			return []prometheus.Metric{}, []error{}, errors.New(fmt.Sprintln("Error retrieving rows:", metricName, err))
 		}
 
 		// Get the label values for this row.
@@ -278,7 +282,7 @@ func (s *Server) queryNamespaceMapping(namespace string, queryInstance *QueryIns
 				}
 				value, ok := dbToFloat64(columnData[idx])
 				if !ok {
-					nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unexpected error parsing column: ", namespace, columnName, columnData[idx])))
+					nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unexpected error parsing column: ", metricName, columnName, columnData[idx])))
 					continue
 				}
 				// Generate the metric
@@ -286,14 +290,14 @@ func (s *Server) queryNamespaceMapping(namespace string, queryInstance *QueryIns
 
 			} else {
 				// Unknown metric. Report as untyped if scan to float64 works, else note an error too.
-				metricLabel := fmt.Sprintf("%s_%s", namespace, columnName)
-				desc := prometheus.NewDesc(metricLabel, fmt.Sprintf("Unknown metric from %s", namespace), queryInstance.LabelNames, s.labels)
+				metricLabel := fmt.Sprintf("%s_%s", metricName, columnName)
+				desc := prometheus.NewDesc(metricLabel, fmt.Sprintf("Unknown metric from %s", metricName), queryInstance.LabelNames, s.labels)
 
 				// Its not an error to fail here, since the values are
 				// unexpected anyway.
 				value, ok := dbToFloat64(columnData[idx])
 				if !ok {
-					nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unparseable column type - discarding: ", namespace, columnName, err)))
+					nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unparseable column type - discarding: ", metricName, columnName, err)))
 					continue
 				}
 				metric = prometheus.MustNewConstMetric(desc, prometheus.UntypedValue, value, labels...)
@@ -325,6 +329,39 @@ func (s *Server) QueryDatabases() ([]string, error) {
 	}
 
 	return result, nil
+}
+
+func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
+	// 获取server名称 ip:port
+	fingerprint, err := parseFingerprint(dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
+	log.Infof("Established new database connection to %q.", fingerprint)
+
+	s := &Server{
+		db:     db,
+		dsn:    dsn,
+		master: false,
+		labels: prometheus.Labels{
+			serverLabelName: fingerprint,
+		},
+		metricCache: make(map[string]cachedMetrics),
+	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s, nil
 }
 
 // Servers contains a collection of servers to Postgres.

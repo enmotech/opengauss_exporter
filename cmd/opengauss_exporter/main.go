@@ -185,7 +185,7 @@ func main() {
 		os.Exit(2)
 	}
 	if *args.DryRun {
-		queryList := ogExporter.GetConfigList()
+		queryList := ogExporter.GetMetricsList()
 		if queryList == nil {
 			return
 		}

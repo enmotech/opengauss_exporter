@@ -20,8 +20,8 @@ FROM (
            unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock',
                'ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']
                ) l(mode)
-WHERE d.datname NOT IN ('postgres','template0','template1')) base
-LEFT JOIN (SELECT database, mode, count(*) AS count FROM pg_locks
+WHERE d.datname NOT IN ('template0','template1')) base
+LEFT JOIN (SELECT database, mode, count(1) AS count FROM pg_locks
 WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);`,
 			},
 		},

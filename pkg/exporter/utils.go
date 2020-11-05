@@ -35,79 +35,6 @@ func Contains(a []string, x string) bool {
 	return false
 }
 
-// // parseDatName extract data name part of a dsn
-// func parseDatName(dsn string) string {
-// 	u, err := url.Parse(dsn)
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	return strings.TrimLeft(u.Path, "/")
-// }
-
-// // castString will force interface{} into float64
-// func castFloat64(t interface{}) float64 {
-// 	switch v := t.(type) {
-// 	case int64:
-// 		return float64(v)
-// 	case float64:
-// 		return v
-// 	case time.Time:
-// 		return float64(v.Unix())
-// 	case []byte:
-// 		strV := string(v)
-// 		result, err := strconv.ParseFloat(strV, 64)
-// 		if err != nil {
-// 			log.Warnf("fail casting []byte to float64: %v", t)
-// 			return math.NaN()
-// 		}
-// 		return result
-// 	case string:
-// 		result, err := strconv.ParseFloat(v, 64)
-// 		if err != nil {
-// 			log.Warnf("fail casting string to float64: %v", t)
-// 			return math.NaN()
-// 		}
-// 		return result
-// 	case bool:
-// 		if v {
-// 			return 1.0
-// 		}
-// 		return 0.0
-// 	case nil:
-// 		return math.NaN()
-// 	default:
-// 		log.Warnf("fail casting unknown to float64: %v", t)
-// 		return math.NaN()
-// 	}
-// }
-//
-// // castString will force interface{} into string
-// func castString(t interface{}) string {
-// 	switch v := t.(type) {
-// 	case int64:
-// 		return fmt.Sprintf("%v", v)
-// 	case float64:
-// 		return fmt.Sprintf("%v", v)
-// 	case time.Time:
-// 		return fmt.Sprintf("%v", v.Unix())
-// 	case nil:
-// 		return ""
-// 	case []byte:
-// 		// Try and convert to string
-// 		return string(v)
-// 	case string:
-// 		return v
-// 	case bool:
-// 		if v {
-// 			return "true"
-// 		}
-// 		return "false"
-// 	default:
-// 		log.Warnf("fail casting unknown to string: %v", t)
-// 		return ""
-// 	}
-// }
-
 // parseConstLabels turn param string into prometheus.Labels
 func parseConstLabels(s string) prometheus.Labels {
 	labels := make(prometheus.Labels)
@@ -166,6 +93,7 @@ func parseVersionSem(versionString string) (semver.Version, error) {
 		errors.New(fmt.Sprintln("Could not find a postgres version in string:", versionString))
 }
 func parseVersion(versionString string) string {
+	versionString = strings.TrimSpace(versionString)
 	var versionRegex = regexp.MustCompile(`^(\(\w+|\w+)\s+((\d+)(\.\d+)?(\.\d+)?)`)
 	subMatches := versionRegex.FindStringSubmatch(versionString)
 	if len(subMatches) > 2 {
