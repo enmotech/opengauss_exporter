@@ -275,7 +275,7 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 
 	// Check if map versions need to be updated
 	if err := e.checkMapVersions(ch, server); err != nil {
-		log.Warnln("Proceeding with outdated query maps, as the Postgres version could not be determined:", err)
+		log.Warnln("Proceeding with outdated query maps, as the OpenGauss version could not be determined:", err)
 	}
 
 	return server.Scrape(ch)
@@ -304,7 +304,7 @@ func (e *Exporter) checkMapVersions(ch chan<- prometheus.Metric, server *Server)
 	}
 
 	versionDesc := prometheus.NewDesc(fmt.Sprintf("%s_%s", e.namespace, staticLabelName),
-		"Version string as reported by postgres", []string{"version", "short_version"}, server.labels)
+		"Version string as reported by OpenGauss", []string{"version", "short_version"}, server.labels)
 
 	if server.master {
 		ch <- prometheus.MustNewConstMetric(versionDesc,

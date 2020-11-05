@@ -80,7 +80,7 @@ type Server struct {
 	cacheMtx    sync.Mutex
 }
 
-// Close disconnects from Postgres.
+// Close disconnects from OpenGauss.
 func (s *Server) Close() error {
 	if s.db == nil {
 		return nil
@@ -364,14 +364,14 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 	return s, nil
 }
 
-// Servers contains a collection of servers to Postgres.
+// Servers contains a collection of servers to OpenGauss.
 type Servers struct {
 	m       sync.Mutex
 	servers map[string]*Server
 	opts    []ServerOpt
 }
 
-// NewServers creates a collection of servers to Postgres.
+// NewServers creates a collection of servers to OpenGauss.
 func NewServers(opts ...ServerOpt) *Servers {
 	return &Servers{
 		servers: make(map[string]*Server),

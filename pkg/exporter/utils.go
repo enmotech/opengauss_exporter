@@ -90,7 +90,7 @@ func parseVersionSem(versionString string) (semver.Version, error) {
 		return semver.ParseTolerant(version)
 	}
 	return semver.Version{},
-		errors.New(fmt.Sprintln("Could not find a postgres version in string:", versionString))
+		errors.New(fmt.Sprintln("Could not find a openGauss version in string:", versionString))
 }
 func parseVersion(versionString string) string {
 	versionString = strings.TrimSpace(versionString)

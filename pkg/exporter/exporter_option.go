@@ -9,7 +9,7 @@ import (
 // ExporterOpt configures Exporter
 type Opt func(*Exporter)
 
-// WithConfig add config path to Exporter
+// WithDNS add config dsn to Exporter
 func WithDNS(dsn []string) Opt {
 	return func(e *Exporter) {
 		e.dsn = dsn

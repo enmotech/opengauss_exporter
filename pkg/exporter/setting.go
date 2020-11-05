@@ -44,7 +44,7 @@ func (s *Server) querySettings(ch chan<- prometheus.Metric) error {
 	return nil
 }
 
-// pgSetting is represents a PostgreSQL runtime variable as returned by the
+// pgSetting is represents a OpenGauss runtime variable as returned by the
 // pg_settings view.
 type pgSetting struct {
 	name, setting, unit, shortDesc, varType string

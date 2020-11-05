@@ -23,7 +23,7 @@ _mtk_want_help() {
 }
 
 _main() {
-	# if first arg looks like a flag, assume we want to run postgres server
+	# if first arg looks like a flag, assume we want to run openGauss server
 	if [ "${1:0:1}" = '-' ]; then
 		set -- opengauss_exporter "$@"
 	fi
