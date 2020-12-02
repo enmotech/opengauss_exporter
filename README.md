@@ -19,8 +19,8 @@ docker run --net=host -e DATA_SOURCE_NAME="postgresql://postgres:password@localh
 
 The default make file behavior is to build the binary:
 ```
-$ go get github.com/mogdb/opengauss_exporter
-$ cd ${GOPATH-$HOME/go}/src/github.com/mogdb/opengauss_exporter
+$ go get github.com/enmotech/opengauss_exporter
+$ cd ${GOPATH-$HOME/go}/src/github.com/enmotech/opengauss_exporter
 $ make build
 $ export DATA_SOURCE_NAME="postgresql://login:password@hostname:port/dbname"
 $ ./bin/opengauss_exporter <flags>
