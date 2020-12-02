@@ -2,6 +2,10 @@
 
 Prometheus exporter for OpenGauss server metrics.
 
+
+## limit 
+- OpenGauss Password authentication method must be md5
+
 ## Quick Start
 This package is available for Docker:
 ```
@@ -22,7 +26,7 @@ $ export DATA_SOURCE_NAME="postgresql://login:password@hostname:port/dbname"
 $ ./bin/opengauss_exporter <flags>
 ```
 
-To build the dockerfile, run `make docker`.
+To build the docker, run `make docker`.
 
 
 ### Flags
@@ -96,18 +100,18 @@ The following environment variables configure the exporter:
 
 Settings set by environment variables starting with `OG_` will be overwritten by the corresponding CLI flag if given.
 
-### Setting the Postgres server's data source name
+### Setting the OpenGauss server's data source name
 
-The PostgreSQL server's [data source name](http://en.wikipedia.org/wiki/Data_source_name)
+The OpenGauss server's [data source name](http://en.wikipedia.org/wiki/Data_source_name)
 must be set via the `DATA_SOURCE_NAME` environment variable.
 
 For running it locally on a default Debian/Ubuntu install, this will work (transpose to init script as appropriate):
 
-    sudo -u postgres DATA_SOURCE_NAME="user=postgres host=/var/run/postgresql/ sslmode=disable" opengauss_exporter 
+    DATA_SOURCE_NAME="user=postgres host=/var/run/postgresql/ sslmode=disable" opengauss_exporter 
 
 Also, you can set a list of sources to scrape different instances from the one exporter setup. Just define a comma separated string.
 
-    sudo -u postgres DATA_SOURCE_NAME="port=5432,port=6432" opengauss_exporter 
+    DATA_SOURCE_NAME="port=5432,port=6432" opengauss_exporter 
 
 See the [github.com/lib/pq](http://github.com/lib/pq) module for other ways to format the connection string.
 
@@ -126,5 +130,3 @@ result a new set of DSN's is created for which the metrics are scraped.
 In addition, the option `--exclude-databases` adds the possibily to filter the result from the auto discovery to discard databases you do not need.
 
 
-
-docker run -p 9004:9187 -e DATA_SOURCE_NAME="postgresql://gaussdb:mtkOP@123@192.168.1.209:6432/postgres?sslmode=disable" mogdb/opengauss_exporter
