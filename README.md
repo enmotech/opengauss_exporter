@@ -3,7 +3,7 @@
 Prometheus exporter for OpenGauss server metrics.
 
 
-## limit 
+## Limit 
 - OpenGauss Password authentication method must be md5
 
 ## Quick Start
