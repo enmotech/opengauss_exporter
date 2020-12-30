@@ -1,10 +1,10 @@
-# OpenGauss Server Exporter
+# openGauss Server Exporter
 
-Prometheus exporter for OpenGauss server metrics.
+Prometheus exporter for openGauss server metrics.
 
 
-## Limit 
-- OpenGauss Password authentication method must be md5
+## Limit
+- openGauss Password authentication method must be md5
 
 ## Quick Start
 This package is available for Docker:
@@ -17,6 +17,7 @@ docker run --net=host -e DATA_SOURCE_NAME="postgresql://postgres:password@localh
 
 ## Building and running
 
+### github
 The default make file behavior is to build the binary:
 ```
 $ go get github.com/enmotech/opengauss_exporter
@@ -26,6 +27,15 @@ $ export DATA_SOURCE_NAME="postgresql://login:password@hostname:port/dbname"
 $ ./bin/opengauss_exporter <flags>
 ```
 
+### gitee
+The default make file behavior is to build the binary:
+```
+$ go get gitee.com/enmotech/opengauss_exporter
+$ cd ${GOPATH-$HOME/go}/src/gitee.com/enmotech/opengauss_exporter
+$ make build
+$ export DATA_SOURCE_NAME="postgresql://login:password@hostname:port/dbname"
+$ ./bin/opengauss_exporter <flags>
+```
 To build the docker, run `make docker`.
 
 
@@ -100,18 +110,18 @@ The following environment variables configure the exporter:
 
 Settings set by environment variables starting with `OG_` will be overwritten by the corresponding CLI flag if given.
 
-### Setting the OpenGauss server's data source name
+### Setting the openGauss server's data source name
 
-The OpenGauss server's [data source name](http://en.wikipedia.org/wiki/Data_source_name)
+The openGauss server's [data source name](http://en.wikipedia.org/wiki/Data_source_name)
 must be set via the `DATA_SOURCE_NAME` environment variable.
 
 For running it locally on a default Debian/Ubuntu install, this will work (transpose to init script as appropriate):
 
-    DATA_SOURCE_NAME="user=postgres host=/var/run/postgresql/ sslmode=disable" opengauss_exporter 
+    DATA_SOURCE_NAME="user=postgres host=/var/run/postgresql/ sslmode=disable" opengauss_exporter
 
 Also, you can set a list of sources to scrape different instances from the one exporter setup. Just define a comma separated string.
 
-    DATA_SOURCE_NAME="port=5432,port=6432" opengauss_exporter 
+    DATA_SOURCE_NAME="port=5432,port=6432" opengauss_exporter
 
 See the [github.com/lib/pq](http://github.com/lib/pq) module for other ways to format the connection string.
 
@@ -123,8 +133,8 @@ Some examples are provided in [og_exporter.yaml](og_exporter_default.yaml).
 
 
 ### Automatically discover databases
-To scrape metrics from all databases on a database server, the database DSN's can be dynamically discovered via the 
-`--auto-discover-databases` flag. When true, `SELECT datname FROM pg_database WHERE datallowconn = true AND datistemplate = false and datname != current_database()` is run for all configured DSN's. From the 
+To scrape metrics from all databases on a database server, the database DSN's can be dynamically discovered via the
+`--auto-discover-databases` flag. When true, `SELECT datname FROM pg_database WHERE datallowconn = true AND datistemplate = false and datname != current_database()` is run for all configured DSN's. From the
 result a new set of DSN's is created for which the metrics are scraped.
 
 In addition, the option `--exclude-databases` adds the possibily to filter the result from the auto discovery to discard databases you do not need.
