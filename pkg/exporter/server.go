@@ -228,10 +228,11 @@ func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([
 		ctx = context.Background()
 		defer ctx.Done()
 	}
-	log.Debugf("queryMetric [%s] executing begin", queryInstance.Name)
+	log.Debugf("queryMetric [%s] executing begin, sql %s", queryInstance.Name, query.SQL)
 
 	rows, err = s.db.QueryContext(ctx, query.SQL)
 	if err != nil {
+		log.Errorf("queryMetric [%s] executing err %s", queryInstance.Name, err)
 		return []prometheus.Metric{}, []error{}, fmt.Errorf("Error running queryMetric on database %q query: %s %v ", s, metricName, err)
 	}
 	defer rows.Close() // nolint: errcheck
@@ -495,11 +496,11 @@ func parseFingerprint(url string) (string, error) {
 	pairs := strings.Split(dsn, " ")
 	kv := make(map[string]string, len(pairs))
 	for _, pair := range pairs {
-		splitted := strings.SplitN(pair, "=", 2)
-		if len(splitted) != 2 {
+		split := strings.SplitN(pair, "=", 2)
+		if len(split) != 2 {
 			return "", fmt.Errorf("malformed dsn %q", dsn)
 		}
-		kv[splitted[0]] = splitted[1]
+		kv[split[0]] = split[1]
 	}
 
 	var fingerprint string

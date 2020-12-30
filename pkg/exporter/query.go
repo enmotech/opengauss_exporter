@@ -154,7 +154,7 @@ func (q *QueryInstance) GetQuerySQL(ver semver.Version) *Query {
 func (q *QueryInstance) GetColumn(colName string, serverLabels prometheus.Labels) *Column {
 	if col, ok := q.Columns[colName]; ok {
 		switch col.Usage {
-		case LABEL:
+		case LABEL, DISCARD:
 			col.DisCard = true
 		case GAUGE:
 			col.PrometheusType = prometheus.GaugeValue
