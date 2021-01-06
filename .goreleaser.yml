@@ -51,3 +51,10 @@ changelog:
       - bump version
 release:
   disable: true
+#nfpms:
+#  - id: export-rpm
+#    formats:
+#      - apk
+#      - deb
+#      - rpm
+#    bindir: /usr/bin
