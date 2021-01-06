@@ -109,7 +109,17 @@ bin/%: cmd/%/main.go; $(info $(M) running build)
 
 .PHONY: goreleaser
 goreleaser: ; $(info $(M) cleaning)	@ ## Run goreleaser Build
-	goreleaser build --debug --snapshot --rm-dist
+	goreleaser build --debug --rm-dist
+
+
+#################################################
+# Release
+#################################################
+
+files = linux/amd64 linux/arm64 windows/amd64 darwin/amd64
+xgo:; $(info) @ ## Run Xgo Build Release
+	xgo -x --targets="${files}" ${GOLDFLAGS} -dest bin -out ${BINARY_NAME}-${RELEASE_FILE_VERSION} -pkg /cmd/opengauss_exporter .
+
 #################################################
 # Cleaning
 #################################################

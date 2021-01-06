@@ -255,16 +255,16 @@ func Test_parseVersion(t *testing.T) {
 		// 	args: args{versionString: "EnterpriseDB 9.6.5.10 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-16), 64-bit"},
 		// 	want: "9.6.5",
 		// },
-		{
-			name: "1.0.0",
-			args: args{versionString: "(openGauss 1.0.0 build 5ed8dc17) compiled at 2020-09-15 18:04:09 commit 0 last mr   on x86_64-unknown-linux-gnu, compiled by g++ (GCC) 8.2.0, 64-"},
-			want: "1.0.0",
-		},
 		// {
 		// 	name: "postgres 9.5.4",
 		// 	args: args{versionString: "postgres 9.5.4, compiled by Visual C++ build 1800, 64-bit"},
 		// 	want: "9.5.4",
 		// },
+		{
+			name: "1.0.0",
+			args: args{versionString: "(openGauss 1.0.0 build 5ed8dc17) compiled at 2020-09-15 18:04:09 commit 0 last mr   on x86_64-unknown-linux-gnu, compiled by g++ (GCC) 8.2.0, 64-"},
+			want: "1.0.0",
+		},
 		{
 			name: "1.0.1",
 			args: args{versionString: "(openGauss 1.0.1 build 89d339ca) compiled at 2020-12-21 11:12:55 commit 0 last mr   on aarch64-unknown-linux-gnu, compiled by g++ (GCC) 8.2.0, 64-bit"},

@@ -25,12 +25,18 @@ builds:
     ldflags:
       - -s -w -X opengauss_exporter/pkg/version.version={{ .Version }} -X opengauss_exporter/pkg/version.gitCommit={{ .ShortCommit }} -X opengauss_exporter/pkg/version.buildTimestamp={{ .Date }} -X opengauss_exporter/pkg/version.gitTagInfo={{ .Tag }}
 archives:
-  - replacements:
+  - id: export-archive
+    format: zip
+    replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
       386: i386
       amd64: x86_64
+    files:
+      - og_exporter_default.yaml
+      - LICENSE
+      - README.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -39,7 +45,6 @@ changelog:
   sort: asc
   filters:
     exclude:
-      -
       - '^docs:'
       - '^test:'
       - '^build:'
@@ -47,3 +52,5 @@ changelog:
       - Merge branch
       - go mod tidy
       - bump version
+release:
+  disable: true
