@@ -19,7 +19,7 @@ func (s *Server) querySettings(ch chan<- prometheus.Metric) error {
 	//
 	// NOTE: If you add more vartypes here, you must update the supported
 	// types in normaliseUnit() below
-	query := "SELECT name, setting, COALESCE(unit, ''), short_desc, vartype FROM pg_settings WHERE vartype IN ('bool', 'integer', 'real');"
+	query := "SELECT name, setting, COALESCE(unit, ''), short_desc, vartype FROM pg_settings WHERE vartype IN ('bool', 'integer', 'real','string');"
 
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -76,6 +76,8 @@ func (s *pgSetting) metric(namespace string, labels prometheus.Labels) prometheu
 			name = fmt.Sprintf("%s_%s", name, unit)
 			shortDesc = fmt.Sprintf("%s [Units converted to %s.]", shortDesc, unit)
 		}
+	case "string":
+
 	default:
 		// Panic because we got a type we didn't ask for
 		panic(fmt.Sprintf("Unsupported vartype %q", s.varType))

@@ -139,7 +139,10 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 			log.Errorf("Querying Metric:%s not define querySQL for version %s", metric, s.lastMapVersion.String())
 			continue
 		}
-
+		if strings.EqualFold(querySQL.Status, statusDisable) {
+			log.Debugf("Querying metric: %s disable. skip", metric)
+			continue
+		}
 		var (
 			scrapeMetric   = false // Whether to collect indicators from the database 是否从数据库里采集指标
 			cachedMetric   cachedMetrics
@@ -305,6 +308,10 @@ func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([
 			}
 			metrics = append(metrics, metric)
 		}
+	}
+	if err = rows.Err(); err != nil {
+		log.Debugf("queryMetric [%s] rows error %s", metricName, err)
+		return []prometheus.Metric{}, []error{}, err
 	}
 	return metrics, nonfatalErrors, nil
 }

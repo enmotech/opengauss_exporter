@@ -413,4 +413,23 @@ omm`))
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, []string{"postgres", "omm"}, r)
 	})
+	// t.Run("test", func(t *testing.T) {
+	// 	dsn := "host=localhost user=gaussdb password=mtkOP@123 port=5433 dbname=postgres sslmode=disable"
+	// 	db, err := sql.Open("postgres", dsn)
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 	}
+	// 	rows,err := db.Query(" select name,setting from pg_settings where name in('data_directory','unix_socket_directory','log_directory','audit_directory')")
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 	}
+	// 	for rows.Next() {
+	// 		var s1,s2 string
+	// 		if err := rows.Scan(&s1,&s2);err != nil {
+	// 			return
+	// 		}
+	// 		fmt.Println(s1,s2)
+	// 	}
+	//
+	// })
 }
