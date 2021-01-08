@@ -140,3 +140,9 @@ result a new set of DSN's is created for which the metrics are scraped.
 In addition, the option `--exclude-databases` adds the possibily to filter the result from the auto discovery to discard databases you do not need.
 
 
+### run test
+
+```shell
+make build
+sh test/test.sh `pwd`/bin/opengauss_exporter <config_file>
+```

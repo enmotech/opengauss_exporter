@@ -26,7 +26,6 @@ cd "$DIR" || exit 1
 
 VERSIONS=( \
     1.0.1 \
-    1.1.0 \
 )
 
 wait_for_openGauss(){
