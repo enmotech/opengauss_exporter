@@ -2,57 +2,58 @@ pg_bgwriter:
   name: pg_stat_bgwriter
   desc: OpenGauss background writer metrics
   query:
-  - name: pg_stat_bgwriter
-    sql: |-
-      SELECT checkpoints_timed,
-          checkpoints_req,
-          checkpoint_write_time,
-          checkpoint_sync_time,
-          buffers_checkpoint,
-          buffers_clean,
-          buffers_backend,
-          maxwritten_clean,
-          buffers_backend_fsync,
-          buffers_alloc,
-          stats_reset
-      FROM pg_stat_bgwriter
-    version: '>=0.0.0'
-    timeout: 0.1
-    status: enable
+    - name: pg_stat_bgwriter
+      sql: |-
+        SELECT checkpoints_timed,
+            checkpoints_req,
+            checkpoint_write_time,
+            checkpoint_sync_time,
+            buffers_checkpoint,
+            buffers_clean,
+            buffers_backend,
+            maxwritten_clean,
+            buffers_backend_fsync,
+            buffers_alloc,
+            stats_reset
+        FROM pg_stat_bgwriter
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 60
+      status: enable
   metrics:
-  - name: checkpoints_timed
-    description: scheduled checkpoints that have been performed
-    usage: COUNTER
-  - name: checkpoints_req
-    description: requested checkpoints that have been performed
-    usage: COUNTER
-  - name: checkpoint_write_time
-    description: time spending on writing files to disk, in µs
-    usage: COUNTER
-  - name: checkpoint_sync_time
-    description: time spending on syncing files to disk, in µs
-    usage: COUNTER
-  - name: buffers_checkpoint
-    description: buffers written during checkpoints
-    usage: COUNTER
-  - name: buffers_clean
-    description: buffers written by the background writer
-    usage: COUNTER
-  - name: buffers_backend
-    description: buffers written directly by a backend
-    usage: COUNTER
-  - name: maxwritten_clean
-    description: times that bgwriter stopped a cleaning scan
-    usage: COUNTER
-  - name: buffers_backend_fsync
-    description: times a backend had to execute its own fsync
-    usage: COUNTER
-  - name: buffers_alloc
-    description: buffers allocated
-    usage: COUNTER
-  - name: stats_reset
-    description: time when statistics were last reset
-    usage: COUNTER
+    - name: checkpoints_timed
+      description: scheduled checkpoints that have been performed
+      usage: COUNTER
+    - name: checkpoints_req
+      description: requested checkpoints that have been performed
+      usage: COUNTER
+    - name: checkpoint_write_time
+      description: time spending on writing files to disk, in µs
+      usage: COUNTER
+    - name: checkpoint_sync_time
+      description: time spending on syncing files to disk, in µs
+      usage: COUNTER
+    - name: buffers_checkpoint
+      description: buffers written during checkpoints
+      usage: COUNTER
+    - name: buffers_clean
+      description: buffers written by the background writer
+      usage: COUNTER
+    - name: buffers_backend
+      description: buffers written directly by a backend
+      usage: COUNTER
+    - name: maxwritten_clean
+      description: times that bgwriter stopped a cleaning scan
+      usage: COUNTER
+    - name: buffers_backend_fsync
+      description: times a backend had to execute its own fsync
+      usage: COUNTER
+    - name: buffers_alloc
+      description: buffers allocated
+      usage: COUNTER
+    - name: stats_reset
+      description: time when statistics were last reset
+      usage: COUNTER
   status: enable
   ttl: 60
   timeout: 0.1
@@ -60,18 +61,19 @@ pg_database:
   name: pg_database
   desc: OpenGauss Database size
   query:
-  - name: pg_database
-    sql: SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database where datname NOT IN ('template0','template1')
-    version: '>=0.0.0'
-    timeout: 0.1
-    status: enable
+    - name: pg_database
+      sql: SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database where datname NOT IN ('template0','template1')
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 60
+      status: enable
   metrics:
-  - name: datname
-    description: Name of this database
-    usage: LABEL
-  - name: size_bytes
-    description: Disk space used by the database
-    usage: GAUGE
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: size_bytes
+      description: Disk space used by the database
+      usage: GAUGE
   status: enable
   ttl: 60
   timeout: 0.1
@@ -79,31 +81,32 @@ pg_lock:
   name: pg_lock
   desc: OpenGauss lock distribution by mode
   query:
-  - name: pg_lock
-    sql: |-
-      SELECT
-        datname, mode, coalesce(count, 0) AS count
-      FROM (
-        SELECT d.oid AS database, d.datname, l.mode FROM pg_database d,
-                 unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock',
-                     'ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']
-                     ) l(mode)
-      WHERE d.datname NOT IN ('postgres','template0','template1')) base
-      LEFT JOIN (SELECT database, mode, count(*) AS count FROM pg_locks
-      WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);
-    version: '>=0.0.0'
-    timeout: 0.1
-    status: enable
+    - name: pg_lock
+      sql: |-
+        SELECT
+          datname, mode, coalesce(count, 0) AS count
+        FROM (
+          SELECT d.oid AS database, d.datname, l.mode FROM pg_database d,
+                   unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock',
+                       'ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']
+                       ) l(mode)
+        WHERE d.datname NOT IN ('template0','template1')) base
+        LEFT JOIN (SELECT database, mode, count(1) AS count FROM pg_locks
+        WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 60
+      status: enable
   metrics:
-  - name: datname
-    description: Name of this database
-    usage: LABEL
-  - name: mode
-    description: Type of Lock
-    usage: LABEL
-  - name: count
-    description: Number of locks
-    usage: GAUGE
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: mode
+      description: Type of Lock
+      usage: LABEL
+    - name: count
+      description: Number of locks
+      usage: GAUGE
   status: enable
   ttl: 60
   timeout: 0.1
@@ -111,49 +114,50 @@ pg_stat_activity:
   name: pg_stat_activity
   desc: OpenGauss backend activity group by state
   query:
-  - name: pg_stat_activity
-    sql: |-
-      SELECT datname,
-             state,
-             coalesce(count, 0)             AS count,
-             coalesce(max_duration, 0)      AS max_duration,
-             coalesce(max_tx_duration, 0)   AS max_tx_duration,
-             coalesce(max_conn_duration, 0) AS max_conn_duration
-      FROM (SELECT d.oid AS database, d.datname, a.state
-            FROM pg_database d,
-                 unnest(ARRAY ['active','idle','idle in transaction','idle in transaction (aborted)','fastpath function call','disabled']) a(state)
-            WHERE d.datname NOT IN ('template0','template1')) base
-               LEFT JOIN (
-          SELECT datname, state,
-                 count(*) AS count,
-                 max(extract(epoch from now() - state_change)) AS max_duration,
-                 max(extract(epoch from now() - xact_start))   AS max_tx_duration,
-                 max(extract(epoch from now() - backend_start)) AS max_conn_duration
-          FROM pg_stat_activity WHERE pid <> pg_backend_pid()
-          GROUP BY datname, state
-      ) a USING (datname, state);
-    version: '>=1.0.0'
-    timeout: 0.1
-    status: enable
+    - name: pg_stat_activity
+      sql: |-
+        SELECT datname,
+               state,
+               coalesce(count, 0)             AS count,
+               coalesce(max_duration, 0)      AS max_duration,
+               coalesce(max_tx_duration, 0)   AS max_tx_duration,
+               coalesce(max_conn_duration, 0) AS max_conn_duration
+        FROM (SELECT d.oid AS database, d.datname, a.state
+              FROM pg_database d,
+                   unnest(ARRAY ['active','idle','idle in transaction','idle in transaction (aborted)','fastpath function call','disabled']) a(state)
+              WHERE d.datname NOT IN ('template0','template1')) base
+                 LEFT JOIN (
+            SELECT datname, state,
+                   count(*) AS count,
+                   max(extract(epoch from now() - state_change)) AS max_duration,
+                   max(extract(epoch from now() - xact_start))   AS max_tx_duration,
+                   max(extract(epoch from now() - backend_start)) AS max_conn_duration
+            FROM pg_stat_activity WHERE pid <> pg_backend_pid()
+            GROUP BY datname, state
+        ) a USING (datname, state);
+      version: '>=1.0.0'
+      timeout: 0.1
+      ttl: 60
+      status: enable
   metrics:
-  - name: datname
-    description: Name of this database
-    usage: LABEL
-  - name: state
-    description: connection state
-    usage: LABEL
-  - name: count
-    description: number of connections in this state
-    usage: GAUGE
-  - name: max_duration
-    description: max duration since state change among (datname, state)
-    usage: GAUGE
-  - name: max_tx_duration
-    description: max duration in seconds any active transaction has been running
-    usage: GAUGE
-  - name: max_conn_duration
-    description: max backend session duration since state change among (datname, state)
-    usage: GAUGE
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: state
+      description: connection state
+      usage: LABEL
+    - name: count
+      description: number of connections in this state
+      usage: GAUGE
+    - name: max_duration
+      description: max duration since state change among (datname, state)
+      usage: GAUGE
+    - name: max_tx_duration
+      description: max duration in seconds any active transaction has been running
+      usage: GAUGE
+    - name: max_conn_duration
+      description: max backend session duration since state change among (datname, state)
+      usage: GAUGE
   status: enable
   ttl: 60
   timeout: 0.1
@@ -161,69 +165,70 @@ pg_stat_database:
   name: pg_stat_database
   desc: OpenGauss database statistics
   query:
-  - name: pg_stat_database
-    sql: select * from pg_stat_database where datname NOT IN ('template0','template1')
-    version: '>=0.0.0'
-    timeout: 0.1
-    status: enable
+    - name: pg_stat_database
+      sql: select * from pg_stat_database where datname NOT IN ('template0','template1')
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 60
+      status: enable
   metrics:
-  - name: datid
-    description: OID of a database
-    usage: LABEL
-  - name: datname
-    description: Name of this database
-    usage: LABEL
-  - name: numbackends
-    description: Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
-    usage: GAUGE
-  - name: xact_commit
-    description: Number of transactions in this database that have been committed
-    usage: COUNTER
-  - name: xact_rollback
-    description: Number of transactions in this database that have been rolled back
-    usage: COUNTER
-  - name: blks_read
-    description: Number of disk blocks read in this database
-    usage: COUNTER
-  - name: blks_hit
-    description: Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the PostgreSQL buffer cache, not the operating system's file system cache)
-    usage: COUNTER
-  - name: tup_returned
-    description: Number of rows returned by queries in this database
-    usage: COUNTER
-  - name: tup_fetched
-    description: Number of rows fetched by queries in this database
-    usage: COUNTER
-  - name: tup_inserted
-    description: Number of rows inserted by queries in this database
-    usage: COUNTER
-  - name: tup_updated
-    description: Number of rows updated by queries in this database
-    usage: COUNTER
-  - name: tup_deleted
-    description: Number of rows deleted by queries in this database
-    usage: COUNTER
-  - name: conflicts
-    description: Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
-    usage: COUNTER
-  - name: temp_files
-    description: Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
-    usage: COUNTER
-  - name: temp_bytes
-    description: Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
-    usage: COUNTER
-  - name: deadlocks
-    description: Number of deadlocks detected in this database
-    usage: COUNTER
-  - name: blk_read_time
-    description: Time spent reading data file blocks by backends in this database, in milliseconds
-    usage: COUNTER
-  - name: blk_write_time
-    description: Time spent writing data file blocks by backends in this database, in milliseconds
-    usage: COUNTER
-  - name: stats_reset
-    description: Time at which these statistics were last reset
-    usage: COUNTER
+    - name: datid
+      description: OID of a database
+      usage: LABEL
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: numbackends
+      description: Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
+      usage: GAUGE
+    - name: xact_commit
+      description: Number of transactions in this database that have been committed
+      usage: COUNTER
+    - name: xact_rollback
+      description: Number of transactions in this database that have been rolled back
+      usage: COUNTER
+    - name: blks_read
+      description: Number of disk blocks read in this database
+      usage: COUNTER
+    - name: blks_hit
+      description: Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
+      usage: COUNTER
+    - name: tup_returned
+      description: Number of rows returned by queries in this database
+      usage: COUNTER
+    - name: tup_fetched
+      description: Number of rows fetched by queries in this database
+      usage: COUNTER
+    - name: tup_inserted
+      description: Number of rows inserted by queries in this database
+      usage: COUNTER
+    - name: tup_updated
+      description: Number of rows updated by queries in this database
+      usage: COUNTER
+    - name: tup_deleted
+      description: Number of rows deleted by queries in this database
+      usage: COUNTER
+    - name: conflicts
+      description: Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
+      usage: COUNTER
+    - name: temp_files
+      description: Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
+      usage: COUNTER
+    - name: temp_bytes
+      description: Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
+      usage: COUNTER
+    - name: deadlocks
+      description: Number of deadlocks detected in this database
+      usage: COUNTER
+    - name: blk_read_time
+      description: Time spent reading data file blocks by backends in this database, in milliseconds
+      usage: COUNTER
+    - name: blk_write_time
+      description: Time spent writing data file blocks by backends in this database, in milliseconds
+      usage: COUNTER
+    - name: stats_reset
+      description: Time at which these statistics were last reset
+      usage: COUNTER
   status: enable
   ttl: 60
   timeout: 0.1
@@ -231,100 +236,195 @@ pg_stat_database_conflicts:
   name: pg_stat_database_conflicts
   desc: OpenGauss database statistics conflicts
   query:
-  - name: pg_stat_database_conflicts
-    sql: select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1')
-    version: '>=0.0.0'
-    timeout: 0.1
-    status: enable
+    - name: pg_stat_database_conflicts
+      sql: select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1')
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 60
+      status: enable
   metrics:
-  - name: datid
-    description: OID of a database
-    usage: LABEL
-  - name: datname
-    description: Name of this database
-    usage: LABEL
-  - name: confl_tablespace
-    description: Number of queries in this database that have been canceled due to dropped tablespaces
-    usage: COUNTER
-  - name: confl_lock
-    description: Number of queries in this database that have been canceled due to lock timeouts
-    usage: COUNTER
-  - name: confl_snapshot
-    description: Number of queries in this database that have been canceled due to old snapshots
-    usage: COUNTER
-  - name: confl_bufferpin
-    description: Number of queries in this database that have been canceled due to pinned buffers
-    usage: COUNTER
-  - name: confl_deadlock
-    description: Number of queries in this database that have been canceled due to deadlocks
-    usage: COUNTER
+    - name: datid
+      description: OID of a database
+      usage: LABEL
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: confl_tablespace
+      description: Number of queries in this database that have been canceled due to dropped tablespaces
+      usage: COUNTER
+    - name: confl_lock
+      description: Number of queries in this database that have been canceled due to lock timeouts
+      usage: COUNTER
+    - name: confl_snapshot
+      description: Number of queries in this database that have been canceled due to old snapshots
+      usage: COUNTER
+    - name: confl_bufferpin
+      description: Number of queries in this database that have been canceled due to pinned buffers
+      usage: COUNTER
+    - name: confl_deadlock
+      description: Number of queries in this database that have been canceled due to deadlocks
+      usage: COUNTER
   status: enable
   ttl: 60
   timeout: 0.1
 pg_stat_replication:
   name: pg_stat_replication
   query:
-  - name: pg_stat_replication
-    sql: |-
-      SELECT *,
-        (case pg_is_in_recovery() when 't' then null else pg_current_xlog_location() end) AS pg_current_xlog_location,
-        (case pg_is_in_recovery() when 't' then null else pg_xlog_location_diff(pg_current_xlog_location(), receiver_replay_location)::float end) AS pg_xlog_location_diff
-      FROM pg_stat_replication
-    version: '>=1.0.0'
-    timeout: 0.1
-    status: enable
+    - name: pg_stat_replication
+      sql: |-
+        SELECT *,
+          (case pg_is_in_recovery() when 't' then null else pg_current_xlog_location() end) AS pg_current_xlog_location,
+          (case pg_is_in_recovery() when 't' then null else pg_xlog_location_diff(pg_current_xlog_location(), receiver_replay_location)::float end) AS pg_xlog_location_diff
+        FROM pg_stat_replication
+      version: '>=1.0.0'
+      timeout: 0.1
+      ttl: 60
+      status: enable
   metrics:
-  - name: pid
-    description: Process ID of a WAL sender process
-    usage: DISCARD
-  - name: usesysid
-    description: OID of the user logged into this WAL sender process
-    usage: DISCARD
-  - name: usename
-    description: Name of the user logged into this WAL sender process
-    usage: DISCARD
-  - name: application_name
-    description: Name of the application that is connected to this WAL sender
-    usage: LABEL
-  - name: client_addr
-    description: IP address of the client connected to this WAL sender. If this field is null, it indicates that the client is connected via a Unix socket on the server machine.
-    usage: LABEL
-  - name: client_hostname
-    description: Host name of the connected client, as reported by a reverse DNS lookup of client_addr. This field will only be non-null for IP connections, and only when log_hostname is enabled.
-    usage: DISCARD
-  - name: client_port
-    description: TCP port number that the client is using for communication with this WAL sender, or -1 if a Unix socket is used
-    usage: DISCARD
-  - name: backend_start
-    description: with time zone      Time when this process was started, i.e., when the client connected to this WAL sender
-    usage: DISCARD
-  - name: state
-    description: Current WAL sender state
-    usage: LABEL
-  - name: sender_sent_location
-    description: Last transaction log position sent on this connection
-    usage: GAUGE
-  - name: receiver_write_location
-    description: Last transaction log position written to disk by this standby server
-    usage: GAUGE
-  - name: receiver_flush_location
-    description: Last transaction log position flushed to disk by this standby server
-    usage: GAUGE
-  - name: receiver_replay_location
-    description: Last transaction log position replayed into the database on this standby server
-    usage: GAUGE
-  - name: sync_priority
-    description: Priority of this standby server for being chosen as the synchronous standby
-    usage: DISCARD
-  - name: sync_state
-    description: Synchronous state of this standby server
-    usage: GAUGE
-  - name: pg_current_xlog_location
-    description: pg_current_xlog_location
-    usage: DISCARD
-  - name: pg_xlog_location_diff
-    description: Lag in bytes between master and slave
-    usage: GAUGE
+    - name: procpid
+      description: Process ID of a WAL sender process
+      usage: DISCARD
+    - name: pid
+      description: Process ID of a WAL sender process
+      usage: DISCARD
+    - name: usesysid
+      description: OID of the user logged into this WAL sender process
+      usage: DISCARD
+    - name: usename
+      description: Name of the user logged into this WAL sender process
+      usage: DISCARD
+    - name: application_name
+      description: Name of the application that is connected to this WAL sender
+      usage: LABEL
+    - name: client_addr
+      description: IP address of the client connected to this WAL sender. If this field is null, it indicates that the client is connected via a Unix socket on the server machine.
+      usage: LABEL
+    - name: client_hostname
+      description: Host name of the connected client, as reported by a reverse DNS lookup of client_addr. This field will only be non-null for IP connections, and only when log_hostname is enabled.
+      usage: DISCARD
+    - name: client_port
+      description: TCP port number that the client is using for communication with this WAL sender, or -1 if a Unix socket is used
+      usage: DISCARD
+    - name: backend_start
+      description: with time zone      Time when this process was started, i.e., when the client connected to this WAL sender
+      usage: DISCARD
+    - name: backend_xmin
+      description: The current backend's xmin horizon.
+      usage: DISCARD
+    - name: state
+      description: Current WAL sender state
+      usage: LABEL
+    - name: sender_sent_location
+      description: Last transaction log position sent on this connection
+      usage: DISCARD
+    - name: receiver_write_location
+      description: Last transaction log position written to disk by this standby server
+      usage: DISCARD
+    - name: receiver_flush_location
+      description: Last transaction log position flushed to disk by this standby server
+      usage: DISCARD
+    - name: receiver_replay_location
+      description: Last transaction log position replayed into the database on this standby server
+      usage: DISCARD
+    - name: sync_priority
+      description: Priority of this standby server for being chosen as the synchronous standby
+      usage: DISCARD
+    - name: sync_state
+      description: Synchronous state of this standby server
+      usage: DISCARD
+    - name: pg_current_xlog_location
+      description: pg_current_xlog_location
+      usage: DISCARD
+    - name: pg_xlog_location_diff
+      description: Lag in bytes between master and slave
+      usage: GAUGE
+    - name: sent_location
+      description: Last transaction log position sent on this connection
+      usage: DISCARD
+    - name: write_location
+      description: Last transaction log position written to disk by this standby server
+      usage: DISCARD
+    - name: flush_location
+      description: Last transaction log position flushed to disk by this standby server
+      usage: DISCARD
+    - name: replay_location
+      description: Last transaction log position replayed into the database on this standby server
+      usage: DISCARD
+    - name: sent_lsn
+      description: Last transaction log position sent on this connection
+      usage: DISCARD
+    - name: write_lsn
+      description: Last transaction log position written to disk by this standby server
+      usage: DISCARD
+    - name: flush_lsn
+      description: Last transaction log position flushed to disk by this standby server
+      usage: DISCARD
+    - name: replay_lsn
+      description: Last transaction log position replayed into the database on this standby server
+      usage: DISCARD
+    - name: sync_priority
+      description: Priority of this standby server for being chosen as the synchronous standby
+      usage: DISCARD
+    - name: sync_state
+      description: Synchronous state of this standby server
+      usage: DISCARD
+    - name: slot_name
+      description: A unique, cluster-wide identifier for the replication slot
+      usage: LABEL
+    - name: plugin
+      description: The base name of the shared object containing the output plugin this logical slot is using, or null for physical slots
+      usage: DISCARD
+    - name: slot_type
+      description: The slot type - physical or logical
+      usage: DISCARD
+    - name: datoid
+      description: The OID of the database this slot is associated with, or null. Only logical slots have an associated database
+      usage: DISCARD
+    - name: database
+      description: The name of the database this slot is associated with, or null. Only logical slots have an associated database
+      usage: DISCARD
+    - name: active
+      description: True if this slot is currently actively being used
+      usage: DISCARD
+    - name: active_pid
+      description: Process ID of a WAL sender process
+      usage: DISCARD
+    - name: xmin
+      description: The oldest transaction that this slot needs the database to retain. VACUUM cannot remove tuples deleted by any later transaction
+      usage: DISCARD
+    - name: catalog_xmin
+      description: The oldest transaction affecting the system catalogs that this slot needs the database to retain. VACUUM cannot remove catalog tuples deleted by any later transaction
+      usage: DISCARD
+    - name: restart_lsn
+      description: The address (LSN) of oldest WAL which still might be required by the consumer of this slot and thus won't be automatically removed during checkpoints
+      usage: DISCARD
+    - name: pg_current_xlog_location
+      description: pg_current_xlog_location
+      usage: DISCARD
+    - name: pg_current_wal_lsn
+      description: pg_current_xlog_location
+      usage: DISCARD
+    - name: pg_current_wal_lsn_bytes
+      description: WAL position in bytes
+      usage: GAUGE
+    - name: pg_xlog_location_diff
+      description: Lag in bytes between master and slave
+      usage: GAUGE
+    - name: pg_wal_lsn_diff
+      description: Lag in bytes between master and slave
+      usage: GAUGE
+    - name: confirmed_flush_lsn
+      description: LSN position a consumer of a slot has confirmed flushing the data received
+      usage: DISCARD
+    - name: write_lag
+      description: Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written it (but not yet flushed it or applied it). This can be used to gauge the delay that synchronous_commit level remote_write incurred while committing if this server was configured as a synchronous standby.
+      usage: DISCARD
+    - name: flush_lag
+      description: Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written and flushed it (but not yet applied it). This can be used to gauge the delay that synchronous_commit level remote_flush incurred while committing if this server was configured as a synchronous standby.
+      usage: DISCARD
+    - name: replay_lag
+      description: Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written, flushed and applied it. This can be used to gauge the delay that synchronous_commit level remote_apply incurred while committing if this server was configured as a synchronous standby.
+      usage: DISCARD
   status: enable
   ttl: 60
   timeout: 0.1

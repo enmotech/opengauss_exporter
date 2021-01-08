@@ -413,6 +413,40 @@ omm`))
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, []string{"postgres", "omm"}, r)
 	})
+	t.Run("queryMetric_pg_stat_replication", func(t *testing.T) {
+		queryInstance = pgStatReplication
+		queryInstance.Queries[0].Timeout = 100
+		err = queryInstance.Check()
+		s.lastMapVersion = semver.Version{
+			Major: 1,
+			Minor: 1,
+			Patch: 0,
+		}
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		db, mock, err = sqlmock.New()
+		if err != nil {
+			t.Error(err)
+		}
+		s.db = db
+		mock.ExpectQuery("SELECT").WillDelayFor(1 * time.Second).WillReturnRows(
+			sqlmock.NewRows([]string{"pid", "usesysid", "usename", "application_name", "client_addr", "client_hostname", "client_port", "backend_start", "state", "sender_sent_location",
+				"receiver_write_location", "receiver_flush_location", "receiver_replay_location", "sync_priority", "sync_state", "pg_current_xlog_location", "pg_xlog_location_diff",
+			}).FromCSVString(`140215315789568,10,omm,"WalSender to Standby","192.168.122.92","kvm-yl2",55802,"2021-01-06 14:45:59.944279+08","Streaming","0/331980B8","0/331980B8","0/331980B8","0/331980B8",1,Sync,"0/331980B8",0`))
+		metrics, errs, err := s.queryMetric("pg_stat_replication", queryInstance)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []error{}, errs)
+		for _, m := range metrics {
+			fmt.Printf("%#v\n", m)
+		}
+		// assert.ElementsMatch(t, []prometheus.Metric{
+		// 	&{
+		// 		f
+		// 	},
+		// }, metrics)
+	})
 	// t.Run("test", func(t *testing.T) {
 	// 	dsn := "host=localhost user=gaussdb password=mtkOP@123 port=5433 dbname=postgres sslmode=disable"
 	// 	db, err := sql.Open("postgres", dsn)

@@ -6,6 +6,8 @@ V 				= 0
 Q 				= $(if $(filter 1,$V),,@)
 M 				= $(shell printf "\033[34;1m▶\033[0m")
 DOCKER_USERNAME=mogdb
+PKGS     		= $(or $(PKG),$(shell $(GO) list ./...|grep -v obs|grep -v oraxml))
+TESTPKGS 		= $(shell $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
 
 ### ################################################
 ### tools
@@ -143,3 +145,48 @@ docker-push: docker ; $(info) @ ## Run Docker Build Release And Push Docker Hub
 ifeq ($(VERSION_METADATA),)
 	docker push ${DOCKER_USERNAME}/${BINARY_NAME}:latest
 endif
+
+# ################################################
+# Tests
+# ################################################
+
+TEST_TARGETS := test-default test-bench test-short test-verbose test-race
+.PHONY: $(TEST_TARGETS) test-xml check test tests
+test-bench:   ARGS=-run=__absolutelynothing__ -bench=. ## Run benchmarks
+test-short:   ARGS=-short        ## Run only short tests
+test-verbose: ARGS=-v            ## Run tests in verbose mode with coverage reporting
+test-race:    ARGS=-race         ## Run tests with race detector
+$(TEST_TARGETS): NAME=$(MAKECMDGOALS:test-%=%)
+$(TEST_TARGETS): test
+check test tests: fmt ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
+	$Q $(GO) test $(ARGS) $(TESTPKGS)
+
+test-xml: fmt | $(GO2XUNIT) ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests with xUnit output
+	$Q mkdir -p test
+	$Q 2>&1 $(GO) test -v $(TESTPKGS) | tee test/tests.output
+	$(GO2XUNIT) -fail -input test/tests.output -output test/tests.xml
+
+test-json: fmt ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests with xUnit output
+	$Q mkdir -p test
+	$Q 2>&1 $(GO) test -json -timeout 20s -v $(TESTPKGS) > test/test-report.json
+
+COVERAGE_MODE = atomic
+COVERAGE_PROFILE = test/profile.out
+COVERAGE_XML = $(COVERAGE_DIR)/coverage.xml
+COVERAGE_HTML = $(COVERAGE_DIR)/index.html
+.PHONY: test-coverage
+test-coverage: COVERAGE_DIR := $(CURDIR)/test/coverage.$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+test-coverage: fmt ; $(info $(M) running coverage tests…) @ ## Run coverage tests
+	$Q mkdir -p $(COVERAGE_DIR)/coverage
+	$Q for pkg in $(TESTPKGS); do \
+		$(GO) test \
+			-coverpkg=$$($(GO) list -f '{{ join .Deps "\n" }}' $$pkg | \
+					grep '^$(PACKAGE)/' | \
+					tr '\n' ',')$$pkg \
+			-covermode=$(COVERAGE_MODE) \
+			-coverprofile="$(COVERAGE_DIR)/coverage/`echo $$pkg | tr "/" "-"`.cover" $$pkg ;\
+	 done
+	$Q $(GOCOVMERGE) $(COVERAGE_DIR)/coverage/*.cover > $(COVERAGE_PROFILE)
+	$Q $(GO) tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_HTML)
+	$Q $(GOCOV) convert $(COVERAGE_PROFILE) | $(GOCOVXML) > $(COVERAGE_XML)
