@@ -24,8 +24,9 @@ var (
 )
 
 type cachedMetrics struct {
-	metrics    []prometheus.Metric
-	lastScrape time.Time
+	metrics        []prometheus.Metric
+	lastScrape     time.Time
+	nonFatalErrors []error
 }
 
 // ServerOpt configures a server.
@@ -171,7 +172,7 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 		if scrapeMetric {
 			metrics, nonFatalErrors, err = s.queryMetric(metric, queryInstance)
 		} else {
-			metrics = cachedMetric.metrics
+			metrics, nonFatalErrors = cachedMetric.metrics, cachedMetric.nonFatalErrors
 		}
 
 		// Serious error - a namespace disappeared
@@ -181,9 +182,12 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 		}
 		// Non-serious errors - likely version or parsing problems.
 		if len(nonFatalErrors) > 0 {
+			var errText string
 			for _, err := range nonFatalErrors {
 				log.Errorf("collect metric nonFatalErrors %s err %s", metric, err)
+				errText += err.Error()
 			}
+			metricErrors[metric] = errors.New(errText)
 		}
 
 		// Emit the metrics into the channel
@@ -196,8 +200,9 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 			if queryInstance.TTL > 0 {
 				s.cacheMtx.Lock()
 				s.metricCache[metric] = cachedMetrics{
-					metrics:    metrics,
-					lastScrape: scrapeStart,
+					metrics:        metrics,
+					lastScrape:     scrapeStart,
+					nonFatalErrors: nonFatalErrors,
 				}
 				s.cacheMtx.Unlock()
 			}
@@ -284,13 +289,48 @@ func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([
 				if col.DisCard {
 					continue
 				}
-				value, ok := dbToFloat64(columnData[idx])
-				if !ok {
-					nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unexpected error parsing column: ", metricName, columnName, columnData[idx])))
-					continue
+				/*
+					WITH data AS (SELECT floor(random()*10) AS d FROM generate_series(1,100)),
+					         metrics AS (SELECT SUM(d) AS sum, COUNT(*) AS count FROM data),
+					         buckets AS (SELECT le, SUM(CASE WHEN d <= le THEN 1 ELSE 0 END) AS d
+					                     FROM data, UNNEST(ARRAY[1, 2, 4, 8]) AS le GROUP BY le)
+					    SELECT
+					      sum AS histogram_sum,
+					      count AS histogram_count,
+					      ARRAY_AGG(le) AS histogram,
+					      ARRAY_AGG(d) AS histogram_bucket,
+					      ARRAY_AGG(le) AS missing,
+					      ARRAY_AGG(le) AS missing_sum,
+					      ARRAY_AGG(d) AS missing_sum_bucket,
+					      ARRAY_AGG(le) AS missing_count,
+					      ARRAY_AGG(d) AS missing_count_bucket,
+					      sum AS missing_count_sum,
+					      ARRAY_AGG(le) AS unexpected_sum,
+					      ARRAY_AGG(d) AS unexpected_sum_bucket,
+					      'data' AS unexpected_sum_sum,
+					      ARRAY_AGG(le) AS unexpected_count,
+					      ARRAY_AGG(d) AS unexpected_count_bucket,
+					      sum AS unexpected_count_sum,
+					      'nan'::varchar AS unexpected_count_count,
+					      ARRAY_AGG(le) AS unexpected_bytes,
+					      ARRAY_AGG(d) AS unexpected_bytes_bucket,
+					      sum AS unexpected_bytes_sum,
+					      'nan'::bytea AS unexpected_bytes_count
+					    FROM metrics, buckets GROUP BY 1,2
+				*/
+				if col.Histogram {
+
+				} else if strings.EqualFold(col.Usage, MappedMETRIC) {
+
+				} else {
+					value, ok := dbToFloat64(columnData[idx])
+					if !ok {
+						nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unexpected error parsing column: ", metricName, columnName, columnData[idx])))
+						continue
+					}
+					// Generate the metric
+					metric = prometheus.MustNewConstMetric(col.PrometheusDesc, col.PrometheusType, value, labels...)
 				}
-				// Generate the metric
-				metric = prometheus.MustNewConstMetric(col.PrometheusDesc, col.PrometheusType, value, labels...)
 
 			} else {
 				// Unknown metric. Report as untyped if scan to float64 works, else note an error too.

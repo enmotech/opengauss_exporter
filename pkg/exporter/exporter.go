@@ -209,7 +209,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 	default:
 		e.up.Set(1) // Didn't fail, can mark connection as up for this scrape.
 	}
-
+	log.Debugf("the errorsCount %v ", errorsCount)
 	switch errorsCount {
 	case 0:
 		e.error.Set(0)

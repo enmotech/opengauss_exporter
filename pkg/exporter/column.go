@@ -7,10 +7,13 @@ import (
 )
 
 const (
-	DISCARD = "DISCARD" // Ignore this column (when SELECT *)
-	LABEL   = "LABEL"   // Use this column as a label
-	COUNTER = "COUNTER" // Use this column as a counter
-	GAUGE   = "GAUGE"   // Use this column as a gauge
+	DISCARD      = "DISCARD" // Ignore this column (when SELECT *)
+	LABEL        = "LABEL"   // Use this column as a label
+	COUNTER      = "COUNTER" // Use this column as a counter
+	GAUGE        = "GAUGE"   // Use this column as a gauge
+	HISTOGRAM    = "HISTOGRAM"
+	MappedMETRIC = "MAPPEDMETRIC"
+	DURATION     = "DURATION"
 )
 
 var ColumnUsage = map[string]bool{
@@ -26,6 +29,7 @@ type Column struct {
 	Usage          string               `yaml:"usage,omitempty"`
 	Rename         string               `yaml:"rename,omitempty"`
 	DisCard        bool                 `yaml:"-"`
+	Histogram      bool                 `yaml:"-"` // Should metric be treated as a histogram?
 	PrometheusDesc *prometheus.Desc     `yaml:"-"`
 	PrometheusType prometheus.ValueType `yaml:"-"`
 }

@@ -125,9 +125,18 @@ func (q *QueryInstance) Check() error {
 		case LABEL:
 			labelColumns = append(labelColumns, column.Name)
 			column.DisCard = true
+		case DISCARD:
+			column.DisCard = true
 		case GAUGE:
 			metricColumns = append(metricColumns, column.Name)
 		case COUNTER:
+			metricColumns = append(metricColumns, column.Name)
+		case HISTOGRAM:
+			column.Histogram = true
+			metricColumns = append(metricColumns, column.Name)
+		case MappedMETRIC:
+			metricColumns = append(metricColumns, column.Name)
+		case DURATION:
 			metricColumns = append(metricColumns, column.Name)
 		}
 		allColumns = append(allColumns, column.Name)
@@ -162,12 +171,15 @@ func (q *QueryInstance) GetColumn(colName string, serverLabels prometheus.Labels
 		case COUNTER:
 			col.PrometheusType = prometheus.CounterValue
 			col.PrometheusDesc = prometheus.NewDesc(fmt.Sprintf("%s_%s", q.Name, col.Name), col.Desc, q.LabelNames, serverLabels)
-			// case MAPPEDMETRIC:
-			// 	col.PrometheusType= prometheus.GaugeValue
-			// 	col.PrometheusDesc= prometheus.NewDesc(fmt.Sprintf("%s_%s", q.Name, col.Name), col.Desc, q.LabelNames, serverLabels)
-			// case DURATION:
-			// 	col.PrometheusType= prometheus.GaugeValue
-			// 	col.PrometheusDesc= prometheus.NewDesc(fmt.Sprintf("%s_%s_milliseconds", q.Name, col.Name), col.Desc, q.LabelNames, serverLabels)
+		case HISTOGRAM:
+			col.PrometheusType = prometheus.UntypedValue
+			col.PrometheusDesc = prometheus.NewDesc(fmt.Sprintf("%s_%s", q.Name, col.Name), col.Desc, q.LabelNames, serverLabels)
+		case MappedMETRIC:
+			col.PrometheusType = prometheus.GaugeValue
+			col.PrometheusDesc = prometheus.NewDesc(fmt.Sprintf("%s_%s", q.Name, col.Name), col.Desc, q.LabelNames, serverLabels)
+		case DURATION:
+			col.PrometheusType = prometheus.GaugeValue
+			col.PrometheusDesc = prometheus.NewDesc(fmt.Sprintf("%s_%s_milliseconds", q.Name, col.Name), col.Desc, q.LabelNames, serverLabels)
 		}
 
 		return col
