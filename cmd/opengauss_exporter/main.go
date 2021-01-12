@@ -275,21 +275,29 @@ func runApp(args *Args, ogExporter *exporter.Exporter) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
-	sigChan := make(chan os.Signal, 2)
-	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL, syscall.SIGHUP) //nolint:staticcheck
-	defer signal.Stop(sigChan)
-	sig := <-sigChan
-	switch sig {
-	case syscall.SIGHUP:
-		log.Infof("signal %s received, reloading", sig)
-		_ = Reload()
-	default:
-		log.Infof("signal %s received, forcefully terminating", sig)
-		log.Info("Shutdown Server ...")
-		if err := srv.Shutdown(context.Background()); err != nil {
-			log.Errorf("Server Shutdown: %s", err)
+	closeChan := make(chan struct{}, 1)
+	go func() {
+		sigChan := make(chan os.Signal, 2)
+		signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL, syscall.SIGHUP) //nolint:staticcheck
+		defer signal.Stop(sigChan)
+		for {
+			sig := <-sigChan
+			switch sig {
+			case syscall.SIGHUP:
+				log.Infof("signal %s received, reloading", sig)
+				_ = Reload()
+			default:
+				log.Infof("signal %s received, forcefully terminating", sig)
+				closeChan <- struct{}{}
+				return
+			}
 		}
-		// 关闭
-		ogExporter.Close()
+	}()
+
+	<-closeChan
+	log.Info("Shutdown Server ...")
+	if err := srv.Shutdown(context.Background()); err != nil {
+		log.Errorf("Server Shutdown: %s", err)
 	}
+	ogExporter.Close()
 }

@@ -144,5 +144,5 @@ In addition, the option `--exclude-databases` adds the possibily to filter the r
 
 ```shell
 make build
-sh test/test.sh `pwd`/bin/opengauss_exporter <config_file>
+cd test;sh test.sh ../bin/opengauss_exporter <config_file>
 ```
