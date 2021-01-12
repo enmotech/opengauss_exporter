@@ -242,14 +242,16 @@ func runApp(args *Args, ogExporter *exporter.Exporter) {
 			// DO NOT MANUALLY CLOSE OLD EXPORTER INSTANCE because the stupid implementation of sql.DB
 			// there connection will be automatically released after 1 min
 			prometheus.Unregister(ogExporter)
+
 		}
+		prometheus.MustRegister(newExporter)
 		ogExporter = newExporter
 		log.Infof("server reloaded")
 		return nil
 	}
 
 	// reload interface
-	http.HandleFunc("/reload", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/reload", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		if err := Reload(); err != nil {
 			w.WriteHeader(500)
