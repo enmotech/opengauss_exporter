@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -192,6 +191,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 	var connectionErrorsCount int
 
 	for _, dsn := range dsnList {
+		log.Debugf(dsn)
 		if err := e.scrapeDSN(ch, dsn); err != nil {
 			errorsCount++
 
@@ -219,15 +219,13 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 }
 
 func (e *Exporter) discoverDatabaseDSNs() []string {
-	dsnList := make(map[string]struct{})
+	result := []string{}
 	for _, dsn := range e.dsn {
-		parsedDSN, err := url.Parse(dsn)
+		parsedDSN, err := parseDsn(dsn)
 		if err != nil {
 			log.Errorf("Unable to parse DSN (%s): %v", ShadowDSN(dsn), err)
 			continue
 		}
-
-		dsnList[dsn] = struct{}{}
 		server, err := e.servers.GetServer(dsn)
 		if err != nil {
 			log.Errorf("Error opening connection to database (%s): %v", ShadowDSN(dsn), err)
@@ -242,22 +240,15 @@ func (e *Exporter) discoverDatabaseDSNs() []string {
 			log.Errorf("Error querying databases (%s): %v", ShadowDSN(dsn), err)
 			continue
 		}
+		result = append(result, genDSNString(parsedDSN))
 		for _, databaseName := range databaseNames {
 			if Contains(e.excludedDatabases, databaseName) {
 				continue
 			}
-			parsedDSN.Path = databaseName
-			dsnList[parsedDSN.String()] = struct{}{}
+			parsedDSN["database"] = databaseName
+			result = append(result, genDSNString(parsedDSN))
 		}
 	}
-
-	result := make([]string, len(dsnList))
-	index := 0
-	for dsn := range dsnList {
-		result[index] = dsn
-		index++
-	}
-
 	return result
 }
 
