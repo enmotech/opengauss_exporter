@@ -23,6 +23,9 @@ import (
 
 var (
 	defaultPGURL = "postgresql:///?sslmode=disable"
+	ogExporter   *exporter.Exporter
+	ReloadLock   sync.Mutex
+	args         = &Args{}
 )
 
 // General generic options
@@ -149,9 +152,9 @@ func initArgs(args *Args) {
 	log.AddFlags(kingpin.CommandLine)
 }
 
-func newExporter(args *Args) (*exporter.Exporter, error) {
+func newOgExporter(args *Args) (*exporter.Exporter, error) {
 	dsn := args.RetrieveTargetURL()
-	ogExporter, err := exporter.NewExporter(
+	ex, err := exporter.NewExporter(
 		exporter.WithDNS(dsn),
 		exporter.WithConfig(*args.ConfigPath),
 		exporter.WithConstLabels(*args.ConstLabels),
@@ -163,27 +166,54 @@ func newExporter(args *Args) (*exporter.Exporter, error) {
 		exporter.WithDisableSettingsMetrics(*args.DisableSettingsMetrics),
 		// exporter.WithTags(*args.ServerTags),
 	)
-	return ogExporter, err
+	return ex, err
 
 }
 
-func main() {
-	args := &Args{}
+func Reload() error {
+	ReloadLock.Lock()
+	defer ReloadLock.Unlock()
+	log.Debugf("reload request received, launch new exporter instance")
+
+	// create a new exporter
+	newExporter, err := newOgExporter(args)
+	// if launch new exporter failed, do nothing
+	if err != nil {
+		log.Errorf("fail to reload exporter: %s", err.Error())
+		return err
+	}
+
+	log.Debugf("shutdown old exporter instance")
+	// if older one exists, close and unregister it
+	// if ogExporter != nil {
+	// 	// DO NOT MANUALLY CLOSE OLD EXPORTER INSTANCE because the stupid implementation of sql.DB
+	// 	// there connection will be automatically released after 1 min
+	// 	prometheus.Unregister(ogExporter)
+	//
+	// }
+	// prometheus.MustRegister(newExporter)
+	ogExporter = newExporter
+	log.Infof("server reloaded")
+	return nil
+}
+
+func runApp(args *Args) {
 	// 命令行参数
 	initArgs(args)
 
 	kingpin.Parse()
 
 	var err error
-	ogExporter, err := newExporter(args)
+	ogExporter, err = newOgExporter(args)
 	if err != nil {
 		log.Errorf("fail to reload exporter: %s", err.Error())
 		return
 	}
-	if err := ogExporter.Check(); err != nil {
+	if err = ogExporter.Check(); err != nil {
 		log.Fatalf("fail creating og_exporter: %s", err.Error())
 		os.Exit(2)
 	}
+
 	if *args.DryRun {
 		queryList := ogExporter.GetMetricsList()
 		if queryList == nil {
@@ -196,20 +226,9 @@ func main() {
 		fmt.Println(string(buf))
 		return
 	}
-
-	// if *args.ExplainOnly {
-	// 	ogExporter.Plan()
-	// 	fmt.Println(ogExporter.Explain())
-	// 	return
-	// }
-	runApp(args, ogExporter)
-
-}
-
-func runApp(args *Args, ogExporter *exporter.Exporter) {
-	var ReloadLock sync.Mutex
 	prometheus.MustRegister(ogExporter)
-	// metrics endpoint
+	defer ogExporter.Close()
+
 	router := http.NewServeMux()
 	router.Handle(*args.MetricPath, promhttp.Handler())
 	// basic information
@@ -223,32 +242,6 @@ func runApp(args *Args, ogExporter *exporter.Exporter) {
 		payload := fmt.Sprintf("version %s", version.GetVersion())
 		_, _ = w.Write([]byte(payload))
 	})
-	Reload := func() error {
-		ReloadLock.Lock()
-		defer ReloadLock.Unlock()
-		log.Debugf("reload request received, launch new exporter instance")
-
-		// create a new exporter
-		newExporter, err := newExporter(args)
-		// if launch new exporter failed, do nothing
-		if err != nil {
-			log.Errorf("fail to reload exporter: %s", err.Error())
-			return err
-		}
-
-		log.Debugf("shutdown old exporter instance")
-		// if older one exists, close and unregister it
-		if ogExporter != nil {
-			// DO NOT MANUALLY CLOSE OLD EXPORTER INSTANCE because the stupid implementation of sql.DB
-			// there connection will be automatically released after 1 min
-			prometheus.Unregister(ogExporter)
-
-		}
-		prometheus.MustRegister(newExporter)
-		ogExporter = newExporter
-		log.Infof("server reloaded")
-		return nil
-	}
 
 	// reload interface
 	router.HandleFunc("/reload", func(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +266,7 @@ func runApp(args *Args, ogExporter *exporter.Exporter) {
 		// if err := srv.ListenAndServeTLS("server.crt", "server.key"); err != nil && err != http.ErrServerClosed {
 		// 	logrus.Fatalf("listen: %s\n", err)
 		// }
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err = srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
@@ -298,8 +291,12 @@ func runApp(args *Args, ogExporter *exporter.Exporter) {
 
 	<-closeChan
 	log.Info("Shutdown Server ...")
-	if err := srv.Shutdown(context.Background()); err != nil {
+	if err = srv.Shutdown(context.Background()); err != nil {
 		log.Errorf("Server Shutdown: %s", err)
 	}
-	ogExporter.Close()
+
+}
+
+func main() {
+	runApp(args)
 }
