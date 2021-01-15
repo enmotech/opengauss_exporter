@@ -65,6 +65,13 @@ func WithTags(tags string) Opt {
 	}
 }
 
+// WithTags will register given tags to Exporter and all belonged servers
+func WithTimeToString(b bool) Opt {
+	return func(e *Exporter) {
+		e.timeToString = b
+	}
+}
+
 // WithAutoDiscovery configures exporter with excluded database
 func WithAutoDiscovery(flag bool) Opt {
 	return func(e *Exporter) {

@@ -61,6 +61,11 @@ func ServerWithDisableCache(b bool) ServerOpt {
 		s.disableCache = b
 	}
 }
+func ServerWithTimeToString(b bool) ServerOpt {
+	return func(s *Server) {
+		s.timeToString = b
+	}
+}
 
 type Server struct {
 	dsn                    string
@@ -70,6 +75,7 @@ type Server struct {
 	namespace              string // default prometheus namespace from cmd args
 	disableSettingsMetrics bool
 	disableCache           bool
+	timeToString           bool
 	// Last version used to calculate metric map. If mismatch on scrape,
 	// then maps are recalculated.
 	lastMapVersion semver.Version
@@ -276,7 +282,7 @@ func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([
 		// Get the label values for this row.
 		labels := make([]string, len(queryInstance.LabelNames))
 		for idx, label := range queryInstance.LabelNames {
-			labels[idx], _ = dbToString(columnData[columnIdx[label]])
+			labels[idx], _ = dbToString(columnData[columnIdx[label]], s.timeToString)
 		}
 
 		// Loop over column names, and match to scan data. Unknown columns
@@ -509,14 +515,17 @@ func dbToFloat64(t interface{}) (float64, bool) {
 }
 
 // Convert database.sql to string for Prometheus labels. Null types are mapped to empty strings.
-func dbToString(t interface{}) (string, bool) {
+func dbToString(t interface{}, time2string bool) (string, bool) {
 	switch v := t.(type) {
 	case int64:
 		return fmt.Sprintf("%v", v), true
 	case float64:
 		return fmt.Sprintf("%v", v), true
 	case time.Time:
-		return fmt.Sprintf("%v", v.Unix()), true
+		if time2string {
+			return v.Format(time.RFC3339Nano), true
+		}
+		return fmt.Sprintf("%v%03d", v.Unix(), v.Nanosecond()/1000000), true
 	case nil:
 		return "", true
 	case []byte:

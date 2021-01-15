@@ -219,7 +219,7 @@ func Test_dbToString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := dbToString(tt.args.t)
+			got, got1 := dbToString(tt.args.t, false)
 			if got != tt.want {
 				t.Errorf("dbToString() got = %v, want %v", got, tt.want)
 			}
@@ -446,6 +446,13 @@ omm`))
 		// 		f
 		// 	},
 		// }, metrics)
+	})
+	t.Run("time", func(t *testing.T) {
+		now := time.Now()
+		fmt.Println(now.Unix())
+		fmt.Println(now.Nanosecond())
+		fmt.Println(now)
+		fmt.Println(fmt.Sprintf("%v%03d", now.Unix(), 00/1000000))
 	})
 	// t.Run("test", func(t *testing.T) {
 	// 	dsn := "host=localhost user=gaussdb password=mtkOP@123 port=5433 dbname=postgres sslmode=disable"

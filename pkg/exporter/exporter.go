@@ -29,6 +29,7 @@ type Exporter struct {
 	up              prometheus.Gauge     //
 	configFileError *prometheus.GaugeVec // 读取配置文件失败采集
 	totalScrapes    prometheus.Counter   // 采集次数
+	timeToString    bool
 }
 
 // NewExporter New Exporter
@@ -136,6 +137,7 @@ func (e *Exporter) setupServers() {
 		ServerWithNamespace(e.namespace),
 		ServerWithDisableSettingsMetrics(e.disableSettingsMetrics),
 		ServerWithDisableCache(e.disableCache),
+		ServerWithTimeToString(e.timeToString),
 	)
 }
 

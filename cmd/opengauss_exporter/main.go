@@ -46,6 +46,7 @@ type Args struct {
 	DryRun                 *bool   `long:"dry-run" description:"dry run and print raw configs"`
 	ExplainOnly            *bool   `long:"explain" description:"explain server planned queries"`
 	DisableSettingsMetrics *bool
+	TimeToString           *bool
 }
 
 // RetrieveTargetURL  priority: cli-args > env  > env file path
@@ -137,6 +138,11 @@ func initArgs(args *Args) {
 		Default("/metrics").
 		Envar("OG_EXPORTER_WEB_TELEMETRY_PATH").
 		String()
+
+	args.TimeToString = kingpin.Flag("time-to-string", "convert database timestamp to date string.").
+		Default("false").
+		Envar("OG_EXPORTER_WEB_TELEMETRY_PATH").
+		Bool()
 	args.DryRun = kingpin.Flag("dry-run", "dry run and print default configs and user config").
 		Bool()
 
@@ -164,6 +170,7 @@ func newOgExporter(args *Args) (*exporter.Exporter, error) {
 		exporter.WithAutoDiscovery(*args.AutoDiscovery),
 		exporter.WithExcludeDatabases(*args.ExcludeDatabase),
 		exporter.WithDisableSettingsMetrics(*args.DisableSettingsMetrics),
+		exporter.WithTimeToString(*args.TimeToString),
 		// exporter.WithTags(*args.ServerTags),
 	)
 	return ex, err
