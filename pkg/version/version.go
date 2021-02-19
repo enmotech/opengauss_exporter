@@ -8,7 +8,7 @@ import (
 )
 
 // Version is the current program version.
-var version = "0.0.1"
+var version = "0.0.2"
 
 var (
 	// metadata is extra build time data
