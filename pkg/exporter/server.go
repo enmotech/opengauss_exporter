@@ -246,6 +246,9 @@ func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([
 
 	rows, err = s.db.QueryContext(ctx, query.SQL)
 	if err != nil {
+		if strings.Contains(err.Error(), "context deadline exceeded") {
+			log.Errorf("queryMetric [%s] executing timeout %vs", queryInstance.Name, query.Timeout)
+		}
 		log.Errorf("queryMetric [%s] executing err %s", queryInstance.Name, err)
 		return []prometheus.Metric{}, []error{}, fmt.Errorf("Error running queryMetric on database %q query: %s %v ", s, metricName, err)
 	}

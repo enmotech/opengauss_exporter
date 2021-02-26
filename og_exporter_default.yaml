@@ -429,3 +429,83 @@ pg_stat_replication:
   ttl: 60
   timeout: 0.1
 
+pg_indexes_size:
+  name: pg_indexes_size
+  desc: OpenGauss database indexes size
+  query:
+    - name: pg_indexes_size
+      sql: |-
+        SELECT n.nspname as schema_name,c2.relname as table_name,c.relname as index_name,pg_catalog.pg_table_size(c.oid) as index_size
+        FROM pg_catalog.pg_class c
+        LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+        LEFT JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
+        LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid
+        WHERE c.relkind IN ('i','I','') AND n.nspname <> 'pg_catalog' AND n.nspname <> 'information_schema' AND n.nspname !~ '^pg_toast' AND c.relname not like 'matviewmap_%' AND c.relname not like 'mlog_%' AND pg_catalog.pg_table_is_visible(c.oid)
+        ORDER BY 4 desc
+      version: '>=0.0.0'
+      timeout: 0.1
+      status: enable
+  metrics:
+    - name: schema_name
+      description: Schema name of index
+      usage: LABEL
+    - name: table_name
+      description: Table name of index
+      usage: LABEL
+    - name: index_name
+      description: Name of index
+      usage: LABEL
+    - name: index_size
+      description: Size of index
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 0.1
+pg_tables_expansion_rate:
+  name: pg_tables_expansion_rate
+  desc: OpenGauss database tables expansion rate
+  query:
+    - name: pg_tables_expansion_rate
+      sql: |-
+        select schemaname,relname,n_live_tup,n_dead_tup,round((n_dead_tup/(n_dead_tup+n_live_tup) *100),2) as dead_rate,
+        coalesce(last_vacuum,'1970-01-01') as last_vacuum,
+        coalesce(last_autovacuum,'1970-01-01') as last_autovacuum ,
+        coalesce(last_analyze,'1970-01-01') as last_analyze,
+        coalesce(last_autoanalyze,'1970-01-01') as last_autoanalyze
+        from pg_stat_user_tables
+        where n_live_tup > 0
+        order by 5 asc
+      version: '>=0.0.0'
+      timeout: 100
+      status: enable
+  metrics:
+    - name: schemaname
+      description: Schema name of table
+      usage: LABEL
+    - name: relname
+      description: Table name of table
+      usage: LABEL
+    - name: n_live_tup
+      description: live tup of table
+      usage: LABEL
+    - name: n_dead_tup
+      description: dead tup of table
+      usage: LABEL
+    - name: dead_rate
+      description: Dead rate of table
+      usage: GAUGE
+    - name: last_vacuum
+      description: dead tup of table
+      usage: LABEL
+    - name: last_autovacuum
+      description: dead tup of table
+      usage: LABEL
+    - name: last_analyze
+      description: dead tup of table
+      usage: LABEL
+    - name: last_autoanalyze
+      description: dead tup of table
+      usage: LABEL
+  status: enable
+  ttl: 60
+  timeout: 0.1
