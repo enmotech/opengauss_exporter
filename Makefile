@@ -20,7 +20,7 @@ GOCOVXML = gocov-xml
 GO2XUNIT = go2xunit
 CHGLOG = git-chglog
 
-BUILD_DATE 		= $(shell date -u '+%Y-%m-%d %I:%M:%S')
+BUILD_DATE 		= $(shell date '+%Y-%m-%d %H:%M:%S')
 GIT_COMMIT 		= $(shell git rev-parse HEAD)
 GIT_SHA    		= $(shell git rev-parse --short HEAD)
 GIT_BRANCH    	= $(shell git describe --tags --always 2>/dev/null)
@@ -109,11 +109,17 @@ bin/%: cmd/%/main.go; $(info $(M) running build)
 	$(GO) build $(GOLDFLAGS) -tags ${BUILD_TAGS} -o $@ $<
 
 
-.PHONY: goreleaser
-goreleaser: ; $(info $(M) cleaning)	@ ## Run goreleaser Build
-	goreleaser build --debug --rm-dist
+.PHONY: goreleaser_build
+goreleaser_build: ; $(info $(M) cleaning)	@ ## Run goreleaser Build
+	goreleaser build --debug --snapshot --rm-dist --parallelism 2
 
+.PHONY: goreleaser_beta
+goreleaser_beta: ; $(info $(M) cleaning)	@ ## Run goreleaser Build
+	goreleaser --debug --snapshot --rm-dist --parallelism 2
 
+.PHONY: goreleaser_releaser
+goreleaser_releaser: ; $(info $(M) cleaning)	@ ## Run goreleaser Build
+	goreleaser --debug --rm-dist --parallelism 2
 #################################################
 # Release
 #################################################

@@ -17,7 +17,7 @@ pg_bgwriter:
             stats_reset
         FROM pg_stat_bgwriter
       version: '>=0.0.0'
-      timeout: 0.1
+      timeout: 0.2
       ttl: 60
       status: enable
   metrics:
@@ -56,7 +56,7 @@ pg_bgwriter:
       usage: COUNTER
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 pg_database:
   name: pg_database
   desc: OpenGauss Database size
@@ -64,7 +64,7 @@ pg_database:
     - name: pg_database
       sql: SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database where datname NOT IN ('template0','template1')
       version: '>=0.0.0'
-      timeout: 0.1
+      timeout: 0.2
       ttl: 60
       status: enable
   metrics:
@@ -76,7 +76,7 @@ pg_database:
       usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 pg_lock:
   name: pg_lock
   desc: OpenGauss lock distribution by mode
@@ -94,7 +94,7 @@ pg_lock:
         LEFT JOIN (SELECT database, mode, count(1) AS count FROM pg_locks
         WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);
       version: '>=0.0.0'
-      timeout: 0.1
+      timeout: 0.2
       ttl: 60
       status: enable
   metrics:
@@ -109,7 +109,7 @@ pg_lock:
       usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 pg_stat_activity:
   name: pg_stat_activity
   desc: OpenGauss backend activity group by state
@@ -136,7 +136,7 @@ pg_stat_activity:
             GROUP BY datname, state
         ) a USING (datname, state);
       version: '>=1.0.0'
-      timeout: 0.1
+      timeout: 0.2
       ttl: 60
       status: enable
   metrics:
@@ -160,7 +160,7 @@ pg_stat_activity:
       usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 pg_stat_database:
   name: pg_stat_database
   desc: OpenGauss database statistics
@@ -168,7 +168,7 @@ pg_stat_database:
     - name: pg_stat_database
       sql: select * from pg_stat_database where datname NOT IN ('template0','template1')
       version: '>=0.0.0'
-      timeout: 0.1
+      timeout: 0.2
       ttl: 60
       status: enable
   metrics:
@@ -231,7 +231,7 @@ pg_stat_database:
       usage: COUNTER
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 pg_stat_database_conflicts:
   name: pg_stat_database_conflicts
   desc: OpenGauss database statistics conflicts
@@ -239,7 +239,7 @@ pg_stat_database_conflicts:
     - name: pg_stat_database_conflicts
       sql: select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1')
       version: '>=0.0.0'
-      timeout: 0.1
+      timeout: 0.2
       ttl: 60
       status: enable
   metrics:
@@ -266,7 +266,7 @@ pg_stat_database_conflicts:
       usage: COUNTER
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 pg_stat_replication:
   name: pg_stat_replication
   query:
@@ -277,7 +277,7 @@ pg_stat_replication:
           (case pg_is_in_recovery() when 't' then null else pg_xlog_location_diff(pg_current_xlog_location(), receiver_replay_location)::float end) AS pg_xlog_location_diff
         FROM pg_stat_replication
       version: '>=1.0.0'
-      timeout: 0.1
+      timeout: 0.2
       ttl: 60
       status: enable
   metrics:
@@ -427,7 +427,7 @@ pg_stat_replication:
       usage: DISCARD
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 
 pg_indexes_size:
   name: pg_indexes_size
@@ -443,7 +443,7 @@ pg_indexes_size:
         WHERE c.relkind IN ('i','I','') AND n.nspname <> 'pg_catalog' AND n.nspname <> 'information_schema' AND n.nspname !~ '^pg_toast' AND c.relname not like 'matviewmap_%' AND c.relname not like 'mlog_%' AND pg_catalog.pg_table_is_visible(c.oid)
         ORDER BY 4 desc
       version: '>=0.0.0'
-      timeout: 0.1
+      timeout: 0.2
       status: enable
   metrics:
     - name: schema_name
@@ -460,7 +460,7 @@ pg_indexes_size:
       usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2
 pg_tables_expansion_rate:
   name: pg_tables_expansion_rate
   desc: OpenGauss database tables expansion rate
@@ -508,4 +508,4 @@ pg_tables_expansion_rate:
       usage: LABEL
   status: enable
   ttl: 60
-  timeout: 0.1
+  timeout: 0.2

@@ -30,12 +30,14 @@ type Exporter struct {
 	configFileError *prometheus.GaugeVec // 读取配置文件失败采集
 	totalScrapes    prometheus.Counter   // 采集次数
 	timeToString    bool
+	parallel        int
 }
 
 // NewExporter New Exporter
 func NewExporter(opts ...Opt) (e *Exporter, err error) {
 	e = &Exporter{
 		metricMap: defaultMonList, // default metric
+		parallel:  1,
 	}
 	for _, opt := range opts {
 		opt(e)
@@ -48,6 +50,10 @@ func NewExporter(opts ...Opt) (e *Exporter, err error) {
 	}
 	e.setupInternalMetrics()
 	e.setupServers()
+
+	if e.parallel == 0 {
+		e.parallel = 1
+	}
 	return e, nil
 }
 
@@ -138,6 +144,7 @@ func (e *Exporter) setupServers() {
 		ServerWithDisableSettingsMetrics(e.disableSettingsMetrics),
 		ServerWithDisableCache(e.disableCache),
 		ServerWithTimeToString(e.timeToString),
+		ServerWithParallel(e.parallel),
 	)
 }
 

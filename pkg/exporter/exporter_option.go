@@ -71,6 +71,11 @@ func WithTimeToString(b bool) Opt {
 		e.timeToString = b
 	}
 }
+func WithParallel(i int) Opt {
+	return func(e *Exporter) {
+		e.parallel = i
+	}
+}
 
 // WithAutoDiscovery configures exporter with excluded database
 func WithAutoDiscovery(flag bool) Opt {

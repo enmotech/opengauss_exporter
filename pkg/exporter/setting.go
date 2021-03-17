@@ -94,7 +94,6 @@ func newDesc(namespace, subsystem, name, help string, labels prometheus.Labels) 
 	)
 }
 
-// TODO: fix linter override
 // nolint: nakedret
 func (s *pgSetting) normaliseUnit() (val float64, unit string, err error) {
 	val, err = strconv.ParseFloat(s.setting, 64)

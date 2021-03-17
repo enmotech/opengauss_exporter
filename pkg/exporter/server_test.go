@@ -284,7 +284,7 @@ postgres,ShareUpdateExclusiveLock,0
 omm,AccessExclusiveLock,0
 postgres,RowShareLock,0
 postgres,AccessExclusiveLock,0`))
-		metrics, errs, err := s.queryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, errs, []error{})
 		assert.NotNil(t, metrics)
@@ -313,13 +313,13 @@ postgres,ShareUpdateExclusiveLock,0
 omm,AccessExclusiveLock,0
 postgres,RowShareLock,0
 postgres,AccessExclusiveLock,0`))
-		metrics, errs, err := s.queryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, errs, []error{})
 		assert.NotNil(t, metrics)
 	})
 	t.Run("queryMetric_query_nil", func(t *testing.T) {
-		metrics, errs, err := s.queryMetric(metricName, &QueryInstance{})
+		metrics, errs, err := s.doQueryMetric(metricName, &QueryInstance{})
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		assert.ElementsMatch(t, []prometheus.Metric{}, metrics)
@@ -348,7 +348,7 @@ postgres,ShareUpdateExclusiveLock,0
 omm,AccessExclusiveLock,0
 postgres,RowShareLock,0
 postgres,AccessExclusiveLock,0`))
-		metrics, errs, err := s.queryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
 		assert.Error(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		assert.ElementsMatch(t, []prometheus.Metric{}, metrics)
@@ -360,7 +360,7 @@ postgres,AccessExclusiveLock,0`))
 		}
 		s.db = db
 		mock.ExpectQuery("SELECT").WillReturnError(fmt.Errorf("error"))
-		metrics, errs, err := s.queryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
 		assert.Error(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		assert.ElementsMatch(t, []prometheus.Metric{}, metrics)
@@ -435,7 +435,7 @@ omm`))
 			sqlmock.NewRows([]string{"pid", "usesysid", "usename", "application_name", "client_addr", "client_hostname", "client_port", "backend_start", "state", "sender_sent_location",
 				"receiver_write_location", "receiver_flush_location", "receiver_replay_location", "sync_priority", "sync_state", "pg_current_xlog_location", "pg_xlog_location_diff",
 			}).FromCSVString(`140215315789568,10,omm,"WalSender to Standby","192.168.122.92","kvm-yl2",55802,"2021-01-06 14:45:59.944279+08","Streaming","0/331980B8","0/331980B8","0/331980B8","0/331980B8",1,Sync,"0/331980B8",0`))
-		metrics, errs, err := s.queryMetric("pg_stat_replication", queryInstance)
+		metrics, errs, err := s.doQueryMetric("pg_stat_replication", queryInstance)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		for _, m := range metrics {
@@ -454,23 +454,36 @@ omm`))
 		fmt.Println(now)
 		fmt.Println(fmt.Sprintf("%v%03d", now.Unix(), 00/1000000))
 	})
-	// t.Run("test", func(t *testing.T) {
-	// 	dsn := "host=localhost user=gaussdb password=mtkOP@123 port=5433 dbname=postgres sslmode=disable"
-	// 	db, err := sql.Open("postgres", dsn)
-	// 	if err != nil {
-	// 		t.Error(err)
-	// 	}
-	// 	rows,err := db.Query(" select name,setting from pg_settings where name in('data_directory','unix_socket_directory','log_directory','audit_directory')")
-	// 	if err != nil {
-	// 		t.Error(err)
-	// 	}
-	// 	for rows.Next() {
-	// 		var s1,s2 string
-	// 		if err := rows.Scan(&s1,&s2);err != nil {
-	// 			return
-	// 		}
-	// 		fmt.Println(s1,s2)
-	// 	}
-	//
-	// })
+	t.Run("test", func(t *testing.T) {
+		dsn := "host=localhost user=gaussdb password=mtkOP@128 port=5433 dbname=postgres sslmode=disable"
+		db, err := sql.Open("postgres", dsn)
+		if err != nil {
+			t.Error(err)
+		}
+
+		for i := 1; i < 20; i++ {
+			begin := time.Now()
+			_, err := db.Query(`SELECT datname, mode, coalesce(count, 0) AS count
+FROM (
+  SELECT d.oid AS database, d.datname, l.mode
+  FROM pg_database d,unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']) l(mode)
+  WHERE d.datname NOT IN ('template0','template1')) base
+LEFT JOIN (SELECT database, mode, count(1) AS count
+           FROM pg_locks
+           WHERE database IS NOT NULL GROUP BY database, mode) cnt
+USING (database, mode)`)
+			fmt.Println(i, time.Now().Sub(begin).Milliseconds(), "ms")
+			if err != nil {
+				t.Error(err)
+			}
+			// for rows.Next() {
+			// 	var s1,s2 string
+			// 	if err := rows.Scan(&s1,&s2);err != nil {
+			// 		return
+			// 	}
+			// 	fmt.Println(s1,s2)
+			// }
+		}
+
+	})
 }

@@ -45,6 +45,7 @@ type Args struct {
 	MetricPath             *string `long:"telemetry-path" description:"URL path under which to expose metrics." default:"/metrics" env:"OG_EXPORTER_TELEMETRY_PATH"`
 	DryRun                 *bool   `long:"dry-run" description:"dry run and print raw configs"`
 	ExplainOnly            *bool   `long:"explain" description:"explain server planned queries"`
+	Parallel               *int    `long:"parallel" description:"Specify the parallelism. \nthe degree of parallelism is now useful query database thread "`
 	DisableSettingsMetrics *bool
 	TimeToString           *bool
 }
@@ -154,6 +155,10 @@ func initArgs(args *Args) {
 
 	args.ExplainOnly = kingpin.Flag("explain", "explain server planned queries").
 		Bool()
+	args.Parallel = kingpin.Flag("parallel", "Specify the parallelism. \nthe degree of parallelism is now useful query database thread").
+		Default("5").
+		Envar("OG_EXPORTER_PARALLEL").
+		Int()
 
 	log.AddFlags(kingpin.CommandLine)
 }
@@ -171,6 +176,7 @@ func newOgExporter(args *Args) (*exporter.Exporter, error) {
 		exporter.WithExcludeDatabases(*args.ExcludeDatabase),
 		exporter.WithDisableSettingsMetrics(*args.DisableSettingsMetrics),
 		exporter.WithTimeToString(*args.TimeToString),
+		exporter.WithParallel(*args.Parallel),
 		// exporter.WithTags(*args.ServerTags),
 	)
 	return ex, err

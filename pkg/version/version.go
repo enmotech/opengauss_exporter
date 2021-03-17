@@ -4,7 +4,6 @@ package version
 
 import (
 	"fmt"
-	"time"
 )
 
 // Version is the current program version.
@@ -14,7 +13,7 @@ var (
 	// metadata is extra build time data
 	metadata = ""
 	// BuildTimestamp is the UTC date time when the program is compiled.
-	buildTimestamp = time.Now().Format(time.RFC3339)
+	buildTimestamp = "Unknown"
 	// GitHash is the git commit hash when the program is compiled.
 	gitCommit = "Unknown"
 	// GitBranch is the active git branch when the program is compiled.

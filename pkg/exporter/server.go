@@ -67,6 +67,12 @@ func ServerWithTimeToString(b bool) ServerOpt {
 	}
 }
 
+func ServerWithParallel(i int) ServerOpt {
+	return func(s *Server) {
+		s.parallel = i
+	}
+}
+
 type Server struct {
 	dsn                    string
 	db                     *sql.DB
@@ -76,6 +82,7 @@ type Server struct {
 	disableSettingsMetrics bool
 	disableCache           bool
 	timeToString           bool
+	parallel               int
 	// Last version used to calculate metric map. If mismatch on scrape,
 	// then maps are recalculated.
 	lastMapVersion semver.Version
@@ -135,91 +142,112 @@ func (s *Server) Scrape(ch chan<- prometheus.Metric) error {
 // 查询监控指标. 先判断是否读取缓存. 禁用缓存或者缓存超时,则读取数据库
 func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 	metricErrors := make(map[string]error)
-
-	// Start time of collecting metric  采集指标开始时间
-	scrapeStart := time.Now()
+	wg := sync.WaitGroup{}
+	limit := newRateLimit(s.parallel)
 	for metric, queryInstance := range s.queryInstanceMap {
-		log.Debugf("Querying metric : %s", metric)
+		wg.Add(1)
+		queryInst := queryInstance
+		metricName := metric
+		limit.getToken()
+		go func() {
+			defer wg.Done()
+			defer limit.putToken()
+			err := s.queryMetric(ch, queryInst)
+			if err != nil {
+				metricErrors[metricName] = err
+			}
+		}()
 
-		querySQL := queryInstance.GetQuerySQL(s.lastMapVersion)
-		if querySQL == nil {
-			log.Errorf("Querying Metric:%s not define querySQL for version %s", metric, s.lastMapVersion.String())
-			continue
-		}
-		if strings.EqualFold(querySQL.Status, statusDisable) {
-			log.Debugf("Querying metric: %s disable. skip", metric)
-			continue
-		}
-		var (
-			scrapeMetric   = false // Whether to collect indicators from the database 是否从数据库里采集指标
-			cachedMetric   cachedMetrics
-			metrics        []prometheus.Metric
-			nonFatalErrors []error
-			err            error
-		)
-		// Determine whether to enable caching and cache expiration 判断是否启用缓存和缓存过期
-		if !s.disableCache {
-			var found bool
-			// Check if the metric is cached
-			s.cacheMtx.Lock()
-			cachedMetric, found = s.metricCache[metric]
-			s.cacheMtx.Unlock()
-			// If found, check if needs refresh from cache
-			if found {
-				if scrapeStart.Sub(cachedMetric.lastScrape).Seconds() > queryInstance.TTL {
-					scrapeMetric = true
-				}
-			} else {
+	}
+	wg.Wait()
+
+	return metricErrors
+}
+
+func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryInstance) error {
+	var (
+		metric = queryInstance.Name
+		// Start time of collecting metric  采集指标开始时间
+		scrapeStart    = time.Now()
+		scrapeMetric   = false // Whether to collect indicators from the database 是否从数据库里采集指标
+		cachedMetric   cachedMetrics
+		metrics        []prometheus.Metric
+		nonFatalErrors []error
+		err            error
+	)
+
+	// log.Debugf("Querying metric : %s", metric)
+
+	querySQL := queryInstance.GetQuerySQL(s.lastMapVersion)
+	if querySQL == nil {
+		log.Errorf("Querying Metric:%s not define querySQL for version %s", metric, s.lastMapVersion.String())
+		return nil
+	}
+	if strings.EqualFold(querySQL.Status, statusDisable) {
+		log.Debugf("Querying metric: %s disable. skip", metric)
+		return nil
+	}
+	// Determine whether to enable caching and cache expiration 判断是否启用缓存和缓存过期
+	if !s.disableCache {
+		var found bool
+		// Check if the metric is cached
+		s.cacheMtx.Lock()
+		cachedMetric, found = s.metricCache[metric]
+		s.cacheMtx.Unlock()
+		// If found, check if needs refresh from cache
+		if found {
+			if scrapeStart.Sub(cachedMetric.lastScrape).Seconds() > queryInstance.TTL {
 				scrapeMetric = true
 			}
 		} else {
 			scrapeMetric = true
 		}
-		if scrapeMetric {
-			metrics, nonFatalErrors, err = s.queryMetric(metric, queryInstance)
-		} else {
-			metrics, nonFatalErrors = cachedMetric.metrics, cachedMetric.nonFatalErrors
-		}
-
-		// Serious error - a namespace disappeared
-		if err != nil {
-			metricErrors[metric] = err
-			log.Errorf("collect metric %s err %s", metric, err)
-		}
-		// Non-serious errors - likely version or parsing problems.
-		if len(nonFatalErrors) > 0 {
-			var errText string
-			for _, err := range nonFatalErrors {
-				log.Errorf("collect metric nonFatalErrors %s err %s", metric, err)
-				errText += err.Error()
-			}
-			metricErrors[metric] = errors.New(errText)
-		}
-
-		// Emit the metrics into the channel
-		for _, metric := range metrics {
-			ch <- metric
-		}
-
-		if scrapeMetric {
-			// Only cache if metric is meaningfully cacheable
-			if queryInstance.TTL > 0 {
-				s.cacheMtx.Lock()
-				s.metricCache[metric] = cachedMetrics{
-					metrics:        metrics,
-					lastScrape:     scrapeStart,
-					nonFatalErrors: nonFatalErrors,
-				}
-				s.cacheMtx.Unlock()
-			}
-		}
+	} else {
+		scrapeMetric = true
+	}
+	if scrapeMetric {
+		metrics, nonFatalErrors, err = s.doQueryMetric(metric, queryInstance)
+	} else {
+		metrics, nonFatalErrors = cachedMetric.metrics, cachedMetric.nonFatalErrors
 	}
 
-	return metricErrors
+	// Serious error - a namespace disappeared
+	if err != nil {
+		nonFatalErrors = append(nonFatalErrors, err)
+		log.Errorf("collect metric %s err %s", metric, err)
+	}
+	// Non-serious errors - likely version or parsing problems.
+	if len(nonFatalErrors) > 0 {
+		var errText string
+		for _, err := range nonFatalErrors {
+			log.Errorf("collect metric nonFatalErrors %s err %s", metric, err)
+			errText += err.Error()
+		}
+		err = errors.New(errText)
+	}
+
+	// Emit the metrics into the channel
+	for _, metric := range metrics {
+		ch <- metric
+	}
+
+	if scrapeMetric {
+		// Only cache if metric is meaningfully cacheable
+		if queryInstance.TTL > 0 {
+			s.cacheMtx.Lock()
+			s.metricCache[metric] = cachedMetrics{
+				metrics:        metrics,
+				lastScrape:     time.Now(), // 改为查询完时间
+				nonFatalErrors: nonFatalErrors,
+			}
+			s.cacheMtx.Unlock()
+		}
+	}
+	return err
 }
 
 // 连接数据查询监控指标
-func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([]prometheus.Metric, []error, error) {
+func (s *Server) doQueryMetric(metricName string, queryInstance *QueryInstance) ([]prometheus.Metric, []error, error) {
 	// 根据版本获取查询sql
 	query := queryInstance.GetQuerySQL(s.lastMapVersion)
 	if query == nil {
@@ -231,26 +259,34 @@ func (s *Server) queryMetric(metricName string, queryInstance *QueryInstance) ([
 	var rows *sql.Rows
 	var err error
 	var ctx context.Context
-
-	if query.Timeout != 0 { // if timeout is provided, use context
+	begin := time.Now()
+	if query.Timeout > 0 { // if timeout is provided, use context
 		var cancel context.CancelFunc
-		log.Debugf("queryMetric [%s] executing begin with time limit: %v", query.Name, query.TimeoutDuration())
+		log.Debugf("queryMetric [%s] executing with time limit: %v", query.Name, query.TimeoutDuration())
 		ctx, cancel = context.WithTimeout(context.Background(), query.TimeoutDuration())
 		defer cancel()
-
 	} else {
 		ctx = context.Background()
 		defer ctx.Done()
 	}
-	log.Debugf("queryMetric [%s] executing begin, sql %s", queryInstance.Name, query.SQL)
-
+	log.Debugf("queryMetric [%s] executing sql %s", queryInstance.Name, query.SQL)
+	// tx,err := s.db.Begin()
+	// if err != nil {
+	// 	return []prometheus.Metric{}, []error{},err
+	// }
 	rows, err = s.db.QueryContext(ctx, query.SQL)
+	end := time.Now().Sub(begin).Milliseconds()
+
+	log.Debugf("queryMetric [%s] executing using time %vms", queryInstance.Name, end)
 	if err != nil {
 		if strings.Contains(err.Error(), "context deadline exceeded") {
-			log.Errorf("queryMetric [%s] executing timeout %vs", queryInstance.Name, query.Timeout)
+			log.Errorf("queryMetric [%s] executing timeout %v", queryInstance.Name, query.TimeoutDuration())
+			err = fmt.Errorf("timeout %vs %s", query.TimeoutDuration(), err)
+		} else {
+			log.Errorf("queryMetric [%s] executing err %s", queryInstance.Name, err)
 		}
-		log.Errorf("queryMetric [%s] executing err %s", queryInstance.Name, err)
-		return []prometheus.Metric{}, []error{}, fmt.Errorf("Error running queryMetric on database %q query: %s %v ", s, metricName, err)
+		return []prometheus.Metric{}, []error{},
+			fmt.Errorf("queryMetric [%s] execute on database %q err %s ", metricName, s, err)
 	}
 	defer rows.Close() // nolint: errcheck
 
@@ -399,8 +435,6 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
 
 	log.Infof("Established new database connection to %q.", fingerprint)
 
@@ -418,6 +452,8 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 		opt(s)
 	}
 
+	db.SetMaxOpenConns(s.parallel)
+	// db.SetMaxIdleConns(1)
 	return s, nil
 }
 
