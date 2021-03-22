@@ -3,7 +3,6 @@
 package exporter
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -22,12 +21,6 @@ var (
 	serverLabelName = "server"
 	staticLabelName = "static"
 )
-
-type cachedMetrics struct {
-	metrics        []prometheus.Metric
-	lastScrape     time.Time
-	nonFatalErrors []error
-}
 
 // ServerOpt configures a server.
 type ServerOpt func(*Server)
@@ -90,7 +83,7 @@ type Server struct {
 	queryInstanceMap map[string]*QueryInstance
 	mappingMtx       sync.RWMutex
 	// Currently cached metrics
-	metricCache map[string]cachedMetrics
+	metricCache map[string]*cachedMetrics
 	cacheMtx    sync.Mutex
 }
 
@@ -166,11 +159,9 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 
 func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryInstance) error {
 	var (
-		metric = queryInstance.Name
-		// Start time of collecting metric  采集指标开始时间
-		scrapeStart    = time.Now()
+		metric         = queryInstance.Name
 		scrapeMetric   = false // Whether to collect indicators from the database 是否从数据库里采集指标
-		cachedMetric   cachedMetrics
+		cachedMetric   = &cachedMetrics{}
 		metrics        []prometheus.Metric
 		nonFatalErrors []error
 		err            error
@@ -180,11 +171,11 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 
 	querySQL := queryInstance.GetQuerySQL(s.lastMapVersion)
 	if querySQL == nil {
-		log.Errorf("Querying Metric:%s not define querySQL for version %s", metric, s.lastMapVersion.String())
+		log.Errorf("Collect Metric %s not define querySQL for version %s", metric, s.lastMapVersion.String())
 		return nil
 	}
 	if strings.EqualFold(querySQL.Status, statusDisable) {
-		log.Debugf("Querying metric: %s disable. skip", metric)
+		log.Debugf("Collect Metric %s disable. skip", metric)
 		return nil
 	}
 	// Determine whether to enable caching and cache expiration 判断是否启用缓存和缓存过期
@@ -195,18 +186,16 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		cachedMetric, found = s.metricCache[metric]
 		s.cacheMtx.Unlock()
 		// If found, check if needs refresh from cache
-		if found {
-			if scrapeStart.Sub(cachedMetric.lastScrape).Seconds() > queryInstance.TTL {
-				scrapeMetric = true
-			}
-		} else {
+		if !found {
+			scrapeMetric = true
+		} else if !cachedMetric.IsValid(queryInstance.TTL) {
 			scrapeMetric = true
 		}
 	} else {
 		scrapeMetric = true
 	}
 	if scrapeMetric {
-		metrics, nonFatalErrors, err = s.doQueryMetric(metric, queryInstance)
+		metrics, nonFatalErrors, err = s.doCollectMetric(queryInstance)
 	} else {
 		metrics, nonFatalErrors = cachedMetric.metrics, cachedMetric.nonFatalErrors
 	}
@@ -214,13 +203,13 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 	// Serious error - a namespace disappeared
 	if err != nil {
 		nonFatalErrors = append(nonFatalErrors, err)
-		log.Errorf("collect metric %s err %s", metric, err)
+		log.Errorf("Collect Metric %s err %s", metric, err)
 	}
 	// Non-serious errors - likely version or parsing problems.
 	if len(nonFatalErrors) > 0 {
 		var errText string
 		for _, err := range nonFatalErrors {
-			log.Errorf("collect metric nonFatalErrors %s err %s", metric, err)
+			log.Errorf("Collect Metric %s nonFatalErrors err %s", metric, err)
 			errText += err.Error()
 		}
 		err = errors.New(errText)
@@ -231,175 +220,20 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		ch <- metric
 	}
 
-	if scrapeMetric {
+	if scrapeMetric && queryInstance.TTL > 0 {
 		// Only cache if metric is meaningfully cacheable
-		if queryInstance.TTL > 0 {
-			s.cacheMtx.Lock()
-			s.metricCache[metric] = cachedMetrics{
-				metrics:        metrics,
-				lastScrape:     time.Now(), // 改为查询完时间
-				nonFatalErrors: nonFatalErrors,
-			}
-			s.cacheMtx.Unlock()
+		s.cacheMtx.Lock()
+		s.metricCache[metric] = &cachedMetrics{
+			metrics:        metrics,
+			lastScrape:     time.Now(), // 改为查询完时间
+			nonFatalErrors: nonFatalErrors,
 		}
+		s.cacheMtx.Unlock()
 	}
 	return err
 }
 
 // 连接数据查询监控指标
-func (s *Server) doQueryMetric(metricName string, queryInstance *QueryInstance) ([]prometheus.Metric, []error, error) {
-	// 根据版本获取查询sql
-	query := queryInstance.GetQuerySQL(s.lastMapVersion)
-	if query == nil {
-		// Return success (no pertinent data)
-		return []prometheus.Metric{}, []error{}, nil
-	}
-
-	// Don't fail on a bad scrape of one metric
-	var rows *sql.Rows
-	var err error
-	var ctx context.Context
-	begin := time.Now()
-	if query.Timeout > 0 { // if timeout is provided, use context
-		var cancel context.CancelFunc
-		log.Debugf("queryMetric [%s] executing with time limit: %v", query.Name, query.TimeoutDuration())
-		ctx, cancel = context.WithTimeout(context.Background(), query.TimeoutDuration())
-		defer cancel()
-	} else {
-		ctx = context.Background()
-		defer ctx.Done()
-	}
-	log.Debugf("queryMetric [%s] executing sql %s", queryInstance.Name, query.SQL)
-	// tx,err := s.db.Begin()
-	// if err != nil {
-	// 	return []prometheus.Metric{}, []error{},err
-	// }
-	rows, err = s.db.QueryContext(ctx, query.SQL)
-	end := time.Now().Sub(begin).Milliseconds()
-
-	log.Debugf("queryMetric [%s] executing using time %vms", queryInstance.Name, end)
-	if err != nil {
-		if strings.Contains(err.Error(), "context deadline exceeded") {
-			log.Errorf("queryMetric [%s] executing timeout %v", queryInstance.Name, query.TimeoutDuration())
-			err = fmt.Errorf("timeout %vs %s", query.TimeoutDuration(), err)
-		} else {
-			log.Errorf("queryMetric [%s] executing err %s", queryInstance.Name, err)
-		}
-		return []prometheus.Metric{}, []error{},
-			fmt.Errorf("queryMetric [%s] execute on database %q err %s ", metricName, s, err)
-	}
-	defer rows.Close() // nolint: errcheck
-
-	var columnNames []string
-	columnNames, err = rows.Columns()
-	if err != nil {
-		return []prometheus.Metric{}, []error{}, errors.New(fmt.Sprintln("Error retrieving column list for: ", metricName, err))
-	}
-
-	// Make a lookup map for the column indices
-	var columnIdx = make(map[string]int, len(columnNames))
-	for i, n := range columnNames {
-		columnIdx[n] = i
-	}
-
-	var columnData = make([]interface{}, len(columnNames))
-	var scanArgs = make([]interface{}, len(columnNames))
-	for i := range columnData {
-		scanArgs[i] = &columnData[i]
-	}
-
-	nonfatalErrors := []error{}
-
-	metrics := make([]prometheus.Metric, 0)
-
-	for rows.Next() {
-		err = rows.Scan(scanArgs...)
-		if err != nil {
-			return []prometheus.Metric{}, []error{}, errors.New(fmt.Sprintln("Error retrieving rows:", metricName, err))
-		}
-
-		// Get the label values for this row.
-		labels := make([]string, len(queryInstance.LabelNames))
-		for idx, label := range queryInstance.LabelNames {
-			labels[idx], _ = dbToString(columnData[columnIdx[label]], s.timeToString)
-		}
-
-		// Loop over column names, and match to scan data. Unknown columns
-		// will be filled with an untyped metric number *if* they can be
-		// converted to float64s. NULLs are allowed and treated as NaN.
-		for idx, columnName := range columnNames {
-			var metric prometheus.Metric
-			col := queryInstance.GetColumn(columnName, s.labels)
-			if col != nil {
-				if col.DisCard {
-					continue
-				}
-				/*
-					WITH data AS (SELECT floor(random()*10) AS d FROM generate_series(1,100)),
-					         metrics AS (SELECT SUM(d) AS sum, COUNT(*) AS count FROM data),
-					         buckets AS (SELECT le, SUM(CASE WHEN d <= le THEN 1 ELSE 0 END) AS d
-					                     FROM data, UNNEST(ARRAY[1, 2, 4, 8]) AS le GROUP BY le)
-					    SELECT
-					      sum AS histogram_sum,
-					      count AS histogram_count,
-					      ARRAY_AGG(le) AS histogram,
-					      ARRAY_AGG(d) AS histogram_bucket,
-					      ARRAY_AGG(le) AS missing,
-					      ARRAY_AGG(le) AS missing_sum,
-					      ARRAY_AGG(d) AS missing_sum_bucket,
-					      ARRAY_AGG(le) AS missing_count,
-					      ARRAY_AGG(d) AS missing_count_bucket,
-					      sum AS missing_count_sum,
-					      ARRAY_AGG(le) AS unexpected_sum,
-					      ARRAY_AGG(d) AS unexpected_sum_bucket,
-					      'data' AS unexpected_sum_sum,
-					      ARRAY_AGG(le) AS unexpected_count,
-					      ARRAY_AGG(d) AS unexpected_count_bucket,
-					      sum AS unexpected_count_sum,
-					      'nan'::varchar AS unexpected_count_count,
-					      ARRAY_AGG(le) AS unexpected_bytes,
-					      ARRAY_AGG(d) AS unexpected_bytes_bucket,
-					      sum AS unexpected_bytes_sum,
-					      'nan'::bytea AS unexpected_bytes_count
-					    FROM metrics, buckets GROUP BY 1,2
-				*/
-				if col.Histogram {
-
-				} else if strings.EqualFold(col.Usage, MappedMETRIC) {
-
-				} else {
-					value, ok := dbToFloat64(columnData[idx])
-					if !ok {
-						nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unexpected error parsing column: ", metricName, columnName, columnData[idx])))
-						continue
-					}
-					// Generate the metric
-					metric = prometheus.MustNewConstMetric(col.PrometheusDesc, col.PrometheusType, value, labels...)
-				}
-
-			} else {
-				// Unknown metric. Report as untyped if scan to float64 works, else note an error too.
-				metricLabel := fmt.Sprintf("%s_%s", metricName, columnName)
-				desc := prometheus.NewDesc(metricLabel, fmt.Sprintf("Unknown metric from %s", metricName), queryInstance.LabelNames, s.labels)
-
-				// Its not an error to fail here, since the values are
-				// unexpected anyway.
-				value, ok := dbToFloat64(columnData[idx])
-				if !ok {
-					nonfatalErrors = append(nonfatalErrors, errors.New(fmt.Sprintln("Unparseable column type - discarding: ", metricName, columnName, err)))
-					continue
-				}
-				metric = prometheus.MustNewConstMetric(desc, prometheus.UntypedValue, value, labels...)
-			}
-			metrics = append(metrics, metric)
-		}
-	}
-	if err = rows.Err(); err != nil {
-		log.Debugf("queryMetric [%s] rows error %s", metricName, err)
-		return []prometheus.Metric{}, []error{}, err
-	}
-	return metrics, nonfatalErrors, nil
-}
 
 func (s *Server) QueryDatabases() ([]string, error) {
 	rows, err := s.db.Query(`SELECT datname FROM pg_database
@@ -445,7 +279,7 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 		labels: prometheus.Labels{
 			serverLabelName: fingerprint,
 		},
-		metricCache: make(map[string]cachedMetrics),
+		metricCache: make(map[string]*cachedMetrics),
 	}
 
 	for _, opt := range opts {

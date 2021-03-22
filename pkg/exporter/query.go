@@ -31,11 +31,12 @@ func CheckStatus(s string) (string, error) {
 
 // QueryInstance hold the information of how to fetch metric and parse them
 type QueryInstance struct {
-	Name        string             `yaml:"name,omitempty"`     // actual query name, used as metric prefix
-	Desc        string             `yaml:"desc,omitempty"`     // description of this metric query
-	Queries     []*Query           `yaml:"query,omitempty"`    // 采集SQL
-	Metrics     []*Column          `yaml:"metrics,omitempty"`  // metric definition list
-	Status      string             `yaml:"status,omitempty"`   // enable/disable status. For the entire collection of indicators 针对整个采集指标
+	Name        string             `yaml:"name,omitempty"`    // actual query name, used as metric prefix
+	Desc        string             `yaml:"desc,omitempty"`    // description of this metric query
+	Queries     []*Query           `yaml:"query,omitempty"`   // 采集SQL
+	Metrics     []*Column          `yaml:"metrics,omitempty"` // metric definition list
+	Status      string             `yaml:"status,omitempty"`  // enable/disable status. For the entire collection of indicators 针对整个采集指标
+	EnableCache string             `yaml:"enableCache,omitempty"`
 	TTL         float64            `yaml:"ttl,omitempty"`      // caching ttl in seconds
 	Priority    int                `yaml:"priority,omitempty"` // 权重,暂时不用
 	Timeout     float64            `yaml:"timeout,omitempty"`  // query execution timeout in seconds
@@ -55,6 +56,7 @@ type Query struct {
 	Timeout           float64      `yaml:"timeout,omitempty"` // query execution timeout in seconds
 	TTL               float64      `yaml:"ttl,omitempty"`     // caching ttl in seconds
 	Status            string       `yaml:"status,omitempty"`  // enable/disable status. 状态是否开启,针对特定版本.
+	EnableCache       string       `yaml:"enableCache,omitempty"`
 }
 
 // TimeoutDuration Get timeout settings
@@ -96,6 +98,9 @@ func (q *QueryInstance) Check() error {
 	for _, query := range q.Queries {
 		if query.Timeout == 0 {
 			query.Timeout = q.Timeout
+		}
+		if query.EnableCache == "" {
+			query.EnableCache = q.EnableCache
 		}
 		//  默认版本
 		if query.SupportedVersions == "" {
@@ -148,15 +153,18 @@ func (q *QueryInstance) Check() error {
 
 // GetQuerySQL Get query sql according to version
 func (q *QueryInstance) GetQuerySQL(ver semver.Version) *Query {
-	for _, Query := range q.Queries {
-		if Query.versionRange == nil {
-			return Query
+	for _, query := range q.Queries {
+		if query.versionRange == nil {
+			return query
 		}
-		if Query.versionRange(ver) {
-			return Query
+		if query.versionRange(ver) {
+			return query
 		}
 	}
 	return nil
+}
+func (q *QueryInstance) IsEnableCache() bool {
+	return strings.EqualFold(q.EnableCache, statusEnable)
 }
 
 // GetColumn Get column information

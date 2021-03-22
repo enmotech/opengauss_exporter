@@ -284,7 +284,7 @@ postgres,ShareUpdateExclusiveLock,0
 omm,AccessExclusiveLock,0
 postgres,RowShareLock,0
 postgres,AccessExclusiveLock,0`))
-		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doCollectMetric(queryInstance)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, errs, []error{})
 		assert.NotNil(t, metrics)
@@ -313,13 +313,13 @@ postgres,ShareUpdateExclusiveLock,0
 omm,AccessExclusiveLock,0
 postgres,RowShareLock,0
 postgres,AccessExclusiveLock,0`))
-		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doCollectMetric(queryInstance)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, errs, []error{})
 		assert.NotNil(t, metrics)
 	})
 	t.Run("queryMetric_query_nil", func(t *testing.T) {
-		metrics, errs, err := s.doQueryMetric(metricName, &QueryInstance{})
+		metrics, errs, err := s.doCollectMetric(&QueryInstance{})
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		assert.ElementsMatch(t, []prometheus.Metric{}, metrics)
@@ -348,7 +348,7 @@ postgres,ShareUpdateExclusiveLock,0
 omm,AccessExclusiveLock,0
 postgres,RowShareLock,0
 postgres,AccessExclusiveLock,0`))
-		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doCollectMetric(queryInstance)
 		assert.Error(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		assert.ElementsMatch(t, []prometheus.Metric{}, metrics)
@@ -360,7 +360,7 @@ postgres,AccessExclusiveLock,0`))
 		}
 		s.db = db
 		mock.ExpectQuery("SELECT").WillReturnError(fmt.Errorf("error"))
-		metrics, errs, err := s.doQueryMetric(metricName, queryInstance)
+		metrics, errs, err := s.doCollectMetric(queryInstance)
 		assert.Error(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		assert.ElementsMatch(t, []prometheus.Metric{}, metrics)
@@ -435,7 +435,7 @@ omm`))
 			sqlmock.NewRows([]string{"pid", "usesysid", "usename", "application_name", "client_addr", "client_hostname", "client_port", "backend_start", "state", "sender_sent_location",
 				"receiver_write_location", "receiver_flush_location", "receiver_replay_location", "sync_priority", "sync_state", "pg_current_xlog_location", "pg_xlog_location_diff",
 			}).FromCSVString(`140215315789568,10,omm,"WalSender to Standby","192.168.122.92","kvm-yl2",55802,"2021-01-06 14:45:59.944279+08","Streaming","0/331980B8","0/331980B8","0/331980B8","0/331980B8",1,Sync,"0/331980B8",0`))
-		metrics, errs, err := s.doQueryMetric("pg_stat_replication", queryInstance)
+		metrics, errs, err := s.doCollectMetric(queryInstance)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, []error{}, errs)
 		for _, m := range metrics {
@@ -454,36 +454,92 @@ omm`))
 		fmt.Println(now)
 		fmt.Println(fmt.Sprintf("%v%03d", now.Unix(), 00/1000000))
 	})
-	t.Run("test", func(t *testing.T) {
-		dsn := "host=localhost user=gaussdb password=mtkOP@128 port=5433 dbname=postgres sslmode=disable"
-		db, err := sql.Open("postgres", dsn)
-		if err != nil {
-			t.Error(err)
+	// t.Run("test", func(t *testing.T) {
+	// 	dsn := "host=localhost user=gaussdb password=mtkOP@128 port=5433 dbname=postgres sslmode=disable"
+	// 	db, err := sql.Open("postgres", dsn)
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 	}
+	// 	ctx, _ := context.WithTimeout(context.Background(), 80*time.Millisecond)
+	// 	begin := time.Now()
+	// 	rows, err := db.QueryContext(ctx, `SELECT * from mtk.mtk_test_1`)
+	// 	fmt.Println( time.Now().Sub(begin).Milliseconds(), "ms")
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 		return
+	// 	}
+	// 	for rows.Next() {
+	// 		var s1, s2,s3,s4,s5,s6,s7 string
+	// 		if err := rows.Scan(&s1,&s2,&s3,&s4,&s5,&s6,&s7); err != nil {
+	// 			t.Error(err)
+	// 			return
+	// 		}
+	// 		fmt.Println(s1, s2)
+	// 	}
+	// 	if err = rows.Err(); err != nil {
+	// 		t.Error(err)
+	// 	}
+	// 	// }
+	//
+	// })
+	t.Run("cache", func(t *testing.T) {
+		c := &cachedMetrics{
+			metrics: nil,
+			// lastScrape:     time.Now(),
+			nonFatalErrors: nil,
 		}
-
-		for i := 1; i < 20; i++ {
-			begin := time.Now()
-			_, err := db.Query(`SELECT datname, mode, coalesce(count, 0) AS count
-FROM (
-  SELECT d.oid AS database, d.datname, l.mode
-  FROM pg_database d,unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']) l(mode)
-  WHERE d.datname NOT IN ('template0','template1')) base
-LEFT JOIN (SELECT database, mode, count(1) AS count
-           FROM pg_locks
-           WHERE database IS NOT NULL GROUP BY database, mode) cnt
-USING (database, mode)`)
-			fmt.Println(i, time.Now().Sub(begin).Milliseconds(), "ms")
-			if err != nil {
-				t.Error(err)
-			}
-			// for rows.Next() {
-			// 	var s1,s2 string
-			// 	if err := rows.Scan(&s1,&s2);err != nil {
-			// 		return
-			// 	}
-			// 	fmt.Println(s1,s2)
-			// }
-		}
-
+		// found := true
+		fmt.Println(c.IsValid(10))
+		time.Sleep(10 * time.Second)
+		fmt.Println(c.IsValid(10))
+		// if found && !c.IsValid(10) {
+		// 	fmt.Println(true)
+		// }
 	})
+	// t.Run("collectMetric_cache", func(t *testing.T) {
+	// 	var (
+	// 		metricCh     = make(chan *cachedMetrics, 100)
+	// 		cachedMetric = &cachedMetrics{
+	// 			metrics:        nil,
+	// 			lastScrape:     time.Time{},
+	// 			nonFatalErrors: nil,
+	// 			err:            nil,
+	// 			name:           "",
+	// 			collect:        false,
+	// 		}
+	// 	)
+	// 	queryInstance = pgStatReplication
+	// 	queryInstance.Queries[0].Timeout = 100
+	// 	err = queryInstance.Check()
+	// 	s.lastMapVersion = semver.Version{
+	// 		Major: 1,
+	// 		Minor: 1,
+	// 		Patch: 0,
+	// 	}
+	// 	s.metricCache = map[string]*cachedMetrics{
+	// 		"pg_stat_replication": cachedMetric,
+	// 	}
+	// 	db, mock, err = sqlmock.New()
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 	}
+	// 	s.db = db
+	// 	mock.ExpectQuery("SELECT").WillDelayFor(1 * time.Second).WillReturnRows(
+	// 		sqlmock.NewRows([]string{"pid", "usesysid", "usename", "application_name", "client_addr", "client_hostname", "client_port", "backend_start", "state", "sender_sent_location",
+	// 			"receiver_write_location", "receiver_flush_location", "receiver_replay_location", "sync_priority", "sync_state", "pg_current_xlog_location", "pg_xlog_location_diff",
+	// 		}).FromCSVString(`140215315789568,10,omm,"WalSender to Standby","192.168.122.92","kvm-yl2",55802,"2021-01-06 14:45:59.944279+08","Streaming","0/331980B8","0/331980B8","0/331980B8","0/331980B8",1,Sync,"0/331980B8",0`))
+	// 	s.disableCache = true
+	// 	cachedMetric = s.collectMetric(metricCh, queryInstance)
+	//
+	// 	s.disableCache = false
+	// 	queryInstance.EnableCache = statusDisable
+	// 	cachedMetric = s.collectMetric(metricCh, queryInstance)
+	//
+	// 	s.disableCache = false
+	// 	queryInstance.EnableCache = statusEnable
+	// 	cachedMetric = s.collectMetric(metricCh, queryInstance)
+	// 	s.disableCache = false
+	// 	queryInstance.EnableCache = ""
+	// 	cachedMetric = s.collectMetric(metricCh, queryInstance)
+	// })
 }
