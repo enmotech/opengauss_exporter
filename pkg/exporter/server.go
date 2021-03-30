@@ -6,8 +6,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"gitee.com/opengauss/openGauss-connector-go-pq"
 	"github.com/blang/semver"
-	"github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"math"
@@ -265,7 +265,7 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 		return nil, err
 	}
 
-	db, err := sql.Open("postgres", dsn)
+	db, err := sql.Open("opengauss", dsn)
 	if err != nil {
 		return nil, err
 	}
