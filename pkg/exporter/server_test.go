@@ -240,7 +240,7 @@ func Test_Server(t *testing.T) {
 			labels: prometheus.Labels{
 				"server": "localhost:5432",
 			},
-			master:                 false,
+			primary:                false,
 			namespace:              "",
 			disableSettingsMetrics: false,
 			disableCache:           false,
@@ -495,6 +495,30 @@ omm`))
 		// if found && !c.IsValid(10) {
 		// 	fmt.Println(true)
 		// }
+	})
+	t.Run("queryMetric_Primary", func(t *testing.T) {
+		s.primary = false
+		q := &QueryInstance{
+			Name:    "test",
+			Primary: true,
+		}
+		ch := make(chan prometheus.Metric)
+		err := s.queryMetric(ch, q)
+		assert.NoError(t, err)
+	})
+	t.Run("queryMetrics_primary", func(t *testing.T) {
+		s.primary = false
+		errs := map[string]error{}
+		s.queryInstanceMap = map[string]*QueryInstance{
+			"test": &QueryInstance{
+				Name:    "test",
+				Primary: true,
+			},
+		}
+
+		ch := make(chan prometheus.Metric)
+		errs = s.queryMetrics(ch)
+		fmt.Println(errs)
 	})
 	// t.Run("collectMetric_cache", func(t *testing.T) {
 	// 	var (

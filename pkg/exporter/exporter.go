@@ -241,9 +241,6 @@ func (e *Exporter) discoverDatabaseDSNs() []string {
 			continue
 		}
 
-		// If autoDiscoverDatabases is true, set first dsn as master database (Default: false)
-		server.master = true
-
 		databaseNames, err := server.QueryDatabases()
 		if err != nil {
 			log.Errorf("Error querying databases (%s): %v", ShadowDSN(dsn), err)
@@ -268,10 +265,10 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 		return &ErrorConnectToServer{fmt.Sprintf("Error opening connection to database (%s): %s", ShadowDSN(dsn), err.Error())}
 	}
 
-	// Check if autoDiscoverDatabases is false, set dsn as master database (Default: false)
-	if !e.autoDiscovery {
-		server.master = true
-	}
+	// Check if autoDiscoverDatabases is false, set dsn as primary database (Default: false)
+	// if !e.autoDiscovery {
+	// 	server.primary = true
+	// }
 
 	// Check if map versions need to be updated
 	if err := e.checkMapVersions(ch, server); err != nil {
@@ -306,7 +303,7 @@ func (e *Exporter) checkMapVersions(ch chan<- prometheus.Metric, server *Server)
 	versionDesc := prometheus.NewDesc(fmt.Sprintf("%s_%s", e.namespace, staticLabelName),
 		"Version string as reported by OpenGauss", []string{"version", "short_version"}, server.labels)
 
-	if server.master {
+	if server.primary {
 		ch <- prometheus.MustNewConstMetric(versionDesc,
 			prometheus.UntypedValue, 1, parseVersion(versionString), semanticVersion.String())
 	}

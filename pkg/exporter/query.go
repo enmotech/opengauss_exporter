@@ -45,6 +45,7 @@ type QueryInstance struct {
 	ColumnNames []string           `yaml:"-"`                  // column names in origin orders
 	LabelNames  []string           `yaml:"-"`                  // column (name) that used as label, sequences matters
 	MetricNames []string           `yaml:"-"`                  // column (name) that used as metric
+	Primary     bool               `yaml:"primary,omitempty"`  // only primary database collector. default false
 }
 
 type Query struct {
