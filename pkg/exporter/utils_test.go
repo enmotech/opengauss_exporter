@@ -275,6 +275,11 @@ func Test_parseVersion(t *testing.T) {
 			args: args{versionString: "PostgreSQL 9.2.4 (openGauss 1.1.0 build 392c0438) compiled at 2020-12-31 20:07:42 commit 0 last mr   on x86_64-unknown-linux-gnu, compiled by g++ (GCC) 7.3.0, 64-bit"},
 			want: "1.1.0",
 		},
+		{
+			name: "MogDB_1.1.0",
+			args: args{versionString: "PostgreSQL 9.2.4 (MogDB 1.1.0 build fffb972f) compiled at 2021-03-08 15:01:26 commit 0 last mr   on aarch64-unknown-linux-gnu, compiled by g++ (GCC) 7.3.0, 64-bit"},
+			want: "1.1.0",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
