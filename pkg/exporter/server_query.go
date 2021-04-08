@@ -59,6 +59,9 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		// log.Infof("Collect Metric %s only run primary. instance is recovery auto skip", metric)
 		return nil
 	}
+	if metric == "pg_stat_database" {
+		fmt.Println("aaa")
+	}
 	querySQL := queryInstance.GetQuerySQL(s.lastMapVersion)
 	if querySQL == nil {
 		log.Errorf("Collect Metric %s not define querySQL for version %s", metric, s.lastMapVersion.String())
@@ -90,6 +93,7 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 	if scrapeMetric {
 		metrics, nonFatalErrors, err = s.doCollectMetric(queryInstance)
 	} else {
+		log.Debugf("Collect Metric [%s] use cache", metric)
 		metrics, nonFatalErrors = cachedMetric.metrics, cachedMetric.nonFatalErrors
 	}
 

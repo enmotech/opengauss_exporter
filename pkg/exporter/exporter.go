@@ -267,6 +267,14 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 
 	server.queryInstanceMap = e.metricMap
 
+	versionDesc := prometheus.NewDesc(fmt.Sprintf("%s_%s", e.namespace, staticLabelName),
+		"Version string as reported by OpenGauss", []string{"version", "short_version"}, server.labels)
+
+	if server.primary {
+		ch <- prometheus.MustNewConstMetric(versionDesc,
+			prometheus.UntypedValue, 1, server.lastMapVersion.String(), server.lastMapVersion.String())
+	}
+
 	return server.Scrape(ch)
 }
 

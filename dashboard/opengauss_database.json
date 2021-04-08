@@ -17,7 +17,7 @@
   "gnetId": 9628,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1617858313545,
+  "iteration": 1617873036918,
   "links": [],
   "panels": [
     {
@@ -172,7 +172,7 @@
         "lineColor": "rgb(31, 120, 193)",
         "show": false
       },
-      "tableColumn": "pg_run_times_run_time{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", run_name=\"cluster_runtime\", server=\"localhost:5433\"}",
+      "tableColumn": "pg_run_times_run_time{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", run_name=\"cluster_runtime\", server=\"localhost:5435\"}",
       "targets": [
         {
           "expr": "pg_run_times_run_time{instance=\"$instance\"}",
@@ -532,7 +532,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^pg_settings_shared_buffers_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}$/",
+          "fields": "",
           "values": false
         },
         "textMode": "auto"
@@ -542,7 +542,9 @@
         {
           "expr": "pg_settings_shared_buffers_bytes{instance=\"$instance\"}",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -1451,8 +1453,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_stat_database_tup_updated{datname=~\"$datname\", instance=~\"$instance\"} != 0",
+          "expr": "irate(pg_stat_database_tup_updated{datname=~\"$datname\", instance=~\"$instance\"}[5m])",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{datname}}",
           "refId": "A",
@@ -1554,8 +1557,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_stat_database_tup_fetched{datname=~\"$datname\", instance=~\"$instance\"} != 0",
+          "expr": "irate(pg_stat_database_tup_fetched{datname=~\"$datname\", instance=~\"$instance\"}[5m])",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{datname}}",
           "refId": "A",
@@ -1657,8 +1661,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_stat_database_tup_inserted{datname=~\"$datname\", instance=~\"$instance\"} != 0",
+          "expr": "irate(pg_stat_database_tup_inserted{datname=~\"$datname\", instance=~\"$instance\"}[5m])",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{datname}}",
           "refId": "A",
@@ -1866,8 +1871,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_stat_database_tup_returned{datname=~\"$datname\", instance=~\"$instance\"} != 0",
+          "expr": "irate(pg_stat_database_tup_returned{datname=~\"$datname\", instance=~\"$instance\"}[5m])",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{datname}}",
           "refId": "A",
@@ -2072,8 +2078,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_stat_database_tup_deleted{datname=~\"$datname\", instance=~\"$instance\"} != 0",
+          "expr": "irate(pg_stat_database_tup_deleted{datname=~\"$datname\", instance=~\"$instance\"}[5m])",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{datname}}",
           "refId": "A",
@@ -2901,5 +2908,5 @@
   "timezone": "",
   "title": "OpenGauss Database",
   "uid": "OpenGaussOverview",
-  "version": 25
+  "version": 34
 }

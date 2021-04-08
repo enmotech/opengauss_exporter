@@ -408,7 +408,7 @@ pg_stat_database:
       description: Time at which these statistics were last reset
       usage: COUNTER
   status: enable
-  ttl: 60
+  ttl: -1
   timeout: 3
 pg_stat_database_conflicts:
   name: pg_stat_database_conflicts
