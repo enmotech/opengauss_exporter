@@ -252,7 +252,7 @@ func (s *Servers) GetServer(dsn string) (*Server, error) {
 	}
 	// If autoDiscoverDatabases is true, set first dsn as primary database (Default: false)
 	server.primary = isPrimary
-	server.primary = false
+	// server.primary = false
 	return server, nil
 }
 
