@@ -164,7 +164,7 @@ func (s *Server) doCollectMetric(queryInstance *QueryInstance) ([]prometheus.Met
 	if err != nil {
 		if strings.Contains(err.Error(), "context deadline exceeded") {
 			log.Errorf("Collect Metric [%s] executing timeout %v", queryInstance.Name, query.TimeoutDuration())
-			err = fmt.Errorf("timeout %vs %s", query.TimeoutDuration(), err)
+			err = fmt.Errorf("timeout %v %s", query.TimeoutDuration(), err)
 		} else {
 			log.Errorf("Collect Metric [%s] executing err %s", queryInstance.Name, err)
 		}

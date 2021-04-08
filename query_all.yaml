@@ -250,9 +250,9 @@ pg_db:
            confl_deadlock
            FROM pg_stat_database d,pg_stat_database_conflicts pdc
            WHERE pdc.datname = d.datname
-           and d.datname NOT IN ('postgres', 'template0', 'template1');
+           and d.datname NOT IN ('template0', 'template1');
       version: '>=1.0.0'
-      timeout: 1
+      timeout: 0.1
       ttl: 60
       status: enable
   metrics:
@@ -671,7 +671,7 @@ pg_tables_size:
          AND rel.relkind = 'r';
       version: '>=0.0.0'
       timeout: 1
-      status: enable
+      status: disable
   metrics:
     - name: datname
       description: database name of this relation
@@ -694,7 +694,7 @@ pg_tables_size:
     - name: toastsize
       description:  size of corresponding toast tables
       usage: GAUGE
-  status: enable
+  status: disable
   ttl: 60
   timeout: 1
 pg_toast_tables_size:
@@ -737,7 +737,7 @@ pg_indexes_size:
         ORDER BY 4 desc;
       version: '>=0.0.0'
       timeout: 1
-      status: enable
+      status: disable
   metrics:
     - name: schema_name
       description: Schema name of index
@@ -751,7 +751,7 @@ pg_indexes_size:
     - name: index_size
       description: Size of index
       usage: GAUGE
-  status: enable
+  status: disable
   ttl: 60
   timeout: 1
 pg_need_indexes:
