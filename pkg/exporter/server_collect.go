@@ -156,8 +156,13 @@ func (s *Server) doCollectMetric(queryInstance *QueryInstance) ([]prometheus.Met
 		defer cancel()
 	}
 	log.Debugf("Collect Metric [%s] executing sql %s", queryInstance.Name, query.SQL)
-
-	rows, err = s.db.QueryContext(ctx, query.SQL)
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Errorf("Collect Metric [%s] db.Begin err %s", queryInstance.Name, err)
+		return nil, nil, err
+	}
+	defer tx.Commit()
+	rows, err = tx.QueryContext(ctx, query.SQL)
 	end := time.Now().Sub(begin).Milliseconds()
 
 	log.Debugf("Collect Metric [%s] executing using time %vms", queryInstance.Name, end)
@@ -166,10 +171,10 @@ func (s *Server) doCollectMetric(queryInstance *QueryInstance) ([]prometheus.Met
 			log.Errorf("Collect Metric [%s] executing timeout %v", queryInstance.Name, query.TimeoutDuration())
 			err = fmt.Errorf("timeout %v %s", query.TimeoutDuration(), err)
 		} else {
-			log.Errorf("Collect Metric [%s] executing err %s", queryInstance.Name, err)
+			log.Errorf("Collect Metric [%s] QueryContext err %s", queryInstance.Name, err)
 		}
 		return []prometheus.Metric{}, []error{},
-			fmt.Errorf("Collect Metric [%s] execute on database %q err %s ", metricName, s, err)
+			fmt.Errorf("Collect Metric [%s] QueryContext on database %q err %s ", metricName, s, err)
 	}
 	defer rows.Close()
 	var columnNames []string
@@ -198,7 +203,7 @@ func (s *Server) doCollectMetric(queryInstance *QueryInstance) ([]prometheus.Met
 	for rows.Next() {
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			log.Errorf("Collect Metric [%s] executing Scan err %s", queryInstance.Name, err)
+			log.Errorf("Collect Metric [%s] executing rows.Scan err %s", queryInstance.Name, err)
 			return []prometheus.Metric{}, []error{}, errors.New(fmt.Sprintln("Error retrieving rows:", metricName, err))
 		}
 
@@ -278,10 +283,10 @@ func (s *Server) doCollectMetric(queryInstance *QueryInstance) ([]prometheus.Met
 			metrics = append(metrics, metric)
 		}
 	}
-	if err = rows.Err(); err != nil {
-		log.Debugf("Collect Metric [%s] rows error %s", metricName, err)
-		return []prometheus.Metric{}, []error{}, err
-	}
+	// if err = rows.Err(); err != nil {
+	// 	log.Debugf("Collect Metric [%s] rows.Err() %s", metricName, err)
+	// 	return []prometheus.Metric{}, []error{}, err
+	// }
 	end = time.Now().Sub(begin).Milliseconds()
 	log.Debugf("Collect Metric [%s] executing total time %vms", queryInstance.Name, end)
 	return metrics, nonfatalErrors, nil

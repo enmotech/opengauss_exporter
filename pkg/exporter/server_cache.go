@@ -18,8 +18,7 @@ type cachedMetrics struct {
 
 // IsValid true is cache valid
 func (c *cachedMetrics) IsValid(ttl float64) bool {
-	valid := time.Now().Sub(c.lastScrape).Seconds() > ttl
-	return !valid
+	return !(time.Now().Sub(c.lastScrape).Seconds() >= ttl)
 }
 
 func (c *cachedMetrics) IsCollect() bool {

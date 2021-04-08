@@ -18,7 +18,7 @@ pg_bgwriter:
         FROM pg_stat_bgwriter
       version: '>=0.0.0'
       timeout: 1
-      ttl: 60
+      ttl: -1
       status: enable
   metrics:
     - name: checkpoints_timed
@@ -55,7 +55,7 @@ pg_bgwriter:
       description: time when statistics were last reset
       usage: COUNTER
   status: enable
-  ttl: 60
+  ttl: -1
   timeout: 1
 pg_database:
   name: pg_database

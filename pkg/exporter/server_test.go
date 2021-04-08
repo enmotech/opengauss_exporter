@@ -483,15 +483,16 @@ omm`))
 	//
 	// })
 	t.Run("cache", func(t *testing.T) {
+		// lastScrape := time.Date(2021,04,8,20,25,10,0,time.UTC)
 		c := &cachedMetrics{
-			metrics: nil,
-			// lastScrape:     time.Now(),
+			metrics:        nil,
+			lastScrape:     time.Now(),
 			nonFatalErrors: nil,
 		}
 		// found := true
-		fmt.Println(c.IsValid(10))
+		assert.Equal(t, c.IsValid(10), true)
 		time.Sleep(10 * time.Second)
-		fmt.Println(c.IsValid(10))
+		assert.Equal(t, c.IsValid(10), false)
 		// if found && !c.IsValid(10) {
 		// 	fmt.Println(true)
 		// }

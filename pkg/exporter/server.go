@@ -213,7 +213,7 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 	}
 
 	// db.SetMaxOpenConns(s.parallel)
-	db.SetConnMaxIdleTime(5 * time.Second)
+	db.SetConnMaxIdleTime(120 * time.Second)
 	// db.SetMaxIdleConns(1)
 	return s, nil
 }

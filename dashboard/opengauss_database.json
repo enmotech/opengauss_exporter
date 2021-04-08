@@ -17,7 +17,7 @@
   "gnetId": 9628,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1617877375119,
+  "iteration": 1617882174021,
   "links": [],
   "panels": [
     {
@@ -1221,7 +1221,7 @@
         "show": true,
         "sort": "current",
         "sortDesc": true,
-        "total": false,
+        "total": true,
         "values": true
       },
       "lines": true,
@@ -1242,8 +1242,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_stat_activity_count{datname=~\"$datname\", instance=~\"$instance\", state=\"active\"} !=0",
+          "expr": "pg_stat_activity_count{datname=~\"$datname\", instance=~\"$instance\"} !=0",
           "format": "time_series",
+          "instant": false,
           "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{datname}}, s: {{state}}",
@@ -1285,7 +1286,7 @@
           "logBase": 1,
           "max": null,
           "min": null,
-          "show": true
+          "show": false
         }
       ],
       "yaxis": {
@@ -2519,6 +2520,7 @@
         {
           "expr": "irate(pg_stat_database_temp_bytes{instance=\"$instance\", datname=~\"$datname\"}[5m])",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{datname}}",
           "refId": "A"
@@ -2798,9 +2800,9 @@
       {
         "allValue": null,
         "current": {
-          "selected": true,
-          "text": "192.168.1.137:26000",
-          "value": "192.168.1.137:26000"
+          "selected": false,
+          "text": "192.168.2.209:5433",
+          "value": "192.168.2.209:5433"
         },
         "datasource": "Prometheus",
         "definition": "label_values(pg_up, instance)",
@@ -2825,9 +2827,14 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
+          "selected": true,
+          "tags": [],
+          "text": [
+            "postgres"
+          ],
+          "value": [
+            "postgres"
+          ]
         },
         "datasource": "Prometheus",
         "definition": "",
@@ -2879,7 +2886,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -2910,5 +2917,5 @@
   "timezone": "",
   "title": "OpenGauss Database",
   "uid": "OpenGaussOverview",
-  "version": 8
+  "version": 58
 }
