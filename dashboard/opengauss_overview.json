@@ -1316,7 +1316,7 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(up{job=~\"openGauss.*\"},instance)",
+        "definition": "label_values(pg_up, instance)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1324,7 +1324,7 @@
         "multi": false,
         "name": "instance",
         "options": [],
-        "query": "label_values(up{job=~\"openGauss.*\"},instance)",
+        "query": "label_values(pg_up, instance)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -1343,7 +1343,7 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(pg_stat_database_tup_fetched{instance=~\"$instance\",datname!~\"template.*|postgres\"},datname)",
+        "definition": "label_values(pg_stat_database_tup_fetched{datname!~\"template.*\"},datname)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1351,7 +1351,7 @@
         "multi": false,
         "name": "db",
         "options": [],
-        "query": "label_values(pg_stat_database_tup_fetched{instance=~\"$instance\",datname!~\"template.*|postgres\"},datname)",
+        "query": "label_values(pg_stat_database_tup_fetched{datname!~\"template.*\"},datname)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -1395,6 +1395,6 @@
   },
   "timezone": "browser",
   "title": "OpenGauss Overview",
-  "uid": "wGgaPlciz",
+  "uid": "OpenGaussOverviewOld",
   "version": 11
 }

@@ -2183,7 +2183,7 @@
           "value": "192.168.1.209:6432"
         },
         "datasource": "Prometheus",
-        "definition": "",
+        "definition": "label_values(pg_up, instance)",
         "error": null,
         "hide": 0,
         "includeAll": false,
@@ -2210,7 +2210,7 @@
           "value": "omm"
         },
         "datasource": "Prometheus",
-        "definition": "",
+        "definition": "label_values(pg_stat_database_tup_fetched{datname!~\"template.*\"},datname)",
         "error": null,
         "hide": 0,
         "includeAll": false,
@@ -2218,7 +2218,7 @@
         "multi": false,
         "name": "db",
         "options": [],
-        "query": "label_values(pg_stat_database_tup_fetched{datname!~\"template.*|postgres\"},datname)",
+        "query": "label_values(pg_stat_database_tup_fetched{datname!~\"template.*\"},datname)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -2262,6 +2262,6 @@
   },
   "timezone": "",
   "title": "OpenGauss Statistics",
-  "uid": "O52CEFhGk",
+  "uid": "OpenGaussStatistics",
   "version": 3
 }

@@ -1934,7 +1934,7 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "",
+        "definition": "label_values(pg_stat_database_tup_fetched{datname!~\"template.*\"},datname)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1942,7 +1942,7 @@
         "multi": true,
         "name": "datname",
         "options": [],
-        "query": "label_values(datname)",
+        "query": "label_values(pg_stat_database_tup_fetched{datname!~\"template.*\"},datname)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -2013,6 +2013,6 @@
   },
   "timezone": "",
   "title": "OpenGauss Exporter",
-  "uid": "000000039",
+  "uid": "OpenGaussExporter",
   "version": 6
 }
