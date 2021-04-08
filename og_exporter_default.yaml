@@ -5,19 +5,19 @@ pg_bgwriter:
     - name: pg_stat_bgwriter
       sql: |-
         SELECT checkpoints_timed,
-            checkpoints_req,
-            checkpoint_write_time,
-            checkpoint_sync_time,
-            buffers_checkpoint,
-            buffers_clean,
-            buffers_backend,
-            maxwritten_clean,
-            buffers_backend_fsync,
-            buffers_alloc,
-            stats_reset
+          checkpoints_req,
+          checkpoint_write_time,
+          checkpoint_sync_time,
+          buffers_checkpoint,
+          buffers_clean,
+          buffers_backend,
+          maxwritten_clean,
+          buffers_backend_fsync,
+          buffers_alloc,
+          stats_reset
         FROM pg_stat_bgwriter
       version: '>=0.0.0'
-      timeout: 0.2
+      timeout: 1
       ttl: 60
       status: enable
   metrics:
@@ -56,15 +56,24 @@ pg_bgwriter:
       usage: COUNTER
   status: enable
   ttl: 60
-  timeout: 0.2
+  timeout: 1
 pg_database:
   name: pg_database
   desc: OpenGauss Database size
   query:
     - name: pg_database
-      sql: SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database where datname NOT IN ('template0','template1')
+      sql: |-
+        SELECT datname,
+          pg_database_size(pg_database.datname) as size_bytes,
+          age(datfrozenxid64)          AS age,
+          datistemplate              AS is_template,
+          datallowconn               AS allow_conn,
+          datconnlimit               AS conn_limit,
+          datfrozenxid::TEXT::BIGINT as frozen_xid
+        FROM pg_database
+        where datname NOT IN ('template0','template1');
       version: '>=0.0.0'
-      timeout: 0.2
+      timeout: 1
       ttl: 60
       status: enable
   metrics:
@@ -74,47 +83,29 @@ pg_database:
     - name: size_bytes
       description: Disk space used by the database
       usage: GAUGE
-  status: enable
-  ttl: 60
-  timeout: 0.2
-pg_lock:
-  name: pg_lock
-  desc: OpenGauss lock distribution by mode
-  query:
-    - name: pg_lock
-      sql: |-
-        SELECT
-          datname, mode, coalesce(count, 0) AS count
-        FROM (
-          SELECT d.oid AS database, d.datname, l.mode FROM pg_database d,
-                   unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock',
-                       'ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']
-                       ) l(mode)
-        WHERE d.datname NOT IN ('template0','template1')) base
-        LEFT JOIN (SELECT database, mode, count(1) AS count FROM pg_locks
-        WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);
-      version: '>=0.0.0'
-      timeout: 0.2
-      ttl: 60
-      status: enable
-  metrics:
-    - name: datname
-      description: Name of this database
-      usage: LABEL
-    - name: mode
-      description: Type of Lock
-      usage: LABEL
-    - name: count
-      description: Number of locks
+    - name: age
+      description: database age calculated by age(datfrozenxid64)
+      usage: GAUGE
+    - name: is_template
+      description: 1 for template db and 0 for normal db
+      usage: GAUGE
+    - name: allow_conn
+      description: 1 allow connection and 0 does not allow
+      usage: GAUGE
+    - name: conn_limit
+      description: connection limit, -1 for no limit
+      usage: GAUGE
+    - name: frozen_xid
+      description: tuple with xmin below this will always be visable (until wrap around)
       usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 0.2
-pg_stat_activity:
-  name: pg_stat_activity
+  timeout: 1
+pg_activity:
+  name: pg_activity
   desc: OpenGauss backend activity group by state
   query:
-    - name: pg_stat_activity
+    - name: pg_activity
       sql: |-
         SELECT datname,
                state,
@@ -136,7 +127,7 @@ pg_stat_activity:
             GROUP BY datname, state
         ) a USING (datname, state);
       version: '>=1.0.0'
-      timeout: 0.2
+      timeout: 1
       ttl: 60
       status: enable
   metrics:
@@ -160,7 +151,237 @@ pg_stat_activity:
       usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 0.2
+  timeout: 1
+pg_replication:
+  name: pg_replication
+  query:
+    - name: pg_replication
+      sql: |-
+        SELECT pid,client_addr,application_name,state,sync_state,lsn,
+                   lsn - sent_location   as sent_diff,
+           lsn - write_location  as write_diff,
+           lsn - flush_location  as flush_diff,
+           lsn - replay_location as replay_diff,
+           sent_location,write_location,flush_location,replay_location,
+           backend_uptime,sync_priority
+           FROM (
+           SELECT pid,
+             client_addr,
+             application_name,
+             state,
+             sync_state,
+             pg_xlog_location_diff(CASE WHEN pg_is_in_recovery() THEN pg_last_xlog_receive_location() ELSE pg_current_xlog_location() END, '0/0') AS lsn,
+             pg_xlog_location_diff(sender_sent_location,'0/0')                          AS sent_location,
+             pg_xlog_location_diff(receiver_write_location,'0/0')                         AS write_location,
+             pg_xlog_location_diff(receiver_flush_location,'0/0')                         AS flush_location,
+             pg_xlog_location_diff(receiver_replay_location,'0/0')                        AS replay_location,
+             pg_xlog_location_diff(receiver_replay_location,pg_current_xlog_location())   AS replay_lag,
+             extract(EPOCH FROM now() - backend_start) AS backend_uptime,
+             sync_priority
+        FROM pg_stat_replication) t;
+      version: '>=1.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+  metrics:
+    - name: pid
+      description: unique walsender pid
+      usage: LABEL
+    - name: client_addr
+      description: client address of wal receiver
+      usage: LABEL
+    - name: application_name
+      description: application name of standby
+      usage: LABEL
+    - name: state
+      description: replication state startup|catchup|streaming|backup|stopping
+      usage: LABEL
+    - name: sync_state
+      description: replication sync state async|potential|sync|quorum
+      usage: LABEL
+    - name: lsn
+      description: current log position on this server
+      usage: COUNTER
+    - name: sent_diff
+      description: last log position sent to this standby server diff with current lsn
+      usage: GAUGE
+    - name: write_diff
+      description: last log position written to disk by this standby server diff with current lsn
+      usage: GAUGE
+    - name: flush_diff
+      description: last log position flushed to disk by this standby server diff with current lsn
+      usage: GAUGE
+    - name: replay_diff
+      description: last log position replayed into the database on this standby server diff with current lsn
+      usage: GAUGE
+    - name: sent_lsn
+      description: last log position sent to this standby server
+      usage: COUNTER
+    - name: write_lsn
+      description: last log position written to disk by this standby server
+      usage: COUNTER
+    - name: flush_lsn
+      description: last log position flushed to disk by this standby server
+      usage: COUNTER
+    - name: replay_lsn
+      description: last log position replayed into the database on this standby server
+      usage: COUNTER
+    - name: write_lag
+      description: latest ACK lsn diff with write (sync-remote-write lag)
+      usage: GAUGE
+    - name: flush_lag
+      description: latest ACK lsn diff with flush (sync-remote-flush lag)
+      usage: GAUGE
+    - name: replay_lag
+      description: latest ACK lsn diff with replay (sync-remote-apply lag)
+      usage: GAUGE
+    - name: backend_uptime
+      description: how long since standby connect to this server
+      usage: GAUGE
+    - name: backend_xmin
+      description: this standby's xmin horizon reported by hot_standby_feedback.
+      usage: GAUGE
+    - name: sync_priority
+      description: priority of being chosen as synchronous standby
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 1
+pg_replication_slots:
+  name: pg_replication_slots
+  query:
+    - name: pg_replication_slots
+      sql: |-
+        select slot_name,
+            database                    as datname,
+            coalesce(plugin,'_') as plugin,
+            slot_type,datoid,coalesce(database,'_') as database,
+            active,
+            coalesce(xmin,'_') as xmin,
+            coalesce(catalog_xmin,'_') as catalog_xmin,
+            restart_lsn,
+            pg_xlog_location_diff(pg_current_xlog_location(),restart_lsn) as delay_lsn,
+            dummy_standby,
+            pg_xlog_location_diff(restart_lsn ,'0/0'::text)        AS restart_lsn,
+            pg_xlog_location_diff(CASE WHEN pg_is_in_recovery() THEN pg_last_xlog_receive_location()
+            ELSE pg_current_xlog_location() END , restart_lsn)  AS retained_bytes
+            from pg_replication_slots;
+      version: '>=1.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+  metrics:
+    - name: slot_name
+      description: Slot name
+      usage: LABEL
+    - name: plugin
+      description: Logical plugin
+      usage: LABEL
+    - name: slot_type
+      description: Slot type
+      usage: LABEL
+    - name: datoid
+      description: Database oid
+      usage: LABEL
+    - name: database
+      description: Database name
+      usage: LABEL
+    - name: active
+      description: Is active
+      usage: LABEL
+    - name: xmin
+      description: replication xid
+      usage: LABEL
+    - name: catalog_xmin
+      description: logical decode xid
+      usage: LABEL
+    - name: restart_lsn
+      description: Xlog info
+      usage: LABEL
+    - name: delay_lsn
+      description: delay lsn from pg_current_xlog_location()
+      usage: GAUGE
+    - name: dummy_standby
+      description: Is real standby
+      usage: DISCARD
+  status: enable
+  ttl: 60
+  timeout: 1
+pg_func:
+  name: pg_func
+  query:
+    - name: pg_func
+      sql: |-
+        SELECT CURRENT_CATALOG AS datname,
+          schemaname      AS nspname,
+          funcname,
+          funcid,
+          calls,
+          total_time,
+          self_time
+        FROM pg_stat_user_functions
+        ORDER BY 4 DESC LIMIT 128;
+      version: '>=1.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+  metrics:
+    - name: datname
+      description: database name of this function
+      usage: LABEL
+    - name: nspname
+      description: schema name of this function
+      usage: LABEL
+    - name: funcname
+      description: function name
+      usage: LABEL
+    - name: funcid
+      description: function id, dedupe for funcname override
+      usage: LABEL
+    - name: calls
+      description: how many times this function has been called
+      usage: COUNTER
+    - name: total_time
+      description: how much time spent in this function and it's child function, in ms
+      usage: COUNTER
+    - name: self_time
+      description: how much time spent in this function itself (other func not included), in ms
+      usage: COUNTER
+  status: enable
+  ttl: 60
+  timeout: 1
+pg_lock:
+  name: pg_lock
+  desc: OpenGauss lock distribution by mode
+  query:
+    - name: pg_lock
+      sql: |-
+        SELECT datname, mode, coalesce(count, 0) AS count
+        FROM (
+          SELECT d.oid AS database, d.datname, l.mode
+          FROM pg_database d,unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']) l(mode)
+          WHERE d.datname NOT IN ('template0','template1')) base
+        LEFT JOIN (SELECT database, mode, count(1) AS count
+                   FROM pg_locks
+                   WHERE database IS NOT NULL GROUP BY database, mode) cnt
+        USING (database, mode);
+      version: '>=0.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+  metrics:
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: mode
+      description: Type of Lock
+      usage: LABEL
+    - name: count
+      description: Number of locks
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 1
 pg_stat_database:
   name: pg_stat_database
   desc: OpenGauss database statistics
@@ -168,8 +389,8 @@ pg_stat_database:
     - name: pg_stat_database
       sql: select * from pg_stat_database where datname NOT IN ('template0','template1')
       version: '>=0.0.0'
-      timeout: 0.2
-      ttl: 60
+      timeout: 3
+      ttl: -1
       status: enable
   metrics:
     - name: datid
@@ -231,15 +452,15 @@ pg_stat_database:
       usage: COUNTER
   status: enable
   ttl: 60
-  timeout: 0.2
+  timeout: 3
 pg_stat_database_conflicts:
   name: pg_stat_database_conflicts
   desc: OpenGauss database statistics conflicts
   query:
     - name: pg_stat_database_conflicts
-      sql: select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1')
+      sql: select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1');
       version: '>=0.0.0'
-      timeout: 0.2
+      timeout: 1
       ttl: 60
       status: enable
   metrics:
@@ -266,246 +487,26 @@ pg_stat_database_conflicts:
       usage: COUNTER
   status: enable
   ttl: 60
-  timeout: 0.2
-pg_stat_replication:
-  name: pg_stat_replication
+  timeout: 1
+pg_run_times:
+  name: pg_run_times
+  desc: OpenGauss database run times
   query:
-    - name: pg_stat_replication
-      sql: |-
-        SELECT *,
-          (case pg_is_in_recovery() when 't' then null else pg_current_xlog_location() end) AS pg_current_xlog_location,
-          (case pg_is_in_recovery() when 't' then null else pg_xlog_location_diff(pg_current_xlog_location(), receiver_replay_location)::float end) AS pg_xlog_location_diff
-        FROM pg_stat_replication
-      version: '>=1.0.0'
-      timeout: 0.2
-      ttl: 60
-      status: enable
-  metrics:
-    - name: procpid
-      description: Process ID of a WAL sender process
-      usage: DISCARD
-    - name: pid
-      description: Process ID of a WAL sender process
-      usage: DISCARD
-    - name: usesysid
-      description: OID of the user logged into this WAL sender process
-      usage: DISCARD
-    - name: usename
-      description: Name of the user logged into this WAL sender process
-      usage: DISCARD
-    - name: application_name
-      description: Name of the application that is connected to this WAL sender
-      usage: LABEL
-    - name: client_addr
-      description: IP address of the client connected to this WAL sender. If this field is null, it indicates that the client is connected via a Unix socket on the server machine.
-      usage: LABEL
-    - name: client_hostname
-      description: Host name of the connected client, as reported by a reverse DNS lookup of client_addr. This field will only be non-null for IP connections, and only when log_hostname is enabled.
-      usage: DISCARD
-    - name: client_port
-      description: TCP port number that the client is using for communication with this WAL sender, or -1 if a Unix socket is used
-      usage: DISCARD
-    - name: backend_start
-      description: with time zone      Time when this process was started, i.e., when the client connected to this WAL sender
-      usage: DISCARD
-    - name: backend_xmin
-      description: The current backend's xmin horizon.
-      usage: DISCARD
-    - name: state
-      description: Current WAL sender state
-      usage: LABEL
-    - name: sender_sent_location
-      description: Last transaction log position sent on this connection
-      usage: DISCARD
-    - name: receiver_write_location
-      description: Last transaction log position written to disk by this standby server
-      usage: DISCARD
-    - name: receiver_flush_location
-      description: Last transaction log position flushed to disk by this standby server
-      usage: DISCARD
-    - name: receiver_replay_location
-      description: Last transaction log position replayed into the database on this standby server
-      usage: DISCARD
-    - name: sync_priority
-      description: Priority of this standby server for being chosen as the synchronous standby
-      usage: DISCARD
-    - name: sync_state
-      description: Synchronous state of this standby server
-      usage: DISCARD
-    - name: pg_current_xlog_location
-      description: pg_current_xlog_location
-      usage: DISCARD
-    - name: pg_xlog_location_diff
-      description: Lag in bytes between master and slave
-      usage: GAUGE
-    - name: sent_location
-      description: Last transaction log position sent on this connection
-      usage: DISCARD
-    - name: write_location
-      description: Last transaction log position written to disk by this standby server
-      usage: DISCARD
-    - name: flush_location
-      description: Last transaction log position flushed to disk by this standby server
-      usage: DISCARD
-    - name: replay_location
-      description: Last transaction log position replayed into the database on this standby server
-      usage: DISCARD
-    - name: sent_lsn
-      description: Last transaction log position sent on this connection
-      usage: DISCARD
-    - name: write_lsn
-      description: Last transaction log position written to disk by this standby server
-      usage: DISCARD
-    - name: flush_lsn
-      description: Last transaction log position flushed to disk by this standby server
-      usage: DISCARD
-    - name: replay_lsn
-      description: Last transaction log position replayed into the database on this standby server
-      usage: DISCARD
-    - name: sync_priority
-      description: Priority of this standby server for being chosen as the synchronous standby
-      usage: DISCARD
-    - name: sync_state
-      description: Synchronous state of this standby server
-      usage: DISCARD
-    - name: slot_name
-      description: A unique, cluster-wide identifier for the replication slot
-      usage: LABEL
-    - name: plugin
-      description: The base name of the shared object containing the output plugin this logical slot is using, or null for physical slots
-      usage: DISCARD
-    - name: slot_type
-      description: The slot type - physical or logical
-      usage: DISCARD
-    - name: datoid
-      description: The OID of the database this slot is associated with, or null. Only logical slots have an associated database
-      usage: DISCARD
-    - name: database
-      description: The name of the database this slot is associated with, or null. Only logical slots have an associated database
-      usage: DISCARD
-    - name: active
-      description: True if this slot is currently actively being used
-      usage: DISCARD
-    - name: active_pid
-      description: Process ID of a WAL sender process
-      usage: DISCARD
-    - name: xmin
-      description: The oldest transaction that this slot needs the database to retain. VACUUM cannot remove tuples deleted by any later transaction
-      usage: DISCARD
-    - name: catalog_xmin
-      description: The oldest transaction affecting the system catalogs that this slot needs the database to retain. VACUUM cannot remove catalog tuples deleted by any later transaction
-      usage: DISCARD
-    - name: restart_lsn
-      description: The address (LSN) of oldest WAL which still might be required by the consumer of this slot and thus won't be automatically removed during checkpoints
-      usage: DISCARD
-    - name: pg_current_xlog_location
-      description: pg_current_xlog_location
-      usage: DISCARD
-    - name: pg_current_wal_lsn
-      description: pg_current_xlog_location
-      usage: DISCARD
-    - name: pg_current_wal_lsn_bytes
-      description: WAL position in bytes
-      usage: GAUGE
-    - name: pg_xlog_location_diff
-      description: Lag in bytes between master and slave
-      usage: GAUGE
-    - name: pg_wal_lsn_diff
-      description: Lag in bytes between master and slave
-      usage: GAUGE
-    - name: confirmed_flush_lsn
-      description: LSN position a consumer of a slot has confirmed flushing the data received
-      usage: DISCARD
-    - name: write_lag
-      description: Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written it (but not yet flushed it or applied it). This can be used to gauge the delay that synchronous_commit level remote_write incurred while committing if this server was configured as a synchronous standby.
-      usage: DISCARD
-    - name: flush_lag
-      description: Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written and flushed it (but not yet applied it). This can be used to gauge the delay that synchronous_commit level remote_flush incurred while committing if this server was configured as a synchronous standby.
-      usage: DISCARD
-    - name: replay_lag
-      description: Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written, flushed and applied it. This can be used to gauge the delay that synchronous_commit level remote_apply incurred while committing if this server was configured as a synchronous standby.
-      usage: DISCARD
-  status: enable
-  ttl: 60
-  timeout: 0.2
-
-pg_indexes_size:
-  name: pg_indexes_size
-  desc: OpenGauss database indexes size
-  query:
-    - name: pg_indexes_size
-      sql: |-
-        SELECT n.nspname as schema_name,c2.relname as table_name,c.relname as index_name,pg_catalog.pg_table_size(c.oid) as index_size
-        FROM pg_catalog.pg_class c
-        LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-        LEFT JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
-        LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid
-        WHERE c.relkind IN ('i','I','') AND n.nspname <> 'pg_catalog' AND n.nspname <> 'information_schema' AND n.nspname !~ '^pg_toast' AND c.relname not like 'matviewmap_%' AND c.relname not like 'mlog_%' AND pg_catalog.pg_table_is_visible(c.oid)
-        ORDER BY 4 desc
+    - name: pg_run_times
+      sql: select 'cluster_runtime' as run_name,(case pg_is_in_recovery() when 'f' then 1 else 0 end) as db_role,extract(epoch from(now() - pg_postmaster_start_time())) as run_time;
       version: '>=0.0.0'
-      timeout: 0.2
+      timeout: 1
       status: enable
   metrics:
-    - name: schema_name
-      description: Schema name of index
+    - name: run_name
+      description: Name of cluster
       usage: LABEL
-    - name: table_name
-      description: Table name of index
-      usage: LABEL
-    - name: index_name
-      description: Name of index
-      usage: LABEL
-    - name: index_size
-      description: Size of index
+    - name: db_role
+      description: Role of database
+      usage: GAUGE
+    - name: run_time
+      description: Run times of cluster
       usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 0.2
-pg_tables_expansion_rate:
-  name: pg_tables_expansion_rate
-  desc: OpenGauss database tables expansion rate
-  query:
-    - name: pg_tables_expansion_rate
-      sql: |-
-        select schemaname,relname,n_live_tup,n_dead_tup,round((n_dead_tup/(n_dead_tup+n_live_tup) *100),2) as dead_rate,
-        coalesce(last_vacuum,'1970-01-01') as last_vacuum,
-        coalesce(last_autovacuum,'1970-01-01') as last_autovacuum ,
-        coalesce(last_analyze,'1970-01-01') as last_analyze,
-        coalesce(last_autoanalyze,'1970-01-01') as last_autoanalyze
-        from pg_stat_user_tables
-        where n_live_tup > 0
-        order by 5 asc
-      version: '>=0.0.0'
-      timeout: 100
-      status: enable
-  metrics:
-    - name: schemaname
-      description: Schema name of table
-      usage: LABEL
-    - name: relname
-      description: Table name of table
-      usage: LABEL
-    - name: n_live_tup
-      description: live tup of table
-      usage: LABEL
-    - name: n_dead_tup
-      description: dead tup of table
-      usage: LABEL
-    - name: dead_rate
-      description: Dead rate of table
-      usage: GAUGE
-    - name: last_vacuum
-      description: dead tup of table
-      usage: LABEL
-    - name: last_autovacuum
-      description: dead tup of table
-      usage: LABEL
-    - name: last_analyze
-      description: dead tup of table
-      usage: LABEL
-    - name: last_autoanalyze
-      description: dead tup of table
-      usage: LABEL
-  status: enable
-  ttl: 60
-  timeout: 0.2
+  timeout: 1

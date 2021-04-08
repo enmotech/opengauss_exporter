@@ -215,131 +215,6 @@ pg_activity:
   status: enable
   ttl: 60
   timeout: 1
-pg_db:
-  name: pg_db
-  desc: OpenGauss database statistics
-  query:
-    - name: pg_db
-      sql: |-
-        SELECT d.datid,
-           d.datname,
-           numbackends,
-           xact_commit,
-           xact_rollback,
-           xact_rollback + xact_commit              AS xact_total,
-           blks_read,
-           blks_hit,
-           blks_read + blks_hit                     AS blks_access,
-           tup_returned,
-           tup_fetched,
-           tup_inserted,
-           tup_updated,
-           tup_deleted,
-           tup_inserted + tup_updated + tup_deleted AS tup_modified,
-           conflicts,
-           temp_files,
-           temp_bytes,
-           deadlocks,
-           blk_read_time,
-           blk_write_time,
-           stats_reset,
-           confl_tablespace,
-           confl_lock,
-           confl_snapshot,
-           confl_bufferpin,
-           confl_deadlock
-           FROM pg_stat_database d,pg_stat_database_conflicts pdc
-           WHERE pdc.datname = d.datname
-           and d.datname NOT IN ('template0', 'template1');
-      version: '>=1.0.0'
-      timeout: 0.1
-      ttl: 60
-      status: enable
-  metrics:
-    - name: datid
-      description: OID of a database
-      usage: LABEL
-    - name: datname
-      description: Name of this database
-      usage: LABEL
-    - name: numbackends
-      description: Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
-      usage: GAUGE
-    - name: xact_commit
-      description: Number of transactions in this database that have been committed
-      usage: COUNTER
-    - name: xact_rollback
-      description: Number of transactions in this database that have been rolled back
-      usage: COUNTER
-    - name: xact_total
-      description: transactions in this database that have been issued
-      usage: COUNTER
-    - name: blks_read
-      description: Number of disk blocks read in this database
-      usage: COUNTER
-    - name: blks_hit
-      description: Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
-      usage: COUNTER
-    - name: blks_access
-      description: blocks read plus blocks hit
-      usage: COUNTER
-    - name: tup_returned
-      description: Number of rows returned by queries in this database
-      usage: COUNTER
-    - name: tup_fetched
-      description: Number of rows fetched by queries in this database
-      usage: COUNTER
-    - name: tup_inserted
-      description: Number of rows inserted by queries in this database
-      usage: COUNTER
-    - name: tup_updated
-      description: Number of rows updated by queries in this database
-      usage: COUNTER
-    - name: tup_deleted
-      description: Number of rows deleted by queries in this database
-      usage: COUNTER
-    - name: tup_modified
-      description: rows modified by queries in this database
-      usage: COUNTER
-    - name: conflicts
-      description: Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
-      usage: COUNTER
-    - name: temp_files
-      description: Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
-      usage: COUNTER
-    - name: temp_bytes
-      description: Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
-      usage: COUNTER
-    - name: deadlocks
-      description: Number of deadlocks detected in this database
-      usage: COUNTER
-    - name: blk_read_time
-      description: Time spent reading data file blocks by backends in this database, in milliseconds
-      usage: COUNTER
-    - name: blk_write_time
-      description: Time spent writing data file blocks by backends in this database, in milliseconds
-      usage: COUNTER
-    - name: stats_reset
-      description: Time at which these statistics were last reset
-      usage: COUNTER
-    - name: confl_tablespace
-      description: Number of queries in this database that have been canceled due to dropped tablespaces
-      usage: COUNTER
-    - name: confl_lock
-      description: Number of queries in this database that have been canceled due to lock timeouts
-      usage: COUNTER
-    - name: confl_snapshot
-      description: Number of queries in this database that have been canceled due to old snapshots
-      usage: COUNTER
-    - name: confl_bufferpin
-      description: Number of queries in this database that have been canceled due to pinned buffers
-      usage: COUNTER
-    - name: confl_deadlock
-      description: Number of queries in this database that have been canceled due to deadlocks
-      usage: COUNTER
-  status: enable
-  ttl: 60
-  timeout: 1
 pg_replication:
   name: pg_replication
   query:
@@ -457,7 +332,7 @@ pg_downstream:
   status: enable
   ttl: 5
   timeout: 1
-pg_slot:
+pg_replication_slots:
   name: pg_replication_slots
   query:
     - name: pg_replication_slots
@@ -592,8 +467,6 @@ pg_lock:
   status: enable
   ttl: 60
   timeout: 1
-
-
 pg_stat_database_conflicts:
   name: pg_stat_database_conflicts
   desc: OpenGauss database statistics conflicts
@@ -629,7 +502,6 @@ pg_stat_database_conflicts:
   status: enable
   ttl: 60
   timeout: 1
-
 pg_run_times:
   name: pg_run_times
   desc: OpenGauss database run times
@@ -765,7 +637,7 @@ pg_need_indexes:
         where pg_table_size(relid) > 1024*1024*1024 and coalesce((idx_scan/(case when (seq_scan+idx_scan) >0 then (seq_scan+idx_scan) else 1 end) * 100),0) < 90 order by seq_scan desc limit 10;
       version: '>=0.0.0'
       timeout: 1
-      status: enable
+      status: disable
   metrics:
     - name: tablename
       description: Name of table
@@ -788,7 +660,7 @@ pg_need_indexes:
     - name: rate
       description: Index used rate
       usage: GAUGE
-  status: enable
+  status: disable
   ttl: 60
   timeout: 1
 pg_never_used_indexes:

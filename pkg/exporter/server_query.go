@@ -93,13 +93,13 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 	// Serious error - a namespace disappeared
 	if err != nil {
 		nonFatalErrors = append(nonFatalErrors, err)
-		log.Errorf("Collect Metric %s err %s", metric, err)
+		log.Errorf("Collect Metric [%s] err %s", metric, err)
 	}
 	// Non-serious errors - likely version or parsing problems.
 	if len(nonFatalErrors) > 0 {
 		var errText string
 		for _, err := range nonFatalErrors {
-			log.Errorf("Collect Metric %s nonFatalErrors err %s", metric, err)
+			log.Errorf("Collect Metric [%s] nonFatalErrors err %s", metric, err)
 			errText += err.Error()
 		}
 		err = errors.New(errText)

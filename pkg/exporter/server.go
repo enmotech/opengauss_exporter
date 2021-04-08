@@ -164,7 +164,9 @@ func (s *Server) QueryDatabases() ([]string, error) {
 		}
 		result = append(result, databaseName)
 	}
-
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -197,6 +199,7 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 	}
 
 	db.SetMaxOpenConns(s.parallel)
+	db.SetConnMaxIdleTime(5 * time.Second)
 	// db.SetMaxIdleConns(1)
 	return s, nil
 }

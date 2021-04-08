@@ -10,7 +10,7 @@ Prometheus exporter for openGauss server metrics.
 This package is available for Docker:
 ```
 # Start an example database
-docker run --net=host -it --rm -e GS_PASSWOR=password enmotech/opengauss
+docker run --net=host -it --rm -e GS_PASSWORD=mtkOP@128 enmotech/opengauss
 # Connect to it
 docker run --net=host -e DATA_SOURCE_NAME="postgresql://postgres:password@localhost:5432/postgres?sslmode=disable" mogdb/opengauss_exporter
 ```

@@ -40,7 +40,9 @@ func (s *Server) querySettings(ch chan<- prometheus.Metric) error {
 
 		ch <- pgSetting.metric(s.namespace, s.labels)
 	}
-
+	if err = rows.Err(); err != nil {
+		return err
+	}
 	return nil
 }
 

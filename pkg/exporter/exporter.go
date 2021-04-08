@@ -280,9 +280,8 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 
 func (e *Exporter) checkMapVersions(ch chan<- prometheus.Metric, server *Server) error {
 	log.Debugf("Querying OpenGauss Version on %q", server)
-	versionRow := server.db.QueryRow("SELECT version();")
 	var versionString string
-	err := versionRow.Scan(&versionString)
+	err := server.db.QueryRow("SELECT version();").Scan(&versionString)
 	if err != nil {
 		return fmt.Errorf("Error scanning version string on %q: %v ", server, err)
 	}
