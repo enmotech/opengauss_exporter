@@ -81,6 +81,9 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		} else if !cachedMetric.IsValid(queryInstance.TTL) {
 			scrapeMetric = true
 		}
+		if cachedMetric != nil && (len(cachedMetric.nonFatalErrors) > 0 || len(cachedMetric.metrics) == 0) {
+			scrapeMetric = true
+		}
 	} else {
 		scrapeMetric = true
 	}

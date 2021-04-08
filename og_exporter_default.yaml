@@ -307,49 +307,6 @@ pg_replication_slots:
   status: enable
   ttl: 60
   timeout: 1
-pg_func:
-  name: pg_func
-  query:
-    - name: pg_func
-      sql: |-
-        SELECT CURRENT_CATALOG AS datname,
-          schemaname      AS nspname,
-          funcname,
-          funcid,
-          calls,
-          total_time,
-          self_time
-        FROM pg_stat_user_functions
-        ORDER BY 4 DESC LIMIT 128;
-      version: '>=1.0.0'
-      timeout: 1
-      ttl: 60
-      status: enable
-  metrics:
-    - name: datname
-      description: database name of this function
-      usage: LABEL
-    - name: nspname
-      description: schema name of this function
-      usage: LABEL
-    - name: funcname
-      description: function name
-      usage: LABEL
-    - name: funcid
-      description: function id, dedupe for funcname override
-      usage: LABEL
-    - name: calls
-      description: how many times this function has been called
-      usage: COUNTER
-    - name: total_time
-      description: how much time spent in this function and it's child function, in ms
-      usage: COUNTER
-    - name: self_time
-      description: how much time spent in this function itself (other func not included), in ms
-      usage: COUNTER
-  status: enable
-  ttl: 60
-  timeout: 1
 pg_lock:
   name: pg_lock
   desc: OpenGauss lock distribution by mode

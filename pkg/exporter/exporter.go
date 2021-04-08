@@ -200,7 +200,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 	var connectionErrorsCount int
 
 	for _, dsn := range dsnList {
-		log.Debugf(dsn)
+		// log.Debugf(dsn)
 		if err := e.scrapeDSN(ch, dsn); err != nil {
 			errorsCount++
 
@@ -265,48 +265,9 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 		return &ErrorConnectToServer{fmt.Sprintf("Error opening connection to database (%s): %s", ShadowDSN(dsn), err.Error())}
 	}
 
-	// Check if autoDiscoverDatabases is false, set dsn as primary database (Default: false)
-	// if !e.autoDiscovery {
-	// 	server.primary = true
-	// }
-
-	// Check if map versions need to be updated
-	if err := e.checkMapVersions(ch, server); err != nil {
-		log.Warnln("Proceeding with outdated query maps, as the OpenGauss version could not be determined:", err)
-	}
+	server.queryInstanceMap = e.metricMap
 
 	return server.Scrape(ch)
-}
-
-func (e *Exporter) checkMapVersions(ch chan<- prometheus.Metric, server *Server) error {
-	log.Debugf("Querying OpenGauss Version on %q", server)
-	var versionString string
-	err := server.db.QueryRow("SELECT version();").Scan(&versionString)
-	if err != nil {
-		return fmt.Errorf("Error scanning version string on %q: %v ", server, err)
-	}
-	semanticVersion, err := parseVersionSem(versionString)
-	if err != nil {
-		return fmt.Errorf("Error parsing version string on %q: %v ", server, err)
-	}
-	// Check if semantic version changed and recalculate maps if needed.
-	if semanticVersion.NE(server.lastMapVersion) || server.queryInstanceMap == nil {
-		log.Infof("Semantic Version Changed on %s: %s -> %s", server, server.lastMapVersion, semanticVersion)
-		server.mappingMtx.Lock()
-		server.queryInstanceMap = e.metricMap
-		server.lastMapVersion = semanticVersion
-		server.mappingMtx.Unlock()
-
-	}
-
-	versionDesc := prometheus.NewDesc(fmt.Sprintf("%s_%s", e.namespace, staticLabelName),
-		"Version string as reported by OpenGauss", []string{"version", "short_version"}, server.labels)
-
-	if server.primary {
-		ch <- prometheus.MustNewConstMetric(versionDesc,
-			prometheus.UntypedValue, 1, parseVersion(versionString), semanticVersion.String())
-	}
-	return nil
 }
 
 func (e *Exporter) Check() error {

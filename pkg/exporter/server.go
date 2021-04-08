@@ -169,6 +169,20 @@ func (s *Server) QueryDatabases() ([]string, error) {
 	}
 	return result, nil
 }
+func (s *Server) getVersion() error {
+	// log.Debugf("Querying OpenGauss Version on %q")
+	var versionString string
+	err := s.db.QueryRow("SELECT version();").Scan(&versionString)
+	if err != nil {
+		return err
+	}
+	semanticVersion, err := parseVersionSem(versionString)
+	if err != nil {
+		return fmt.Errorf("Error parsing version string err %s ", err)
+	}
+	s.lastMapVersion = semanticVersion
+	return nil
+}
 
 func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 	// 获取server名称 ip:port
@@ -198,7 +212,7 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 		opt(s)
 	}
 
-	db.SetMaxOpenConns(s.parallel)
+	// db.SetMaxOpenConns(s.parallel)
 	db.SetConnMaxIdleTime(5 * time.Second)
 	// db.SetMaxIdleConns(1)
 	return s, nil
@@ -256,6 +270,11 @@ func (s *Servers) GetServer(dsn string) (*Server, error) {
 	// If autoDiscoverDatabases is true, set first dsn as primary database (Default: false)
 	server.primary = isPrimary
 	// server.primary = false
+
+	if err = server.getVersion(); err != nil {
+		return nil, err
+	}
+
 	return server, nil
 }
 
