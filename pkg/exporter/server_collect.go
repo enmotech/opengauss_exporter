@@ -156,13 +156,13 @@ func (s *Server) doCollectMetric(queryInstance *QueryInstance) ([]prometheus.Met
 		defer cancel()
 	}
 	log.Debugf("Collect Metric [%s] executing sql %s", queryInstance.Name, query.SQL)
-	tx, err := s.db.Begin()
-	if err != nil {
-		log.Errorf("Collect Metric [%s] db.Begin err %s", queryInstance.Name, err)
-		return nil, nil, err
-	}
-	defer tx.Commit()
-	rows, err = tx.QueryContext(ctx, query.SQL)
+	// tx, err := s.db.Begin()
+	// if err != nil {
+	// 	log.Errorf("Collect Metric [%s] db.Begin err %s", queryInstance.Name, err)
+	// 	return nil, nil, err
+	// }
+	// defer tx.Commit()
+	rows, err = s.db.QueryContext(ctx, query.SQL)
 	end := time.Now().Sub(begin).Milliseconds()
 
 	log.Debugf("Collect Metric [%s] executing using time %vms", queryInstance.Name, end)

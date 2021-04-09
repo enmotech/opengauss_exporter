@@ -17,7 +17,7 @@
   "gnetId": 9628,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1617933059269,
+  "iteration": 1617952111145,
   "links": [],
   "panels": [
     {
@@ -36,6 +36,15 @@
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorPostfix": true,
+      "colorPrefix": true,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "description": "Database version",
       "fieldConfig": {
@@ -68,6 +77,14 @@
         },
         "overrides": []
       },
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 2,
         "w": 4,
@@ -77,7 +94,20 @@
       "id": 36,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -93,6 +123,26 @@
         "textMode": "name"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "1.1.0",
       "targets": [
         {
           "expr": "pg_static{release=\"$release\", instance=\"$instance\"}",
@@ -103,11 +153,28 @@
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "title": "Version",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "name"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "description": "start time of the process",
       "fieldConfig": {
@@ -140,6 +207,14 @@
         },
         "overrides": []
       },
+      "format": "s",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 2,
         "w": 4,
@@ -149,7 +224,20 @@
       "id": 28,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -165,6 +253,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "pg_run_times_run_time{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", run_name=\"cluster_runtime\", server=\"localhost:5433\"}",
       "targets": [
         {
           "expr": "pg_run_times_run_time{instance=\"$instance\"}",
@@ -176,11 +284,28 @@
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "title": "Start Time",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "description": "pg_stat_database.tup_fetched",
       "fieldConfig": {
@@ -213,6 +338,14 @@
         },
         "overrides": []
       },
+      "format": "bytes",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 2,
         "w": 4,
@@ -222,7 +355,20 @@
       "id": 10,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -238,6 +384,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
       "targets": [
         {
           "expr": "SUM(pg_stat_database_tup_fetched{datname=~\"$datname\", instance=~\"$instance\"})",
@@ -250,11 +416,28 @@
           "step": 4
         }
       ],
+      "thresholds": "",
       "title": "Current fetch data",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "description": "pg_stat_database.tup_inserted",
       "fieldConfig": {
@@ -287,6 +470,14 @@
         },
         "overrides": []
       },
+      "format": "bytes",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 2,
         "w": 4,
@@ -296,7 +487,20 @@
       "id": 11,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -312,6 +516,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
       "targets": [
         {
           "expr": "SUM(pg_stat_database_tup_inserted{release=\"$release\", datname=~\"$datname\", instance=~\"$instance\"})",
@@ -324,11 +548,28 @@
           "step": 4
         }
       ],
+      "thresholds": "",
       "title": "Current insert data",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "description": "pg_stat_database.tup_updated",
       "fieldConfig": {
@@ -361,6 +602,14 @@
         },
         "overrides": []
       },
+      "format": "bytes",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 2,
         "w": 4,
@@ -370,7 +619,20 @@
       "id": 12,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -386,6 +648,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
       "targets": [
         {
           "expr": "SUM(pg_stat_database_tup_updated{datname=~\"$datname\", instance=~\"$instance\"})",
@@ -398,11 +680,28 @@
           "step": 4
         }
       ],
+      "thresholds": "",
       "title": "Current update data",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
@@ -434,6 +733,14 @@
         },
         "overrides": []
       },
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 2,
         "w": 4,
@@ -443,7 +750,20 @@
       "id": 38,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -459,6 +779,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "pg_settings_max_connections{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
       "targets": [
         {
           "expr": "pg_settings_max_connections{release=\"$release\", instance=\"$instance\"}",
@@ -470,11 +810,28 @@
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "title": "Max Connections",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
@@ -506,6 +863,14 @@
         },
         "overrides": []
       },
+      "format": "bytes",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 3,
         "w": 4,
@@ -515,7 +880,20 @@
       "id": 40,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -531,6 +909,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "pg_settings_shared_buffers_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
       "targets": [
         {
           "expr": "pg_settings_shared_buffers_bytes{instance=\"$instance\"}",
@@ -542,11 +940,28 @@
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "title": "Shared Buffers",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
@@ -578,6 +993,14 @@
         },
         "overrides": []
       },
+      "format": "bytes",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 3,
         "w": 4,
@@ -587,7 +1010,20 @@
       "id": 42,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -603,6 +1039,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "pg_settings_effective_cache_size_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
       "targets": [
         {
           "expr": "pg_settings_effective_cache_size_bytes{instance=\"$instance\"}",
@@ -614,11 +1070,28 @@
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "title": "Effective Cache",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
@@ -650,6 +1123,14 @@
         },
         "overrides": []
       },
+      "format": "bytes",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 3,
         "w": 4,
@@ -659,7 +1140,20 @@
       "id": 44,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -675,6 +1169,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "pg_settings_maintenance_work_mem_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
       "targets": [
         {
           "expr": "pg_settings_maintenance_work_mem_bytes{instance=\"$instance\"}",
@@ -686,11 +1200,28 @@
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "title": "Maintenance Work Mem",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
@@ -722,6 +1253,14 @@
         },
         "overrides": []
       },
+      "format": "bytes",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
         "h": 3,
         "w": 4,
@@ -731,7 +1270,20 @@
       "id": 46,
       "interval": null,
       "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
       "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -747,6 +1299,26 @@
         "textMode": "auto"
       },
       "pluginVersion": "7.3.4",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "pg_settings_work_mem_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
       "targets": [
         {
           "expr": "pg_settings_work_mem_bytes{instance=\"$instance\"}",
@@ -758,8 +1330,18 @@
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "title": "Work Mem",
-      "type": "stat"
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
@@ -2830,7 +3412,6 @@
         "allValue": null,
         "current": {
           "selected": true,
-          "tags": [],
           "text": [
             "All"
           ],
@@ -2862,7 +3443,6 @@
         "allValue": null,
         "current": {
           "selected": true,
-          "tags": [],
           "text": [
             "All"
           ],
@@ -2924,5 +3504,5 @@
   "timezone": "",
   "title": "OpenGauss Database",
   "uid": "OpenGaussOverview",
-  "version": 62
+  "version": 67
 }

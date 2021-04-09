@@ -455,6 +455,18 @@ omm`))
 		fmt.Println(fmt.Sprintf("%v%03d", now.Unix(), 00/1000000))
 	})
 	// t.Run("test_timeout", func(t *testing.T) {
+	// 	fmt.Println(uint32(196659))
+	// 	dsn := "host=localhost user=sha256test1 password=Test@123 port=5433 dbname=postgres sslmode=disable"
+	// 	db, err := sql.Open("opengauss", dsn)
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 	}
+	// 	if err := db.Ping(); err != nil {
+	// 		t.Error(err)
+	// 	}
+	// })
+
+	// t.Run("test_timeout", func(t *testing.T) {
 	// 	dsn := "host=localhost user=monitor password=mtkOP@128 port=5433 dbname=postgres sslmode=disable"
 	// 	db, err := sql.Open("opengauss", dsn)
 	// 	if err != nil {
