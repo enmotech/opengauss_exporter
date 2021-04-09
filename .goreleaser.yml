@@ -3,7 +3,7 @@
 env:
   - GO111MODULE=on
   - GOPROXY=https://goproxy.cn
-  - BETA_VERSION=v0.0.5
+  - BETA_VERSION=v0.0.6
 before:
   hooks:
     # You may remove this if you don't use go modules.
