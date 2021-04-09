@@ -454,31 +454,61 @@ omm`))
 		fmt.Println(now)
 		fmt.Println(fmt.Sprintf("%v%03d", now.Unix(), 00/1000000))
 	})
-	// t.Run("test", func(t *testing.T) {
-	// 	dsn := "host=localhost user=gaussdb password=mtkOP@128 port=5433 dbname=postgres sslmode=disable"
-	// 	db, err := sql.Open("postgres", dsn)
+	// t.Run("test_timeout", func(t *testing.T) {
+	// 	dsn := "host=localhost user=monitor password=mtkOP@128 port=5433 dbname=postgres sslmode=disable"
+	// 	db, err := sql.Open("opengauss", dsn)
 	// 	if err != nil {
 	// 		t.Error(err)
 	// 	}
-	// 	ctx, _ := context.WithTimeout(context.Background(), 80*time.Millisecond)
-	// 	begin := time.Now()
-	// 	rows, err := db.QueryContext(ctx, `SELECT * from mtk.mtk_test_1`)
-	// 	fmt.Println( time.Now().Sub(begin).Milliseconds(), "ms")
-	// 	if err != nil {
-	// 		t.Error(err)
-	// 		return
-	// 	}
-	// 	for rows.Next() {
-	// 		var s1, s2,s3,s4,s5,s6,s7 string
-	// 		if err := rows.Scan(&s1,&s2,&s3,&s4,&s5,&s6,&s7); err != nil {
+	// 	for i := 0; i < 200; i++ {
+	// 		begin := time.Now()
+	// 		rows, err := db.Query(`SELECT pid,client_addr,application_name,state,sync_state,lsn,
+	//                lsn - sent_location   as sent_diff,
+	//        lsn - write_location  as write_diff,
+	//        lsn - flush_location  as flush_diff,
+	//        lsn - replay_location as replay_diff,
+	//        sent_location,write_location,flush_location,replay_location,
+	//        backend_uptime,sync_priority
+	//        FROM (
+	//        SELECT pid,
+	//          client_addr,
+	//          application_name,
+	//          state,
+	//          sync_state,
+	//          pg_xlog_location_diff(CASE WHEN pg_is_in_recovery() THEN pg_last_xlog_receive_location() ELSE pg_current_xlog_location() END, '0/0') AS lsn,
+	//          pg_xlog_location_diff(sender_sent_location,'0/0')                          AS sent_location,
+	//          pg_xlog_location_diff(receiver_write_location,'0/0')                         AS write_location,
+	//          pg_xlog_location_diff(receiver_flush_location,'0/0')                         AS flush_location,
+	//          pg_xlog_location_diff(receiver_replay_location,'0/0')                        AS replay_location,
+	//          pg_xlog_location_diff(receiver_replay_location,pg_current_xlog_location())   AS replay_lag,
+	//          extract(EPOCH FROM now() - backend_start) AS backend_uptime,
+	//          sync_priority
+	//     FROM pg_stat_replication) t`)
+	//
+	// 		if err != nil {
 	// 			t.Error(err)
 	// 			return
 	// 		}
-	// 		fmt.Println(s1, s2)
+	// 		for rows.Next() {
+	// 			var s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17 string
+	// 			var s18, s19 *string
+	// 			if err := rows.Scan(&s1, &s2, &s3, &s4, &s5, &s6, &s7, &s8, &s9, &s10,
+	// 				&s11, &s12, &s13, &s14, &s15, &s16, &s17, &s18, &s19); err != nil {
+	// 				t.Error(err)
+	// 				return
+	// 			}
+	// 			// fmt.Println(s1, s2)
+	// 		}
+	// 		if err = rows.Err(); err != nil {
+	// 			t.Error(err)
+	// 		}
+	// 		rows.Close()
+	//
+	// 		fmt.Printf("%04d :%04vms\n", i, time.Now().Sub(begin).Milliseconds())
+	// 		time.Sleep(1 * time.Second)
 	// 	}
-	// 	if err = rows.Err(); err != nil {
-	// 		t.Error(err)
-	// 	}
+	// 	// ctx, _ := context.WithTimeout(context.Background(), 80*time.Millisecond)
+	//
 	// 	// }
 	//
 	// })
