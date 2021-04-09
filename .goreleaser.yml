@@ -3,6 +3,7 @@
 env:
   - GO111MODULE=on
   - GOPROXY=https://goproxy.cn
+  - BETA_VERSION=v0.0.5
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -23,21 +24,18 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X opengauss_exporter/pkg/version.version={{ .Version }} -X opengauss_exporter/pkg/version.gitCommit={{ .ShortCommit }} -X opengauss_exporter/pkg/version.buildTimestamp={{ .Date }} -X opengauss_exporter/pkg/version.gitTagInfo={{ .Tag }}
+      - -s -w -X opengauss_exporter/pkg/version.version={{ .Version }} -X opengauss_exporter/pkg/version.gitCommit={{ .ShortCommit }} -X opengauss_exporter/pkg/version.buildTimestamp={{ .Date }} -X opengauss_exporter/pkg/version.gitTagInfo={{ .Tag }}-{{.ShortCommit}}
 archives:
   - id: export-archive
     format: zip
-    replacements:
-      386: i386
-      amd64: x86_64
     files:
       - og_exporter_default.yaml
       - LICENSE
       - README.md
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "{{ .ProjectName }}_checksums.txt"
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "{{ .Env.BETA_VERSION }}-beta-{{.ShortCommit}}"
 changelog:
   sort: asc
   filters:

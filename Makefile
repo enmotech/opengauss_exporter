@@ -92,8 +92,8 @@ info:
 	@echo "Docker Image Version:    \"${DOCKER_IMAGE_VERSION}\""
 	@echo "Release Or Beta:         \"${VERSION_METADATA}\""
 	@echo "Build Timestamp:         \"${BUILD_DATE}\""
-	@echo "Git Hash:                \"${GIT_COMMIT}\""
-	@echo "Git Branch:              \"${GIT_TAG}\""
+	@echo "Git Commit Hash:         \"${GIT_COMMIT}\""
+	@echo "Git Tag:                 \"${GIT_TAG}\""
 
 
 
