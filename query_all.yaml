@@ -1,4 +1,4 @@
-pg_bgwriter:
+pg_stat_bgwriter:
   name: pg_stat_bgwriter
   desc: OpenGauss background writer metrics
   query:
@@ -164,11 +164,11 @@ pg_connections:
   status: enable
   ttl: 60
   timeout: 1
-pg_activity:
-  name: pg_activity
+pg_stat_activity:
+  name: pg_stat_activity
   desc: OpenGauss backend activity group by state
   query:
-    - name: pg_activity
+    - name: pg_stat_activity
       sql: |-
         SELECT datname,
                state,
@@ -215,10 +215,10 @@ pg_activity:
   status: enable
   ttl: 60
   timeout: 1
-pg_replication:
-  name: pg_replication
+pg_stat_replication:
+  name: pg_stat_replication
   query:
-    - name: pg_replication
+    - name: pg_stat_replication
       sql: |-
         SELECT pid,client_addr,application_name,state,sync_state,lsn,
                    lsn - sent_location   as sent_diff,

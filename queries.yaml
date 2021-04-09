@@ -1,4 +1,4 @@
-pg_bgwriter:
+pg_stat_bgwriter:
   name: pg_stat_bgwriter
   desc: OpenGauss background writer metrics
   query:
