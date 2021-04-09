@@ -17,7 +17,7 @@
   "gnetId": 9628,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1617882174021,
+  "iteration": 1617933059269,
   "links": [],
   "panels": [
     {
@@ -1770,8 +1770,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_locks_count{datname=~\"$datname\", instance=~\"$instance\", mode=~\"$mode\"} != 0",
+          "expr": "pg_lock_count{datname=~\"$datname\", instance=~\"$instance\", mode=~\"$mode\"} != 0",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{datname}},{{mode}}",
           "refId": "A",
@@ -2673,7 +2674,7 @@
       }
     }
   ],
-  "refresh": "5s",
+  "refresh": "30s",
   "schemaVersion": 26,
   "style": "dark",
   "tags": [
@@ -2737,6 +2738,7 @@
           }
         ],
         "query": "1s,5s,1m,5m,1h,6h,1d",
+        "queryValue": "",
         "refresh": 2,
         "skipUrlSync": false,
         "type": "interval"
@@ -2830,10 +2832,10 @@
           "selected": true,
           "tags": [],
           "text": [
-            "postgres"
+            "All"
           ],
           "value": [
-            "postgres"
+            "$__all"
           ]
         },
         "datasource": "Prometheus",
@@ -2859,12 +2861,17 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
+          "selected": true,
+          "tags": [],
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "datasource": "Prometheus",
-        "definition": "",
+        "definition": "label_values(mode)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -2872,7 +2879,7 @@
         "multi": true,
         "name": "mode",
         "options": [],
-        "query": "label_values({mode=~\"accessexclusivelock|accesssharelock|exclusivelock|rowexclusivelock|rowsharelock|sharelock|sharerowexclusivelock|shareupdateexclusivelock\"}, mode)",
+        "query": "label_values(mode)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -2917,5 +2924,5 @@
   "timezone": "",
   "title": "OpenGauss Database",
   "uid": "OpenGaussOverview",
-  "version": 58
+  "version": 62
 }
