@@ -1,4 +1,4 @@
-FROM golang:1.14 as builder
+FROM golang:1.15 as builder
 WORKDIR /go/src/opengauss_exporter
 COPY . .
 ENV GOPROXY=https://goproxy.cn GO111MODULE=on
