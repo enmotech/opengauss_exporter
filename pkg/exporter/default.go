@@ -237,7 +237,7 @@ var (
 		"pg_stat_replication":        pgStatReplication,
 		"pg_stat_activity":           pgStatActivity,
 		"pg_database":                pgDatabase,
-		"pg_bgwriter":                pgStatBgWriter,
+		"pg_stat_bgwriter":           pgStatBgWriter,
 		"pg_stat_database":           pgStatDatabase,
 		"pg_stat_database_conflicts": pgStatDatabaseConflicts,
 	}

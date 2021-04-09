@@ -1,4 +1,4 @@
-pg_bgwriter:
+pg_stat_bgwriter:
   name: pg_stat_bgwriter
   desc: OpenGauss background writer metrics
   query:
@@ -101,32 +101,22 @@ pg_database:
   status: enable
   ttl: 60
   timeout: 1
-pg_activity:
-  name: pg_activity
-  desc: OpenGauss backend activity group by state
+pg_lock:
+  name: pg_lock
+  desc: OpenGauss lock distribution by mode
   query:
-    - name: pg_activity
+    - name: pg_lock
       sql: |-
-        SELECT datname,
-               state,
-               coalesce(count, 0)             AS count,
-               coalesce(max_duration, 0)      AS max_duration,
-               coalesce(max_tx_duration, 0)   AS max_tx_duration,
-               coalesce(max_conn_duration, 0) AS max_conn_duration
-        FROM (SELECT d.oid AS database, d.datname, a.state
-              FROM pg_database d,
-                   unnest(ARRAY ['active','idle','idle in transaction','idle in transaction (aborted)','fastpath function call','disabled']) a(state)
-              WHERE d.datname NOT IN ('template0','template1')) base
-                 LEFT JOIN (
-            SELECT datname, state,
-                   count(*) AS count,
-                   max(extract(epoch from now() - state_change)) AS max_duration,
-                   max(extract(epoch from now() - xact_start))   AS max_tx_duration,
-                   max(extract(epoch from now() - backend_start)) AS max_conn_duration
-            FROM pg_stat_activity WHERE pid <> pg_backend_pid()
-            GROUP BY datname, state
-        ) a USING (datname, state);
-      version: '>=1.0.0'
+        SELECT datname, mode, coalesce(count, 0) AS count
+        FROM (
+          SELECT d.oid AS database, d.datname, l.mode
+          FROM pg_database d,unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']) l(mode)
+          WHERE d.datname NOT IN ('template0','template1')) base
+        LEFT JOIN (SELECT database, mode, count(1) AS count
+                   FROM pg_locks
+                   WHERE database IS NOT NULL GROUP BY database, mode) cnt
+        USING (database, mode);
+      version: '>=0.0.0'
       timeout: 1
       ttl: 60
       status: enable
@@ -134,115 +124,11 @@ pg_activity:
     - name: datname
       description: Name of this database
       usage: LABEL
-    - name: state
-      description: connection state
+    - name: mode
+      description: Type of Lock
       usage: LABEL
     - name: count
-      description: number of connections in this state
-      usage: GAUGE
-    - name: max_duration
-      description: max duration since state change among (datname, state)
-      usage: GAUGE
-    - name: max_tx_duration
-      description: max duration in seconds any active transaction has been running
-      usage: GAUGE
-    - name: max_conn_duration
-      description: max backend session duration since state change among (datname, state)
-      usage: GAUGE
-  status: enable
-  ttl: 60
-  timeout: 1
-pg_replication:
-  name: pg_replication
-  query:
-    - name: pg_replication
-      sql: |-
-        SELECT pid,client_addr,application_name,state,sync_state,lsn,
-                   lsn - sent_location   as sent_diff,
-           lsn - write_location  as write_diff,
-           lsn - flush_location  as flush_diff,
-           lsn - replay_location as replay_diff,
-           sent_location,write_location,flush_location,replay_location,
-           backend_uptime,sync_priority
-           FROM (
-           SELECT pid,
-             client_addr,
-             application_name,
-             state,
-             sync_state,
-             pg_xlog_location_diff(CASE WHEN pg_is_in_recovery() THEN pg_last_xlog_receive_location() ELSE pg_current_xlog_location() END, '0/0') AS lsn,
-             pg_xlog_location_diff(sender_sent_location,'0/0')                          AS sent_location,
-             pg_xlog_location_diff(receiver_write_location,'0/0')                         AS write_location,
-             pg_xlog_location_diff(receiver_flush_location,'0/0')                         AS flush_location,
-             pg_xlog_location_diff(receiver_replay_location,'0/0')                        AS replay_location,
-             pg_xlog_location_diff(receiver_replay_location,pg_current_xlog_location())   AS replay_lag,
-             extract(EPOCH FROM now() - backend_start) AS backend_uptime,
-             sync_priority
-        FROM pg_stat_replication) t;
-      version: '>=1.0.0'
-      timeout: 1
-      ttl: 60
-      status: enable
-  metrics:
-    - name: pid
-      description: unique walsender pid
-      usage: LABEL
-    - name: client_addr
-      description: client address of wal receiver
-      usage: LABEL
-    - name: application_name
-      description: application name of standby
-      usage: LABEL
-    - name: state
-      description: replication state startup|catchup|streaming|backup|stopping
-      usage: LABEL
-    - name: sync_state
-      description: replication sync state async|potential|sync|quorum
-      usage: LABEL
-    - name: lsn
-      description: current log position on this server
-      usage: COUNTER
-    - name: sent_diff
-      description: last log position sent to this standby server diff with current lsn
-      usage: GAUGE
-    - name: write_diff
-      description: last log position written to disk by this standby server diff with current lsn
-      usage: GAUGE
-    - name: flush_diff
-      description: last log position flushed to disk by this standby server diff with current lsn
-      usage: GAUGE
-    - name: replay_diff
-      description: last log position replayed into the database on this standby server diff with current lsn
-      usage: GAUGE
-    - name: sent_lsn
-      description: last log position sent to this standby server
-      usage: COUNTER
-    - name: write_lsn
-      description: last log position written to disk by this standby server
-      usage: COUNTER
-    - name: flush_lsn
-      description: last log position flushed to disk by this standby server
-      usage: COUNTER
-    - name: replay_lsn
-      description: last log position replayed into the database on this standby server
-      usage: COUNTER
-    - name: write_lag
-      description: latest ACK lsn diff with write (sync-remote-write lag)
-      usage: GAUGE
-    - name: flush_lag
-      description: latest ACK lsn diff with flush (sync-remote-flush lag)
-      usage: GAUGE
-    - name: replay_lag
-      description: latest ACK lsn diff with replay (sync-remote-apply lag)
-      usage: GAUGE
-    - name: backend_uptime
-      description: how long since standby connect to this server
-      usage: GAUGE
-    - name: backend_xmin
-      description: this standby's xmin horizon reported by hot_standby_feedback.
-      usage: GAUGE
-    - name: sync_priority
-      description: priority of being chosen as synchronous standby
+      description: Number of locks
       usage: GAUGE
   status: enable
   ttl: 60
@@ -307,22 +193,55 @@ pg_replication_slots:
   status: enable
   ttl: 60
   timeout: 1
-pg_lock:
-  name: pg_lock
-  desc: OpenGauss lock distribution by mode
+pg_run_times:
+  name: pg_run_times
+  desc: OpenGauss database run times
   query:
-    - name: pg_lock
-      sql: |-
-        SELECT datname, mode, coalesce(count, 0) AS count
-        FROM (
-          SELECT d.oid AS database, d.datname, l.mode
-          FROM pg_database d,unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']) l(mode)
-          WHERE d.datname NOT IN ('template0','template1')) base
-        LEFT JOIN (SELECT database, mode, count(1) AS count
-                   FROM pg_locks
-                   WHERE database IS NOT NULL GROUP BY database, mode) cnt
-        USING (database, mode);
+    - name: pg_run_times
+      sql: select 'cluster_runtime' as run_name,(case pg_is_in_recovery() when 'f' then 1 else 0 end) as db_role,extract(epoch from(now() - pg_postmaster_start_time())) as run_time;
       version: '>=0.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+  metrics:
+    - name: run_name
+      description: Name of cluster
+      usage: LABEL
+    - name: db_role
+      description: Role of database
+      usage: GAUGE
+    - name: run_time
+      description: Run times of cluster
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 1
+pg_stat_activity:
+  name: pg_stat_activity
+  desc: OpenGauss backend activity group by state
+  query:
+    - name: pg_stat_activity
+      sql: |-
+        SELECT datname,
+               state,
+               coalesce(count, 0)             AS count,
+               coalesce(max_duration, 0)      AS max_duration,
+               coalesce(max_tx_duration, 0)   AS max_tx_duration,
+               coalesce(max_conn_duration, 0) AS max_conn_duration
+        FROM (SELECT d.oid AS database, d.datname, a.state
+              FROM pg_database d,
+                   unnest(ARRAY ['active','idle','idle in transaction','idle in transaction (aborted)','fastpath function call','disabled']) a(state)
+              WHERE d.datname NOT IN ('template0','template1')) base
+                 LEFT JOIN (
+            SELECT datname, state,
+                   count(*) AS count,
+                   max(extract(epoch from now() - state_change)) AS max_duration,
+                   max(extract(epoch from now() - xact_start))   AS max_tx_duration,
+                   max(extract(epoch from now() - backend_start)) AS max_conn_duration
+            FROM pg_stat_activity WHERE pid <> pg_backend_pid()
+            GROUP BY datname, state
+        ) a USING (datname, state);
+      version: '>=1.0.0'
       timeout: 1
       ttl: 60
       status: enable
@@ -330,11 +249,20 @@ pg_lock:
     - name: datname
       description: Name of this database
       usage: LABEL
-    - name: mode
-      description: Type of Lock
+    - name: state
+      description: connection state
       usage: LABEL
     - name: count
-      description: Number of locks
+      description: number of connections in this state
+      usage: GAUGE
+    - name: max_duration
+      description: max duration since state change among (datname, state)
+      usage: GAUGE
+    - name: max_tx_duration
+      description: max duration in seconds any active transaction has been running
+      usage: GAUGE
+    - name: max_conn_duration
+      description: max backend session duration since state change among (datname, state)
       usage: GAUGE
   status: enable
   ttl: 60
@@ -445,24 +373,97 @@ pg_stat_database_conflicts:
   status: enable
   ttl: 60
   timeout: 1
-pg_run_times:
-  name: pg_run_times
-  desc: OpenGauss database run times
+pg_stat_replication:
+  name: pg_stat_replication
   query:
-    - name: pg_run_times
-      sql: select 'cluster_runtime' as run_name,(case pg_is_in_recovery() when 'f' then 1 else 0 end) as db_role,extract(epoch from(now() - pg_postmaster_start_time())) as run_time;
-      version: '>=0.0.0'
+    - name: pg_stat_replication
+      sql: |-
+        SELECT pid,client_addr,application_name,state,sync_state,lsn,
+                   lsn - sent_location   as sent_diff,
+           lsn - write_location  as write_diff,
+           lsn - flush_location  as flush_diff,
+           lsn - replay_location as replay_diff,
+           sent_location,write_location,flush_location,replay_location,
+           backend_uptime,sync_priority
+           FROM (
+           SELECT pid,
+             client_addr,
+             application_name,
+             state,
+             sync_state,
+             pg_xlog_location_diff(CASE WHEN pg_is_in_recovery() THEN pg_last_xlog_receive_location() ELSE pg_current_xlog_location() END, '0/0') AS lsn,
+             pg_xlog_location_diff(sender_sent_location,'0/0')                          AS sent_location,
+             pg_xlog_location_diff(receiver_write_location,'0/0')                         AS write_location,
+             pg_xlog_location_diff(receiver_flush_location,'0/0')                         AS flush_location,
+             pg_xlog_location_diff(receiver_replay_location,'0/0')                        AS replay_location,
+             pg_xlog_location_diff(receiver_replay_location,pg_current_xlog_location())   AS replay_lag,
+             extract(EPOCH FROM now() - backend_start) AS backend_uptime,
+             sync_priority
+        FROM pg_stat_replication) t;
+      version: '>=1.0.0'
       timeout: 1
+      ttl: 60
       status: enable
   metrics:
-    - name: run_name
-      description: Name of cluster
+    - name: pid
+      description: unique walsender pid
       usage: LABEL
-    - name: db_role
-      description: Role of database
+    - name: client_addr
+      description: client address of wal receiver
+      usage: LABEL
+    - name: application_name
+      description: application name of standby
+      usage: LABEL
+    - name: state
+      description: replication state startup|catchup|streaming|backup|stopping
+      usage: LABEL
+    - name: sync_state
+      description: replication sync state async|potential|sync|quorum
+      usage: LABEL
+    - name: lsn
+      description: current log position on this server
+      usage: COUNTER
+    - name: sent_diff
+      description: last log position sent to this standby server diff with current lsn
       usage: GAUGE
-    - name: run_time
-      description: Run times of cluster
+    - name: write_diff
+      description: last log position written to disk by this standby server diff with current lsn
+      usage: GAUGE
+    - name: flush_diff
+      description: last log position flushed to disk by this standby server diff with current lsn
+      usage: GAUGE
+    - name: replay_diff
+      description: last log position replayed into the database on this standby server diff with current lsn
+      usage: GAUGE
+    - name: sent_lsn
+      description: last log position sent to this standby server
+      usage: COUNTER
+    - name: write_lsn
+      description: last log position written to disk by this standby server
+      usage: COUNTER
+    - name: flush_lsn
+      description: last log position flushed to disk by this standby server
+      usage: COUNTER
+    - name: replay_lsn
+      description: last log position replayed into the database on this standby server
+      usage: COUNTER
+    - name: write_lag
+      description: latest ACK lsn diff with write (sync-remote-write lag)
+      usage: GAUGE
+    - name: flush_lag
+      description: latest ACK lsn diff with flush (sync-remote-flush lag)
+      usage: GAUGE
+    - name: replay_lag
+      description: latest ACK lsn diff with replay (sync-remote-apply lag)
+      usage: GAUGE
+    - name: backend_uptime
+      description: how long since standby connect to this server
+      usage: GAUGE
+    - name: backend_xmin
+      description: this standby's xmin horizon reported by hot_standby_feedback.
+      usage: GAUGE
+    - name: sync_priority
+      description: priority of being chosen as synchronous standby
       usage: GAUGE
   status: enable
   ttl: 60
