@@ -4,12 +4,14 @@ env:
   - GO111MODULE=on
   - GOPROXY=https://goproxy.cn
   - BETA_VERSION=v0.0.6
+  - DOCKER_CLI_EXPERIMENTAL=enabled
 before:
   hooks:
     # You may remove this if you don't use go modules.
     - go mod download
 builds:
-  - env:
+  - id: opengauss_exporter
+    env:
       - CGO_ENABLED=0
     binary: opengauss_exporter
     main: ./cmd/opengauss_exporter/main.go
@@ -25,13 +27,6 @@ builds:
       - -trimpath
     ldflags:
       - -s -w -X opengauss_exporter/pkg/version.version={{ .Version }} -X opengauss_exporter/pkg/version.gitCommit={{ .ShortCommit }} -X opengauss_exporter/pkg/version.buildTimestamp={{ .Date }} -X opengauss_exporter/pkg/version.gitTagInfo={{ .Tag }}-{{.ShortCommit}}
-archives:
-  - id: export-archive
-    format: zip
-    files:
-      - og_exporter_default.yaml
-      - LICENSE
-      - README.md
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
 snapshot:
@@ -47,7 +42,77 @@ changelog:
       - Merge branch
       - go mod tidy
       - bump version
+dockers:
+  - image_templates:
+      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
+    dockerfile: Dockerfile_goreleaser
+    use_buildx: true
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+    extra_files:
+      - scripts/docker-entrypoint.sh
+      - og_exporter_default.yaml
+    skip_push: false
+  - image_templates:
+      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
+    dockerfile: Dockerfile_goreleaser
+    use_buildx: true
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64"
+    goarch: arm64
+    extra_files:
+      - scripts/docker-entrypoint.sh
+      - og_exporter_default.yaml
+    skip_push: false
+docker_manifests:
+  - name_template: 'enmotech/opengauss_exporter:{{ .Tag }}'
+    image_templates:
+      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
+      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
+  - name_template: 'enmotech/opengauss_exporter:latest'
+    image_templates:
+      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
+      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
+archives:
+  - id: export-archive
+    format: zip
+    files:
+      - og_exporter_default.yaml
+      - LICENSE
+      - README.md
+nfpms:
+  - id: opengauss_exporter
+    builds:
+      - opengauss_exporter
+    formats:
+      - rpm
+    vendor: Enmotech
+    homepage: https://www.enmotech.com
+    maintainer: Mogdb Support <mogdb-support@enmotech.com>
+    description: Mogdb/OpenGauss Database prometheus exporter
+    bindir: /usr/bin
+    contents:
+      - src: og_exporter_default.yaml
+        dst: /etc/og_exporter/og_exporter.yaml
+        type: config
+        file_info:
+          mode: 0644
 release:
+  github:
+    owner: enmotech
+    name: opengauss_exporter
   disable: true
 #nfpms:
 #  - id: export-rpm
