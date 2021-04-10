@@ -38,7 +38,10 @@ func (s *Server) querySettings(ch chan<- prometheus.Metric) error {
 			pgSetting.unit = *unit
 		}
 
-		ch <- pgSetting.metric(s.namespace, s.labels)
+		if metric := pgSetting.metric(s.namespace, s.labels); metric != nil {
+			ch <- metric
+		}
+
 	}
 	if err = rows.Err(); err != nil {
 		return err
@@ -82,7 +85,8 @@ func (s *pgSetting) metric(namespace string, labels prometheus.Labels) prometheu
 
 	default:
 		// Panic because we got a type we didn't ask for
-		panic(fmt.Sprintf("Unsupported vartype %q", s.varType))
+		// panic(fmt.Sprintf("Unsupported vartype %q", s.varType))
+		return nil
 	}
 
 	desc := newDesc(namespace, subsystem, name, shortDesc, labels)
@@ -151,6 +155,5 @@ func (s *pgSetting) normaliseUnit() (val float64, unit string, err error) {
 	case "64MB":
 		val *= math.Pow(2, 26)
 	}
-
 	return
 }

@@ -17,10 +17,13 @@ const (
 )
 
 var ColumnUsage = map[string]bool{
-	DISCARD: true,
-	LABEL:   true,
-	COUNTER: true,
-	GAUGE:   true,
+	DISCARD:      true,
+	LABEL:        true,
+	COUNTER:      true,
+	GAUGE:        true,
+	HISTOGRAM:    true,
+	MappedMETRIC: true,
+	DURATION:     true,
 }
 
 type Column struct {

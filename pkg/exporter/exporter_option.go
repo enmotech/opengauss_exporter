@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// ExporterOpt configures Exporter
+// Opt ExporterOpt configures Exporter
 type Opt func(*Exporter)
 
 // WithDNS add config dsn to Exporter
@@ -65,7 +65,7 @@ func WithTags(tags string) Opt {
 	}
 }
 
-// WithTags will register given tags to Exporter and all belonged servers
+// WithTimeToString WithTags will register given tags to Exporter and all belonged servers
 func WithTimeToString(b bool) Opt {
 	return func(e *Exporter) {
 		e.timeToString = b

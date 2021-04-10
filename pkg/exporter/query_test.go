@@ -84,6 +84,21 @@ func TestQueryInstance(t *testing.T) {
 				Desc:  "col4",
 				Usage: COUNTER,
 			},
+			{
+				Name:  "col5",
+				Desc:  "col5",
+				Usage: HISTOGRAM,
+			},
+			{
+				Name:  "col6",
+				Desc:  "col6",
+				Usage: MappedMETRIC,
+			},
+			{
+				Name:  "col7",
+				Desc:  "col7",
+				Usage: DURATION,
+			},
 		},
 		Status:      "",
 		TTL:         0,
@@ -128,6 +143,10 @@ func TestQueryInstance(t *testing.T) {
 		r := queryInstance.TimeoutDuration()
 		assert.Equal(t, time.Duration(float64(time.Second)*queryInstance.Timeout), r)
 	})
+	t.Run("IsEnableCache", func(t *testing.T) {
+		r := queryInstance.IsEnableCache()
+		assert.Equal(t, false, r)
+	})
 	t.Run("TimeoutDuration_other", func(t *testing.T) {
 		queryInstance.Timeout = 1
 		r := queryInstance.TimeoutDuration()
@@ -152,7 +171,9 @@ func TestQueryInstance(t *testing.T) {
 		col4 := queryInstance.GetColumn("col4", nil)
 		assert.NotNil(t, col4)
 		col5 := queryInstance.GetColumn("col5", nil)
-		assert.Nil(t, col5)
+		assert.NotNil(t, col5)
+		col11 := queryInstance.GetColumn("col11", nil)
+		assert.Nil(t, col11)
 	})
 }
 func TestQuery(t *testing.T) {

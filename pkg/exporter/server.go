@@ -49,7 +49,7 @@ func ServerWithDisableSettingsMetrics(b bool) ServerOpt {
 	}
 }
 
-// ServerWithDisableSettingsMetrics will specify metric namespace, by default is pg or pgbouncer
+// ServerWithDisableCache  will specify metric namespace, by default is pg or pgbouncer
 func ServerWithDisableCache(b bool) ServerOpt {
 	return func(s *Server) {
 		s.disableCache = b

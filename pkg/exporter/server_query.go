@@ -3,7 +3,6 @@
 package exporter
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
@@ -18,9 +17,6 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 	wg := sync.WaitGroup{}
 	limit := newRateLimit(s.parallel)
 	for metric, queryInstance := range s.queryInstanceMap {
-		if metric == "pg_primary_only" {
-			fmt.Println(metric)
-		}
 		if !s.primary && queryInstance.Primary {
 			log.Infof("Collect Metric %s only run primary. instance is recovery auto skip", metric)
 			continue
@@ -78,7 +74,7 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		// If found, check if needs refresh from cache
 		if !found {
 			scrapeMetric = true
-		} else if !cachedMetric.IsValid(queryInstance.TTL) {
+		} else if !cachedMetric.IsValid(querySQL.TTL) {
 			scrapeMetric = true
 		}
 		if cachedMetric != nil && (len(cachedMetric.nonFatalErrors) > 0 || len(cachedMetric.metrics) == 0) {
