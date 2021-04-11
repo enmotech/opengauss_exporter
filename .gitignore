@@ -1,3 +1,5 @@
 dist
 bin
 .metrics*
+test/coverage*
+/test/profile.out
