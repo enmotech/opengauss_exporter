@@ -9,7 +9,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"gopkg.in/yaml.v2"
 	"net/http"
 	"opengauss_exporter/pkg/exporter"
 	"opengauss_exporter/pkg/version"
@@ -228,15 +227,11 @@ func runApp(args *Args) {
 	}
 
 	if *args.DryRun {
-		queryList := ogExporter.GetMetricsList()
-		if queryList == nil {
-			return
-		}
-		buf, err := yaml.Marshal(&queryList)
+		queryList, err := ogExporter.PrintMetricsList()
 		if err != nil {
 			log.Error(err)
 		}
-		fmt.Println(string(buf))
+		fmt.Println(queryList)
 		return
 	}
 	prometheus.MustRegister(ogExporter)

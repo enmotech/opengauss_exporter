@@ -3,6 +3,7 @@
 package exporter
 
 import (
+	"fmt"
 	"github.com/blang/semver"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -52,10 +53,10 @@ func TestCheckStatus(t *testing.T) {
 
 func TestQueryInstance(t *testing.T) {
 	query1 := &Query{
-		Name:              "",
-		SQL:               "select col1,col1,col2 from dual",
-		SupportedVersions: "",
-		Status:            "",
+		Name:    "",
+		SQL:     "select col1,col1,col2 from dual",
+		Version: "",
+		Status:  "",
 	}
 	queryInstance := &QueryInstance{
 		Name: "test",
@@ -174,6 +175,10 @@ func TestQueryInstance(t *testing.T) {
 		assert.NotNil(t, col5)
 		col11 := queryInstance.GetColumn("col11", nil)
 		assert.Nil(t, col11)
+	})
+	t.Run("Explain", func(t *testing.T) {
+		pgStatDatabase.Check()
+		fmt.Println(pgStatDatabase.Explain())
 	})
 }
 func TestQuery(t *testing.T) {

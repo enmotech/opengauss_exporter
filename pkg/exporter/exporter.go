@@ -90,14 +90,6 @@ func (e *Exporter) loadConfig() error {
 	return nil
 }
 
-// GetMetricsList Get Metrics List
-func (e *Exporter) GetMetricsList() map[string]*QueryInstance {
-	if e.metricMap == nil {
-		return nil
-	}
-	return e.metricMap
-}
-
 // setupInternalMetrics setup Internal Metrics
 func (e *Exporter) setupInternalMetrics() {
 

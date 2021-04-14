@@ -12,7 +12,7 @@ var (
 		Desc: "OpenGauss lock distribution by mode",
 		Queries: []*Query{
 			{
-				SupportedVersions: ">=0.0.0",
+				Version: ">=0.0.0",
 				SQL: `SELECT
   datname, mode, coalesce(count, 0) AS count
 FROM (
@@ -41,7 +41,7 @@ WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);`
   (case pg_is_in_recovery() when 't' then null else pg_current_xlog_location() end) AS pg_current_xlog_location,
   (case pg_is_in_recovery() when 't' then null else pg_xlog_location_diff(pg_current_xlog_location(), receiver_replay_location)::float end) AS pg_xlog_location_diff
 FROM pg_stat_replication`,
-				SupportedVersions: ">=1.0.0",
+				Version: ">=1.0.0",
 			},
 		},
 		Metrics: []*Column{
@@ -119,7 +119,7 @@ FROM (SELECT d.oid AS database, d.datname, a.state
     FROM pg_stat_activity WHERE pid <> pg_backend_pid()
     GROUP BY datname, state
 ) a USING (datname, state);`,
-				SupportedVersions: ">=1.0.0",
+				Version: ">=1.0.0",
 			},
 		},
 		Metrics: []*Column{
@@ -136,8 +136,8 @@ FROM (SELECT d.oid AS database, d.datname, a.state
 		Desc: "OpenGauss Database size",
 		Queries: []*Query{
 			{
-				SQL:               `SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database where datname NOT IN ('template0','template1')`,
-				SupportedVersions: ">=0.0.0",
+				SQL:     `SELECT pg_database.datname, pg_database_size(pg_database.datname) as size_bytes FROM pg_database where datname NOT IN ('template0','template1')`,
+				Version: ">=0.0.0",
 			},
 		},
 		Metrics: []*Column{
@@ -162,7 +162,7 @@ FROM (SELECT d.oid AS database, d.datname, a.state
     buffers_alloc,
     stats_reset
 FROM pg_stat_bgwriter`,
-				SupportedVersions: ">=0.0.0",
+				Version: ">=0.0.0",
 			},
 		},
 		Metrics: []*Column{
@@ -184,8 +184,8 @@ FROM pg_stat_bgwriter`,
 		Desc: "OpenGauss database statistics",
 		Queries: []*Query{
 			{
-				SQL:               "select * from pg_stat_database where datname NOT IN ('template0','template1')",
-				SupportedVersions: ">=0.0.0",
+				SQL:     "select * from pg_stat_database where datname NOT IN ('template0','template1')",
+				Version: ">=0.0.0",
 			},
 		},
 		Metrics: []*Column{
@@ -215,8 +215,8 @@ FROM pg_stat_bgwriter`,
 		Desc: "OpenGauss database statistics conflicts",
 		Queries: []*Query{
 			{
-				SQL:               "select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1')",
-				SupportedVersions: ">=0.0.0",
+				SQL:     "select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1')",
+				Version: ">=0.0.0",
 			},
 		},
 		Metrics: []*Column{

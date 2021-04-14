@@ -511,9 +511,9 @@ postgres,AccessExclusiveLock,0`))
 			Desc: "a1",
 			Queries: []*Query{
 				{
-					Name:              "a1",
-					SQL:               "select",
-					SupportedVersions: "",
+					Name:    "a1",
+					SQL:     "select",
+					Version: "",
 				},
 			},
 		}
@@ -545,9 +545,9 @@ postgres,AccessExclusiveLock,0`))
 			Desc: "a1",
 			Queries: []*Query{
 				{
-					Name:              "a1",
-					SQL:               "select",
-					SupportedVersions: "",
+					Name:    "a1",
+					SQL:     "select",
+					Version: "",
 				},
 			},
 		}
@@ -748,8 +748,8 @@ postgres,AccessExclusiveLock,0`))
 				Desc: "OpenGauss Database size",
 				Queries: []*Query{
 					{
-						SQL:               `SELECT datname,size_bytes from dual`,
-						SupportedVersions: ">=0.0.0",
+						SQL:     `SELECT datname,size_bytes from dual`,
+						Version: ">=0.0.0",
 					},
 				},
 				Metrics: []*Column{
@@ -778,9 +778,9 @@ postgres,AccessExclusiveLock,0`))
 				Desc: "OpenGauss Database size",
 				Queries: []*Query{
 					{
-						SQL:               `SELECT datname,size_bytes from dual`,
-						SupportedVersions: ">=0.0.0",
-						TTL:               10,
+						SQL:     `SELECT datname,size_bytes from dual`,
+						Version: ">=0.0.0",
+						TTL:     10,
 					},
 				},
 				Metrics: []*Column{
@@ -828,9 +828,9 @@ postgres,AccessExclusiveLock,0`))
 				Desc: "OpenGauss Database size",
 				Queries: []*Query{
 					{
-						SQL:               `SELECT datname,size_bytes from dual`,
-						SupportedVersions: ">=0.0.0",
-						TTL:               10,
+						SQL:     `SELECT datname,size_bytes from dual`,
+						Version: ">=0.0.0",
+						TTL:     10,
 					},
 				},
 				Metrics: []*Column{

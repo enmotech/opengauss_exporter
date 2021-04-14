@@ -3,6 +3,7 @@
 package exporter
 
 import (
+	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -35,4 +36,8 @@ type Column struct {
 	Histogram      bool                 `yaml:"-"` // Should metric be treated as a histogram?
 	PrometheusDesc *prometheus.Desc     `yaml:"-"`
 	PrometheusType prometheus.ValueType `yaml:"-"`
+}
+
+func (c *Column) String() string {
+	return fmt.Sprintf("%-8s %-30s %s", c.Usage, c.Name, c.Desc)
 }
