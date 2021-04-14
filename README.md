@@ -146,3 +146,29 @@ In addition, the option `--exclude-databases` adds the possibily to filter the r
 make build
 cd test;sh test.sh ../bin/opengauss_exporter <config_file>
 ```
+
+
+### OpenGauss
+
+### Monitor user
+
+```bash
+CREATE USER monitor with login monadmin PASSWORD 'Mon@1234';
+grant usage on schema dbe_perf to dbuser_monitor;
+grant select on pg_stat_replication to dbuser_monitor;
+
+```
+·
+### primary and standby 
+
+```bash
+docker network create opengauss_network --subnet=172.11.0.0/24
+docker run --network opengauss_network --ip 172.11.0.101 \
+  --privileged=true --name opengauss_primary  -h opengauss_primary  -p 1111:5432 -d \
+  -e GS_PORT=5432 -e OG_SUBNET=172.11.0.0/24 -e GS_PASSWORD=Gauss@123 -e NODE_NAME=opengauss_primary \
+  -e 'REPL_CONN_INFO=replconninfo1 = '\''localhost=172.11.0.101 localport=5434 localservice=5432 remotehost=172.11.0.102 remoteport=5434 remoteservice=5432'\''\n' enmotech/opengauss:1.1.0 -M primary
+docker run --network opengauss_network --ip 172.11.0.102 \
+  --privileged=true --name opengauss_standby1 -h opengauss_standby1 -p 1112:5432 -d \
+  -e GS_PORT=5432 -e OG_SUBNET=172.11.0.0/24 -e GS_PASSWORD=Gauss@123 -e NODE_NAME=opengauss_standby1 \
+  -e 'REPL_CONN_INFO=replconninfo1 = '\''localhost=172.11.0.102 localport=5434 localservice=5432 remotehost=172.11.0.101 remoteport=5434 remoteservice=5432'\''\n' enmotech/opengauss:1.1.0 -M standby
+```

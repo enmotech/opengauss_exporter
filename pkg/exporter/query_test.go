@@ -159,8 +159,57 @@ func TestQueryInstance(t *testing.T) {
 			Minor: 0,
 			Patch: 0,
 		}
-		q := queryInstance.GetQuerySQL(ver1)
+		q := queryInstance.GetQuerySQL(ver1, false)
 		assert.NotNil(t, q)
+	})
+	t.Run("GetQuerySQL_versionRange_is_null", func(t *testing.T) {
+		queryInstance := &QueryInstance{
+			Queries: []*Query{
+				{
+					SQL:     "select primary",
+					DbRole:  "primary",
+					Version: ">=0.0.0 < 2.0.0",
+				},
+				{
+					SQL:     "select standby",
+					DbRole:  "standby",
+					Version: ">=0.0.0 < 2.0.0",
+				},
+				{
+					SQL:     "select primary 2.0.0",
+					Version: ">=2.0.0",
+					DbRole:  "primary",
+				},
+				{
+					SQL:    "select standby 2.0.0",
+					DbRole: "standby",
+				},
+			},
+		}
+		ver1 := semver.Version{
+			Major: 1,
+			Minor: 1,
+			Patch: 0,
+		}
+		queryInstance.Check()
+		q := queryInstance.GetQuerySQL(ver1, true)
+		assert.NotNil(t, q)
+		assert.Equal(t, "select primary", q.SQL)
+		q = queryInstance.GetQuerySQL(ver1, false)
+		assert.NotNil(t, q)
+		assert.Equal(t, "select standby", q.SQL)
+		ver1 = semver.Version{
+			Major: 2,
+			Minor: 0,
+			Patch: 0,
+		}
+		q = queryInstance.GetQuerySQL(ver1, true)
+		assert.NotNil(t, q)
+		assert.Equal(t, "select primary 2.0.0", q.SQL)
+		q = queryInstance.GetQuerySQL(ver1, false)
+		assert.NotNil(t, q)
+		assert.Equal(t, "select standby 2.0.0", q.SQL)
+
 	})
 	t.Run("GetColumn", func(t *testing.T) {
 		c := queryInstance.GetColumn("col1", nil)
@@ -186,5 +235,17 @@ func TestQuery(t *testing.T) {
 	t.Run("Query_TimeoutDuration_other", func(t *testing.T) {
 		r := query.TimeoutDuration()
 		assert.Equal(t, time.Duration(float64(time.Second)*query.Timeout), r)
+	})
+	t.Run("IsPrimary", func(t *testing.T) {
+		assert.Equal(t, true, query.IsPrimary())
+		query.DbRole = "primary"
+		assert.Equal(t, true, query.IsPrimary())
+		assert.Equal(t, false, query.IsStandby())
+		query.DbRole = "standby"
+		assert.Equal(t, true, query.IsStandby())
+		assert.Equal(t, false, query.IsPrimary())
+		query.DbRole = "standby111"
+		assert.Equal(t, false, query.IsStandby())
+		assert.Equal(t, false, query.IsPrimary())
 	})
 }

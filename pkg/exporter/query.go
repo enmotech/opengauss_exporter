@@ -27,7 +27,6 @@ var queryTemplate, _ = template.New("Query").Parse(`
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ {{ .TTL }}
 # ┃ Timeout  ┆ {{ .TimeoutDuration }}
-# ┃ Primary  ┆ {{ .Primary }}
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 {{range .ColumnList}}# ┃ {{.}}
 {{end}}# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
@@ -64,11 +63,12 @@ type QueryInstance struct {
 	ColumnNames []string           `yaml:"-"`                  // column names in origin orders
 	LabelNames  []string           `yaml:"-"`                  // column (name) that used as label, sequences matters
 	MetricNames []string           `yaml:"-"`                  // column (name) that used as metric
-	Primary     bool               `yaml:"primary,omitempty"`  // only primary database collector. default false
+
 }
 
 type Query struct {
 	Name         string       `yaml:"name,omitempty"`    // actual query name, used as metric prefix
+	Desc         string       `yaml:"desc,omitempty"`    // description of this metric query
 	SQL          string       `yaml:"sql,omitempty"`     // actual query sql 查询sql
 	Version      string       `yaml:"version,omitempty"` // Check supported version 查询支持版本
 	versionRange semver.Range `yaml:"-"`                 // semver.Range
@@ -77,11 +77,41 @@ type Query struct {
 	TTL          float64      `yaml:"ttl,omitempty"`     // caching ttl in seconds
 	Status       string       `yaml:"status,omitempty"`  // enable/disable status. 状态是否开启,针对特定版本.
 	EnableCache  string       `yaml:"enableCache,omitempty"`
+	DbRole       string       `yaml:"dbRole"` // only primary database collector. default false
 }
 
 // TimeoutDuration Get timeout settings
 func (q *Query) TimeoutDuration() time.Duration {
 	return time.Duration(float64(time.Second) * q.Timeout)
+}
+func (q *Query) IsPrimary() bool {
+	if q.DbRole == "" {
+		return true
+	}
+	return strings.EqualFold(q.DbRole, "primary")
+}
+func (q *Query) IsStandby() bool {
+	if q.DbRole == "" {
+		return true
+	}
+	return strings.EqualFold(q.DbRole, "standby")
+}
+
+func (q *Query) IsSQL(ver semver.Version, isPrimary bool) bool {
+	if isPrimary {
+		if !q.IsPrimary() {
+			return false
+		}
+	} else {
+		if !q.IsStandby() {
+			return false
+		}
+	}
+	if q.versionRange != nil && q.versionRange(ver) {
+		return true
+	}
+
+	return false
 }
 
 // TimeoutDuration Get timeout settings
@@ -172,12 +202,9 @@ func (q *QueryInstance) Check() error {
 }
 
 // GetQuerySQL Get query sql according to version
-func (q *QueryInstance) GetQuerySQL(ver semver.Version) *Query {
+func (q *QueryInstance) GetQuerySQL(ver semver.Version, isPrimary bool) *Query {
 	for _, query := range q.Queries {
-		if query.versionRange == nil {
-			return query
-		}
-		if query.versionRange(ver) {
+		if query.IsSQL(ver, isPrimary) {
 			return query
 		}
 	}

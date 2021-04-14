@@ -16,14 +16,15 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 	metricErrors := make(map[string]error)
 	wg := sync.WaitGroup{}
 	limit := newRateLimit(s.parallel)
-	for metric, queryInstance := range s.queryInstanceMap {
-		if !s.primary && queryInstance.Primary {
-			log.Infof("Collect Metric %s only run primary. instance is recovery auto skip", metric)
-			continue
-		}
+	for _, queryInstance := range s.queryInstanceMap {
+		metricName := queryInstance.Name
+		// if !s.primary && queryInstance.Primary {
+		// 	log.Infof("Collect Metric %s only run primary. instance is recovery auto skip", metricName)
+		// 	continue
+		// }
 		wg.Add(1)
 		queryInst := queryInstance
-		metricName := metric
+
 		limit.getToken()
 		go func() {
 			defer wg.Done()
@@ -50,14 +51,9 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		err            error
 	)
 
-	// log.Debugf("Querying metric : %s", metric)
-	if !s.primary && queryInstance.Primary {
-		// log.Infof("Collect Metric %s only run primary. instance is recovery auto skip", metric)
-		return nil
-	}
-	querySQL := queryInstance.GetQuerySQL(s.lastMapVersion)
+	querySQL := queryInstance.GetQuerySQL(s.lastMapVersion, s.primary)
 	if querySQL == nil {
-		log.Errorf("Collect Metric %s not define querySQL for version %s", metric, s.lastMapVersion.String())
+		log.Errorf("Collect Metric %s not define querySQL for version %s on %s database ", metric, s.lastMapVersion.String(), s.DBRole())
 		return nil
 	}
 	if strings.EqualFold(querySQL.Status, statusDisable) {

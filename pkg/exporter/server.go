@@ -133,6 +133,7 @@ func (s *Server) Scrape(ch chan<- prometheus.Metric) error {
 	return err
 }
 
+// IsPrimary return true is primary database. false is standby database
 func (s *Server) IsPrimary() (bool, error) {
 	var b bool
 	sqlText := "SELECT pg_is_in_recovery()"
@@ -141,6 +142,13 @@ func (s *Server) IsPrimary() (bool, error) {
 		return false, err
 	}
 	return !b, nil
+}
+
+func (s *Server) DBRole() string {
+	if s.primary {
+		return "primary"
+	}
+	return "standby"
 }
 
 // 连接数据查询监控指标

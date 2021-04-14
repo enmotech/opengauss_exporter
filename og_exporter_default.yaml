@@ -634,7 +634,7 @@ pg_stat_database:
     - name: pg_stat_database
       sql: select * from pg_stat_database where datname NOT IN ('template0','template1')
       version: '>=0.0.0'
-      timeout: 1s
+      timeout: 1
       ttl: -1
       status: enable
   metrics:

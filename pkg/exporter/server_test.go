@@ -700,27 +700,27 @@ postgres,AccessExclusiveLock,0`))
 	t.Run("queryMetric_Primary", func(t *testing.T) {
 		s.primary = false
 		q := &QueryInstance{
-			Name:    "test",
-			Primary: true,
+			Name: "test",
+			// Primary: true,
 		}
 		ch := make(chan prometheus.Metric)
 		err := s.queryMetric(ch, q)
 		assert.NoError(t, err)
 	})
-	t.Run("queryMetrics_primary", func(t *testing.T) {
-		s.primary = false
-		errs := map[string]error{}
-		s.queryInstanceMap = map[string]*QueryInstance{
-			"test": &QueryInstance{
-				Name:    "test",
-				Primary: true,
-			},
-		}
-
-		ch := make(chan prometheus.Metric)
-		errs = s.queryMetrics(ch)
-		fmt.Println(errs)
-	})
+	// t.Run("queryMetrics_primary", func(t *testing.T) {
+	// 	s.primary = false
+	// 	errs := map[string]error{}
+	// 	s.queryInstanceMap = map[string]*QueryInstance{
+	// 		"test": &QueryInstance{
+	// 			Name: "test",
+	// 			// Primary: true,
+	// 		},
+	// 	}
+	//
+	// 	ch := make(chan prometheus.Metric)
+	// 	errs = s.queryMetrics(ch)
+	// 	fmt.Println(errs)
+	// })
 	t.Run("queryMetric_query_nil", func(t *testing.T) {
 		var (
 			ch = make(chan prometheus.Metric, 100)
@@ -819,6 +819,30 @@ postgres,AccessExclusiveLock,0`))
 		s.disableCache = true
 		err = s.queryMetric(ch, q)
 		assert.NoError(t, err)
+	})
+	t.Run("queryMetric_standby", func(t *testing.T) {
+		var (
+			ch = make(chan prometheus.Metric, 100)
+			q  = &QueryInstance{
+				Name: "pg_database",
+				Desc: "OpenGauss Database size",
+				Queries: []*Query{
+					{
+						SQL:     `SELECT datname,size_bytes from dual`,
+						Version: ">=0.0.0",
+						TTL:     10,
+						DbRole:  "primary",
+					},
+				},
+				Metrics: []*Column{
+					{Name: "datname", Usage: LABEL, Desc: "Name of this database"},
+					{Name: "size_bytes", Usage: GAUGE, Desc: "Disk space used by the database"},
+				},
+			}
+		)
+		err := s.queryMetric(ch, q)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ch))
 	})
 	t.Run("queryMetrics", func(t *testing.T) {
 		var (

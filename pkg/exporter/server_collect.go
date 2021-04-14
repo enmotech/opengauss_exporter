@@ -134,7 +134,7 @@ import (
 //
 func (s *Server) doCollectMetric(queryInstance *QueryInstance) ([]prometheus.Metric, []error, error) {
 	// 根据版本获取查询sql
-	query := queryInstance.GetQuerySQL(s.lastMapVersion)
+	query := queryInstance.GetQuerySQL(s.lastMapVersion, s.primary)
 	if query == nil {
 		// Return success (no pertinent data)
 		return []prometheus.Metric{}, []error{}, nil
