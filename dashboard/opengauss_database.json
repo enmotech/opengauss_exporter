@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": 9628,
   "graphTooltip": 0,
-  "id": 1,
-  "iteration": 1617952111145,
+  "id": 22,
+  "iteration": 1619187684249,
   "links": [],
   "panels": [
     {
@@ -29,7 +29,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 34,
+      "id": 1,
       "panels": [],
       "title": "General Counters",
       "type": "row"
@@ -46,7 +46,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
-      "description": "Database version",
+      "description": "数据库版本",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -91,7 +91,7 @@
         "x": 0,
         "y": 1
       },
-      "id": 36,
+      "id": 2,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -176,7 +176,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
-      "description": "start time of the process",
+      "description": "数据库运行时间",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -221,7 +221,7 @@
         "x": 4,
         "y": 1
       },
-      "id": 28,
+      "id": 3,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -272,7 +272,7 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "pg_run_times_run_time{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", run_name=\"cluster_runtime\", server=\"localhost:5433\"}",
+      "tableColumn": "pg_run_times_run_time{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", run_name=\"cluster_runtime\", server=\"localhost:5434\"}",
       "targets": [
         {
           "expr": "pg_run_times_run_time{instance=\"$instance\"}",
@@ -307,7 +307,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
-      "description": "pg_stat_database.tup_fetched",
+      "description": "数据库查询抓取的行数",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -352,7 +352,7 @@
         "x": 8,
         "y": 1
       },
-      "id": 10,
+      "id": 4,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -439,7 +439,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
-      "description": "pg_stat_database.tup_inserted",
+      "description": "数据库查询插入的行数",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -484,7 +484,7 @@
         "x": 12,
         "y": 1
       },
-      "id": 11,
+      "id": 5,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -571,7 +571,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
-      "description": "pg_stat_database.tup_updated",
+      "description": "数据库查询更新的行数",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -616,7 +616,7 @@
         "x": 16,
         "y": 1
       },
-      "id": 12,
+      "id": 6,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -703,6 +703,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
+      "description": "数据库最大连接",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -747,7 +748,7 @@
         "x": 20,
         "y": 1
       },
-      "id": 38,
+      "id": 7,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -798,7 +799,7 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "pg_settings_max_connections{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
+      "tableColumn": "pg_settings_max_connections{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5434\"}",
       "targets": [
         {
           "expr": "pg_settings_max_connections{release=\"$release\", instance=\"$instance\"}",
@@ -833,6 +834,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
+      "description": "数据库shared_buffers大小",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -877,7 +879,7 @@
         "x": 0,
         "y": 3
       },
-      "id": 40,
+      "id": 8,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -928,7 +930,7 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "pg_settings_shared_buffers_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
+      "tableColumn": "pg_settings_shared_buffers_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5434\"}",
       "targets": [
         {
           "expr": "pg_settings_shared_buffers_bytes{instance=\"$instance\"}",
@@ -963,6 +965,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
+      "description": "数据库effective_cache大小",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1007,7 +1010,7 @@
         "x": 4,
         "y": 3
       },
-      "id": 42,
+      "id": 9,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -1058,7 +1061,7 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "pg_settings_effective_cache_size_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
+      "tableColumn": "pg_settings_effective_cache_size_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5434\"}",
       "targets": [
         {
           "expr": "pg_settings_effective_cache_size_bytes{instance=\"$instance\"}",
@@ -1093,6 +1096,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
+      "description": "实例maintenance_work_mem大小",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1137,7 +1141,7 @@
         "x": 8,
         "y": 3
       },
-      "id": 44,
+      "id": 10,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -1188,7 +1192,7 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "pg_settings_maintenance_work_mem_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
+      "tableColumn": "pg_settings_maintenance_work_mem_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5434\"}",
       "targets": [
         {
           "expr": "pg_settings_maintenance_work_mem_bytes{instance=\"$instance\"}",
@@ -1223,6 +1227,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
+      "description": "实例work_mem大小",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1267,7 +1272,7 @@
         "x": 12,
         "y": 3
       },
-      "id": 46,
+      "id": 11,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -1318,7 +1323,7 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "pg_settings_work_mem_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5433\"}",
+      "tableColumn": "pg_settings_work_mem_bytes{instance=\"192.168.2.209:5433\", job=\"/1367361931404382208/1379728067966013442\", server=\"localhost:5434\"}",
       "targets": [
         {
           "expr": "pg_settings_work_mem_bytes{instance=\"$instance\"}",
@@ -1353,7 +1358,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
-      "description": "xact_commit+xact_rollback",
+      "description": "当前事务数,统计提交和回滚xact_commit+xact_rollback",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1374,7 +1379,7 @@
         "x": 16,
         "y": 3
       },
-      "id": 52,
+      "id": 12,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -1441,7 +1446,7 @@
         "x": 0,
         "y": 6
       },
-      "id": 72,
+      "id": 13,
       "panels": [
         {
           "aliasColors": {},
@@ -1466,7 +1471,7 @@
             "y": 7
           },
           "hiddenSeries": false,
-          "id": 22,
+          "id": 14,
           "legend": {
             "alignAsTable": true,
             "avg": true,
@@ -1566,7 +1571,7 @@
             "y": 7
           },
           "hiddenSeries": false,
-          "id": 24,
+          "id": 15,
           "legend": {
             "alignAsTable": true,
             "avg": true,
@@ -1674,7 +1679,7 @@
             "y": 7
           },
           "hiddenSeries": false,
-          "id": 26,
+          "id": 16,
           "legend": {
             "alignAsTable": true,
             "avg": true,
@@ -1765,7 +1770,7 @@
         "x": 0,
         "y": 7
       },
-      "id": 30,
+      "id": 17,
       "panels": [],
       "title": "Database Stats",
       "type": "row"
@@ -1776,6 +1781,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
+      "description": "当前活动会话",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1792,7 +1798,7 @@
         "y": 8
       },
       "hiddenSeries": false,
-      "id": 1,
+      "id": 18,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -1882,6 +1888,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
+      "description": "空闲会话",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1898,7 +1905,111 @@
         "y": 8
       },
       "hiddenSeries": false,
-      "id": 60,
+      "id": 25,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": true,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": false,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "pg_stat_activity_count{datname=~\"$datname\", instance=~\"$instance\", state=~\"idle|idle in transaction|idle in transaction (aborted)\"}",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "{{datname}}, s: {{state}}",
+          "refId": "A",
+          "step": 2
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Idle sessions",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "description": "事务变更速率. 提交和回退",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "hiddenSeries": false,
+      "id": 19,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2001,116 +2112,11 @@
       "gridPos": {
         "h": 7,
         "w": 8,
-        "x": 16,
-        "y": 8
-      },
-      "hiddenSeries": false,
-      "id": 8,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sideWidth": null,
-        "sort": "current",
-        "sortDesc": true,
-        "total": true,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.4",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "irate(pg_stat_database_tup_updated{datname=~\"$datname\", instance=~\"$instance\"}[5m])",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{datname}}",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Update data",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "bytes",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 8,
         "x": 0,
         "y": 15
       },
       "hiddenSeries": false,
-      "id": 5,
+      "id": 21,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2214,7 +2220,7 @@
         "y": 15
       },
       "hiddenSeries": false,
-      "id": 6,
+      "id": 22,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2302,7 +2308,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "decimals": 0,
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -2319,16 +2324,16 @@
         "y": 15
       },
       "hiddenSeries": false,
-      "id": 3,
+      "id": 20,
       "legend": {
         "alignAsTable": true,
         "avg": true,
         "current": true,
-        "hideEmpty": false,
         "max": false,
         "min": false,
         "rightSide": false,
         "show": true,
+        "sideWidth": null,
         "sort": "current",
         "sortDesc": true,
         "total": true,
@@ -2352,11 +2357,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_lock_count{datname=~\"$datname\", instance=~\"$instance\", mode=~\"$mode\"} != 0",
+          "expr": "irate(pg_stat_database_tup_updated{datname=~\"$datname\", instance=~\"$instance\"}[5m])",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "{{datname}},{{mode}}",
+          "legendFormat": "{{datname}}",
           "refId": "A",
           "step": 2
         }
@@ -2365,7 +2370,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Lock tables",
+      "title": "Update data",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2381,12 +2386,11 @@
       },
       "yaxes": [
         {
-          "decimals": 0,
-          "format": "short",
+          "format": "bytes",
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": "0",
+          "min": null,
           "show": true
         },
         {
@@ -2425,7 +2429,7 @@
         "y": 22
       },
       "hiddenSeries": false,
-      "id": 14,
+      "id": 24,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2529,110 +2533,7 @@
         "y": 22
       },
       "hiddenSeries": false,
-      "id": 4,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.4",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "pg_stat_activity_count{datname=~\"$datname\", instance=~\"$instance\", state=~\"idle|idle in transaction|idle in transaction (aborted)\"}",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "{{datname}}, s: {{state}}",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Idle sessions",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 22
-      },
-      "hiddenSeries": false,
-      "id": 7,
+      "id": 26,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2732,11 +2633,11 @@
       "gridPos": {
         "h": 7,
         "w": 8,
-        "x": 0,
-        "y": 29
+        "x": 16,
+        "y": 22
       },
       "hiddenSeries": false,
-      "id": 62,
+      "id": 27,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2821,9 +2722,112 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
+      "description": "Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.",
       "fieldConfig": {
         "defaults": {
           "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 29
+      },
+      "hiddenSeries": false,
+      "id": 30,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "irate(pg_stat_database_temp_bytes{instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{datname}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Temp File (Bytes)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "bytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -2836,7 +2840,219 @@
         "y": 29
       },
       "hiddenSeries": false,
-      "id": 64,
+      "id": 23,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "hideEmpty": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "pg_lock_count{datname=~\"$datname\", instance=~\"$instance\", mode=~\"$mode\"} != 0",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{datname}},{{mode}}",
+          "refId": "A",
+          "step": 2
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Lock tables",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 29
+      },
+      "hiddenSeries": false,
+      "id": 29,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "irate(pg_stat_database_conflicts{instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{datname}} conflicts",
+          "refId": "B"
+        },
+        {
+          "expr": "irate(pg_stat_database_deadlocks{instance=\"$instance\", datname=~\"$datname\"}[5m])",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{datname}} deadlocks",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Conflicts/Deadlocks",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 36
+      },
+      "hiddenSeries": false,
+      "id": 28,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2948,214 +3164,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "decimals": 0,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 29
-      },
-      "hiddenSeries": false,
-      "id": 66,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "total": true,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.4",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "irate(pg_stat_database_conflicts{instance=\"$instance\", datname=~\"$datname\"}[5m])",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{datname}} conflicts",
-          "refId": "B"
-        },
-        {
-          "expr": "irate(pg_stat_database_deadlocks{instance=\"$instance\", datname=~\"$datname\"}[5m])",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{datname}} deadlocks",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Conflicts/Deadlocks",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "description": "Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 0,
-        "y": 36
-      },
-      "hiddenSeries": false,
-      "id": 68,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "total": true,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.4",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "irate(pg_stat_database_temp_bytes{instance=\"$instance\", datname=~\"$datname\"}[5m])",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{datname}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Temp File (Bytes)",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "bytes",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -3171,7 +3179,7 @@
         "y": 36
       },
       "hiddenSeries": false,
-      "id": 70,
+      "id": 31,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -3254,14 +3262,1648 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "collapsed": false,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 32,
+      "panels": [],
+      "title": "Transaction",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "hiddenSeries": false,
+      "id": 33,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Rollback"
+        },
+        {
+          "alias": "/TPS/",
+          "fill": 0
+        },
+        {
+          "alias": "TPS",
+          "linewidth": 2
+        },
+        {
+          "alias": "/Commit/",
+          "linewidth": 0
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "og:ins:tps{instance=\"$instance\"}",
+          "interval": "",
+          "legendFormat": "TPS",
+          "refId": "B"
+        },
+        {
+          "expr": "og:ins:tps{instance=\"$instance\"} OFFSET 1d",
+          "legendFormat": "TPS -1D",
+          "refId": "D"
+        },
+        {
+          "expr": "og:ins:tps{instance=\"$instance\"} OFFSET 2d",
+          "legendFormat": "TPS -2D",
+          "refId": "E"
+        },
+        {
+          "expr": "sum(og:ins:commits{instance=\"$instance\"})",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "Commit",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(og:ins:rollbacks{instance=\"$instance\"})",
+          "interval": "",
+          "legendFormat": "Rollback",
+          "refId": "C"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "TPS Seasonality",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [
+            {
+              "id": 1,
+              "op": "=",
+              "text": "Disabled",
+              "type": 1,
+              "value": "0"
+            },
+            {
+              "id": 2,
+              "op": "=",
+              "text": "Enabled",
+              "type": 1,
+              "value": "1"
+            }
+          ],
+          "noValue": "Ø",
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "blue",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 6,
+        "x": 12,
+        "y": 44
+      },
+      "id": 34,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Value$/",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "pg_setting_max_prepared_transactions{instance=\"$instance\"} > bool 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Prepared Transaction",
+      "type": "stat"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "noValue": "Ø",
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#E02F44",
+                "value": null
+              },
+              {
+                "color": "#56A64B",
+                "value": 64
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 6,
+        "x": 18,
+        "y": 44
+      },
+      "id": 35,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Value$/",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "pg_setting_max_locks_per_transaction{instance=\"$instance\"}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Locks Limit per xact",
+      "type": "stat"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 46
+      },
+      "hiddenSeries": false,
+      "id": 36,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 0,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "increase(pg_stat_database_xact_rollback{instance=\"$instance\"}[1m])",
+          "interval": "",
+          "legendFormat": "Rollbacks",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Rollbacks in 1min",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 51
+      },
+      "hiddenSeries": false,
+      "id": 45,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": true,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "max",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Read",
+          "color": "#56A64B"
+        },
+        {
+          "alias": "Write",
+          "color": "#3274D9"
+        },
+        {
+          "alias": "Exclusive",
+          "color": "#E02F44"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "og:ins:xlock{instance=\"$instance\"}",
+          "legendFormat": "Exclusive",
+          "refId": "A"
+        },
+        {
+          "expr": "og:ins:wlock{instance=\"$instance\"}",
+          "legendFormat": "Write",
+          "refId": "B"
+        },
+        {
+          "expr": "og:ins:rlock{instance=\"$instance\"}",
+          "legendFormat": "Read",
+          "refId": "C"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Locks by Category",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 51
+      },
+      "hiddenSeries": false,
+      "id": 46,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": true,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "max",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "AccessShareLock",
+          "color": "#56A64B"
+        },
+        {
+          "alias": "RowShareLock",
+          "color": "#8AB8FF"
+        },
+        {
+          "alias": "RowExclusiveLock",
+          "color": "#3274D9"
+        },
+        {
+          "alias": "ShareUpdateExclusiveLock",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "ShareLock",
+          "color": "#CC9D00"
+        },
+        {
+          "alias": "ShareRowExclusiveLock",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "ExclusiveLock",
+          "color": "#E02F44"
+        },
+        {
+          "alias": "AccessExclusiveLock",
+          "color": "#A352CC"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (mode) (pg_lock_count{instance=\"$instance\"})",
+          "legendFormat": "{{ mode }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Locks",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 61
+      },
+      "hiddenSeries": false,
+      "id": 44,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 0,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Xacts",
+          "color": "#A352CC",
+          "linewidth": 2
+        },
+        {
+          "alias": "µ",
+          "color": "#3274D9",
+          "dashLength": 3,
+          "dashes": true,
+          "linewidth": 1
+        },
+        {
+          "alias": "+σ",
+          "fillBelowTo": "-σ",
+          "lines": false
+        },
+        {
+          "alias": "-σ",
+          "lines": false
+        },
+        {
+          "alias": "+3σ",
+          "color": "rgba(250, 210, 128, 0.3)",
+          "fillBelowTo": "-3σ",
+          "lines": false
+        },
+        {
+          "alias": "-3σ",
+          "lines": false
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "og:ins:xacts{instance=\"$instance\"}",
+          "legendFormat": "Xacts",
+          "refId": "A"
+        },
+        {
+          "expr": "og:ins:xacts_avg30m{instance=\"$instance\"}",
+          "legendFormat": "µ",
+          "refId": "B"
+        },
+        {
+          "expr": "og:ins:xacts_avg30m{instance=\"$instance\"} + og:ins:xacts_sigma{instance=\"$instance\"}",
+          "legendFormat": "+σ",
+          "refId": "C"
+        },
+        {
+          "expr": "og:ins:xacts_avg30m{instance=\"$instance\"} - og:ins:xacts_sigma{instance=\"$instance\"}",
+          "legendFormat": "-σ",
+          "refId": "D"
+        },
+        {
+          "expr": "og:ins:xacts_avg30m{instance=\"$instance\"} + 3 * og:ins:xacts_sigma{instance=\"$instance\"}",
+          "legendFormat": "+3σ",
+          "refId": "E"
+        },
+        {
+          "expr": "og:ins:xacts_avg30m{instance=\"$instance\"} - 3 * og:ins:xacts_sigma{instance=\"$instance\"}",
+          "legendFormat": "-3σ",
+          "refId": "F"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Xacts",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 69
+      },
+      "id": 47,
+      "panels": [],
+      "title": "Statement",
+      "type": "row"
+    },
+    {
+      "datasource": null,
+      "description": "会话",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "state"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "xact_runtime"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 142
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "usename"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 156
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 70
+      },
+      "id": 56,
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "pg_active_slowsql_query_runtime{datname=~\"$datname\", instance=~\"$instance\"}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Session",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "server": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 14,
+              "__name__": 1,
+              "client_addr": 2,
+              "datname": 4,
+              "instance": 3,
+              "job": 6,
+              "pid": 7,
+              "query": 10,
+              "query_start": 9,
+              "server": 11,
+              "state": 8,
+              "usename": 5,
+              "xact_runtime": 12,
+              "xact_start": 13
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Query"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              },
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "µs"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Call"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RT"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "µs"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "rgb(166, 166, 166)",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "#EAB839",
+                      "value": 1
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 10
+                    },
+                    {
+                      "color": "purple",
+                      "value": 100
+                    },
+                    {
+                      "color": "rgba(0, 0, 0, 0.7)",
+                      "value": 1000
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RT (rate1m)"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "orange",
+                      "value": 2
+                    },
+                    {
+                      "color": "red",
+                      "value": 10
+                    },
+                    {
+                      "color": "purple",
+                      "value": 100
+                    },
+                    {
+                      "color": "rgba(0, 0, 0, 0.7)",
+                      "value": 1000
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "unit",
+                "value": "µs"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Min"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "µs"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Max"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Call (rate1h)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total (rate1h)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "µs"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Database"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "PG Database ${__data.fields.Database}",
+                    "url": "/d/pg-database?var-ins=${ins}&var-datname=${__data.fields.Database}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 0,
+        "y": 78
+      },
+      "id": 48,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Total (rate1h)"
+          }
+        ]
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "max by (instance,datname,query) (pg_sql_history_n_calls{instance=\"$instance\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        },
+        {
+          "expr": "max by (query) (pg_sql_history_total_elapse_time{instance=\"$instance\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "max by (query) (pg_query_mean_time{instance=\"$instance\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "expr": "max by (query) (og:query:rt{instance=\"$instance\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "D"
+        },
+        {
+          "expr": "max by (query) (rate(pg_sql_history_n_calls{instance=\"$instance\"}[1h]))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "G"
+        },
+        {
+          "expr": "max by (query) (rate(pg_sql_history_total_elapse_time{instance=\"$instance\"}[1h]))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "H"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Instance Statementes",
+      "transformations": [
+        {
+          "id": "seriesToColumns",
+          "options": {
+            "byField": "query"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Time 6": true,
+              "datname": false,
+              "ins": true
+            },
+            "indexByName": {
+              "Time": 8,
+              "Value #A": 2,
+              "Value #B": 4,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #G": 3,
+              "Value #H": 5,
+              "datname": 1,
+              "ins": 9,
+              "query": 0
+            },
+            "renameByName": {
+              "Value #A": "Call",
+              "Value #B": "Total",
+              "Value #C": "RT",
+              "Value #D": "RT (rate1m)",
+              "Value #E": "Min",
+              "Value #F": "Max",
+              "Value #G": "Call (rate1h)",
+              "Value #H": "Total (rate1h)",
+              "datname": "Database",
+              "ins": "",
+              "query": "Query"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 12,
+        "y": 78
+      },
+      "hiddenSeries": false,
+      "id": 49,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "hideEmpty": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 0.5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "topk(32, pg_sql_history_total_elapse_time{instance=\"$instance\"})",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{ query }}",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Statement RT Ranking",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "µs",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 92
+      },
+      "hiddenSeries": false,
+      "id": 51,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "og:query:call{instance=\"$instance\"}",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{ query }}",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Statement Call",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "ops",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 92
+      },
+      "hiddenSeries": false,
+      "id": 52,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": true,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "max",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 0.5,
+      "points": true,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "og:query:rt{instance=\"$instance\"}",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{ query }}",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Statement RT",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
   "refresh": "30s",
   "schemaVersion": 26,
   "style": "dark",
-  "tags": [
-    "opengauss"
-  ],
+  "tags": [],
   "templating": {
     "list": [
       {
@@ -3504,5 +5146,5 @@
   "timezone": "",
   "title": "OpenGauss Database",
   "uid": "OpenGaussOverview",
-  "version": 67
+  "version": 22
 }
