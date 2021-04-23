@@ -27,7 +27,7 @@ var (
 	args         = &Args{}
 )
 
-// General generic options
+// Args General generic options
 type Args struct {
 	Help                   *bool   `short:"h" long:"help" description:"Displays help info"`
 	Version                *bool   `short:"v" long:"version" description:"Displays mtk version"`

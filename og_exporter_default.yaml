@@ -1,91 +1,117 @@
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ┃ pg_stat_bgwriter
-# ┃ OpenGauss background writer metrics
+# ┃ pg_stat_database
+# ┃ OpenGauss database statistics
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ -1
 # ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ COUNTER  checkpoints_timed              scheduled checkpoints that have been performed
-# ┃ COUNTER  checkpoints_req                requested checkpoints that have been performed
-# ┃ COUNTER  checkpoint_write_time          time spending on writing files to disk, in µs
-# ┃ COUNTER  checkpoint_sync_time           time spending on syncing files to disk, in µs
-# ┃ COUNTER  buffers_checkpoint             buffers written during checkpoints
-# ┃ COUNTER  buffers_clean                  buffers written by the background writer
-# ┃ COUNTER  buffers_backend                buffers written directly by a backend
-# ┃ COUNTER  maxwritten_clean               times that bgwriter stopped a cleaning scan
-# ┃ COUNTER  buffers_backend_fsync          times a backend had to execute its own fsync
-# ┃ COUNTER  buffers_alloc                  buffers allocated
-# ┃ COUNTER  stats_reset                    time when statistics were last reset
+# ┃ LABEL    datid                          OID of a database
+# ┃ LABEL    datname                        Name of this database
+# ┃ GAUGE    numbackends                    Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
+# ┃ COUNTER  xact_commit                    Number of transactions in this database that have been committed
+# ┃ COUNTER  xact_rollback                  Number of transactions in this database that have been rolled back
+# ┃ COUNTER  blks_read                      Number of disk blocks read in this database
+# ┃ COUNTER  blks_hit                       Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
+# ┃ COUNTER  tup_returned                   Number of rows returned by queries in this database
+# ┃ COUNTER  tup_fetched                    Number of rows fetched by queries in this database
+# ┃ COUNTER  tup_inserted                   Number of rows inserted by queries in this database
+# ┃ COUNTER  tup_updated                    Number of rows updated by queries in this database
+# ┃ COUNTER  tup_deleted                    Number of rows deleted by queries in this database
+# ┃ COUNTER  conflicts                      Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
+# ┃ COUNTER  temp_files                     Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
+# ┃ COUNTER  temp_bytes                     Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
+# ┃ COUNTER  deadlocks                      Number of deadlocks detected in this database
+# ┃ COUNTER  blk_read_time                  Time spent reading data file blocks by backends in this database, in milliseconds
+# ┃ COUNTER  blk_write_time                 Time spent writing data file blocks by backends in this database, in milliseconds
+# ┃ COUNTER  stats_reset                    Time at which these statistics were last reset
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ pg_stat_bgwriter_checkpoints_timed{}      COUNTER  scheduled checkpoints that have been performed
-# ┃ pg_stat_bgwriter_checkpoints_req{}        COUNTER  requested checkpoints that have been performed
-# ┃ pg_stat_bgwriter_checkpoint_write_time{}  COUNTER  time spending on writing files to disk, in µs
-# ┃ pg_stat_bgwriter_checkpoint_sync_time{}   COUNTER  time spending on syncing files to disk, in µs
-# ┃ pg_stat_bgwriter_buffers_checkpoint{}     COUNTER  buffers written during checkpoints
-# ┃ pg_stat_bgwriter_buffers_clean{}          COUNTER  buffers written by the background writer
-# ┃ pg_stat_bgwriter_buffers_backend{}        COUNTER  buffers written directly by a backend
-# ┃ pg_stat_bgwriter_maxwritten_clean{}       COUNTER  times that bgwriter stopped a cleaning scan
-# ┃ pg_stat_bgwriter_buffers_backend_fsync{}  COUNTER  times a backend had to execute its own fsync
-# ┃ pg_stat_bgwriter_buffers_alloc{}          COUNTER  buffers allocated
-# ┃ pg_stat_bgwriter_stats_reset{}            COUNTER  time when statistics were last reset
+# ┃ pg_stat_database_numbackends{datid,datname}     GAUGE    Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
+# ┃ pg_stat_database_xact_commit{datid,datname}     COUNTER  Number of transactions in this database that have been committed
+# ┃ pg_stat_database_xact_rollback{datid,datname}   COUNTER  Number of transactions in this database that have been rolled back
+# ┃ pg_stat_database_blks_read{datid,datname}       COUNTER  Number of disk blocks read in this database
+# ┃ pg_stat_database_blks_hit{datid,datname}        COUNTER  Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
+# ┃ pg_stat_database_tup_returned{datid,datname}    COUNTER  Number of rows returned by queries in this database
+# ┃ pg_stat_database_tup_fetched{datid,datname}     COUNTER  Number of rows fetched by queries in this database
+# ┃ pg_stat_database_tup_inserted{datid,datname}    COUNTER  Number of rows inserted by queries in this database
+# ┃ pg_stat_database_tup_updated{datid,datname}     COUNTER  Number of rows updated by queries in this database
+# ┃ pg_stat_database_tup_deleted{datid,datname}     COUNTER  Number of rows deleted by queries in this database
+# ┃ pg_stat_database_conflicts{datid,datname}       COUNTER  Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
+# ┃ pg_stat_database_temp_files{datid,datname}      COUNTER  Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
+# ┃ pg_stat_database_temp_bytes{datid,datname}      COUNTER  Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
+# ┃ pg_stat_database_deadlocks{datid,datname}       COUNTER  Number of deadlocks detected in this database
+# ┃ pg_stat_database_blk_read_time{datid,datname}   COUNTER  Time spent reading data file blocks by backends in this database, in milliseconds
+# ┃ pg_stat_database_blk_write_time{datid,datname}  COUNTER  Time spent writing data file blocks by backends in this database, in milliseconds
+# ┃ pg_stat_database_stats_reset{datid,datname}     COUNTER  Time at which these statistics were last reset
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-pg_stat_bgwriter:
-  name: pg_stat_bgwriter
-  desc: OpenGauss background writer metrics
+pg_stat_database:
+  name: pg_stat_database
+  desc: OpenGauss database statistics
   query:
-    - name: pg_stat_bgwriter
-      sql: |-
-        SELECT checkpoints_timed,
-          checkpoints_req,
-          checkpoint_write_time,
-          checkpoint_sync_time,
-          buffers_checkpoint,
-          buffers_clean,
-          buffers_backend,
-          maxwritten_clean,
-          buffers_backend_fsync,
-          buffers_alloc,
-          stats_reset
-        FROM pg_stat_bgwriter
+    - name: pg_stat_database
+      sql: select * from pg_stat_database where datname NOT IN ('template0','template1')
       version: '>=0.0.0'
       timeout: 1
       ttl: -1
       status: enable
+      dbRole: ""
   metrics:
-    - name: checkpoints_timed
-      description: scheduled checkpoints that have been performed
+    - name: datid
+      description: OID of a database
+      usage: LABEL
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: numbackends
+      description: Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
+      usage: GAUGE
+    - name: xact_commit
+      description: Number of transactions in this database that have been committed
       usage: COUNTER
-    - name: checkpoints_req
-      description: requested checkpoints that have been performed
+    - name: xact_rollback
+      description: Number of transactions in this database that have been rolled back
       usage: COUNTER
-    - name: checkpoint_write_time
-      description: time spending on writing files to disk, in µs
+    - name: blks_read
+      description: Number of disk blocks read in this database
       usage: COUNTER
-    - name: checkpoint_sync_time
-      description: time spending on syncing files to disk, in µs
+    - name: blks_hit
+      description: Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
       usage: COUNTER
-    - name: buffers_checkpoint
-      description: buffers written during checkpoints
+    - name: tup_returned
+      description: Number of rows returned by queries in this database
       usage: COUNTER
-    - name: buffers_clean
-      description: buffers written by the background writer
+    - name: tup_fetched
+      description: Number of rows fetched by queries in this database
       usage: COUNTER
-    - name: buffers_backend
-      description: buffers written directly by a backend
+    - name: tup_inserted
+      description: Number of rows inserted by queries in this database
       usage: COUNTER
-    - name: maxwritten_clean
-      description: times that bgwriter stopped a cleaning scan
+    - name: tup_updated
+      description: Number of rows updated by queries in this database
       usage: COUNTER
-    - name: buffers_backend_fsync
-      description: times a backend had to execute its own fsync
+    - name: tup_deleted
+      description: Number of rows deleted by queries in this database
       usage: COUNTER
-    - name: buffers_alloc
-      description: buffers allocated
+    - name: conflicts
+      description: Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
+      usage: COUNTER
+    - name: temp_files
+      description: Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
+      usage: COUNTER
+    - name: temp_bytes
+      description: Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
+      usage: COUNTER
+    - name: deadlocks
+      description: Number of deadlocks detected in this database
+      usage: COUNTER
+    - name: blk_read_time
+      description: Time spent reading data file blocks by backends in this database, in milliseconds
+      usage: COUNTER
+    - name: blk_write_time
+      description: Time spent writing data file blocks by backends in this database, in milliseconds
       usage: COUNTER
     - name: stats_reset
-      description: time when statistics were last reset
+      description: Time at which these statistics were last reset
       usage: COUNTER
   status: enable
   ttl: -1
@@ -95,111 +121,89 @@ pg_stat_bgwriter:
 
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ┃ pg_stat_database_conflicts
-# ┃ OpenGauss database statistics conflicts
+# ┃ pg_downstream
+# ┃ openGauss replication client count group by state
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ 60
-# ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
+# ┃ Timeout  ┆ 100ms
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ LABEL    datid                          OID of a database
-# ┃ LABEL    datname                        Name of this database
-# ┃ COUNTER  confl_tablespace               Number of queries in this database that have been canceled due to dropped tablespaces
-# ┃ COUNTER  confl_lock                     Number of queries in this database that have been canceled due to lock timeouts
-# ┃ COUNTER  confl_snapshot                 Number of queries in this database that have been canceled due to old snapshots
-# ┃ COUNTER  confl_bufferpin                Number of queries in this database that have been canceled due to pinned buffers
-# ┃ COUNTER  confl_deadlock                 Number of queries in this database that have been canceled due to deadlocks
+# ┃ LABEL    state                          downstream state
+# ┃ GAUGE    count                          downstream count
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ pg_stat_database_conflicts_confl_tablespace{datid,datname}  COUNTER  Number of queries in this database that have been canceled due to dropped tablespaces
-# ┃ pg_stat_database_conflicts_confl_lock{datid,datname}        COUNTER  Number of queries in this database that have been canceled due to lock timeouts
-# ┃ pg_stat_database_conflicts_confl_snapshot{datid,datname}    COUNTER  Number of queries in this database that have been canceled due to old snapshots
-# ┃ pg_stat_database_conflicts_confl_bufferpin{datid,datname}   COUNTER  Number of queries in this database that have been canceled due to pinned buffers
-# ┃ pg_stat_database_conflicts_confl_deadlock{datid,datname}    COUNTER  Number of queries in this database that have been canceled due to deadlocks
+# ┃ pg_downstream_count{state}  GAUGE    downstream count
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-pg_stat_database_conflicts:
-  name: pg_stat_database_conflicts
-  desc: OpenGauss database statistics conflicts
+pg_downstream:
+  name: pg_downstream
+  desc: openGauss replication client count group by state
   query:
-    - name: pg_stat_database_conflicts
-      sql: select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1');
+    - name: pg_downstream
+      sql: |
+        SELECT l.state, coalesce(count, 0 ) AS count
+          FROM unnest(ARRAY ['streaming','startup','catchup', 'backup', 'stopping']) l(state)
+        LEFT JOIN (SELECT state, count(*) AS count FROM pg_stat_replication GROUP BY state)r ON l.state =  r.state
       version: '>=0.0.0'
-      timeout: 1
-      ttl: 60
+      timeout: 0.1
+      ttl: 10
       status: enable
+      dbRole: ""
   metrics:
-    - name: datid
-      description: OID of a database
+    - name: state
+      description: downstream state
       usage: LABEL
-    - name: datname
-      description: Name of this database
-      usage: LABEL
-    - name: confl_tablespace
-      description: Number of queries in this database that have been canceled due to dropped tablespaces
-      usage: COUNTER
-    - name: confl_lock
-      description: Number of queries in this database that have been canceled due to lock timeouts
-      usage: COUNTER
-    - name: confl_snapshot
-      description: Number of queries in this database that have been canceled due to old snapshots
-      usage: COUNTER
-    - name: confl_bufferpin
-      description: Number of queries in this database that have been canceled due to pinned buffers
-      usage: COUNTER
-    - name: confl_deadlock
-      description: Number of queries in this database that have been canceled due to deadlocks
-      usage: COUNTER
+    - name: count
+      description: downstream count
+      usage: GAUGE
   status: enable
   ttl: 60
-  timeout: 1
+  timeout: 0.1
 
 
 
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ┃ pg_lock
-# ┃ OpenGauss lock distribution by mode
+# ┃ pg_xact
+# ┃ opengauss transaction identifier information
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ TTL      ┆ 60
+# ┃ TTL      ┆ 5
 # ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ LABEL    datname                        Name of this database
-# ┃ LABEL    mode                           Type of Lock
-# ┃ GAUGE    count                          Number of locks
+# ┃ GAUGE    xmin                           earliest txid that is still active
+# ┃ GAUGE    xmax                           first as-yet-unassigned txid. txid >= this are invisible.
+# ┃ GAUGE    xnum                           current active transaction count
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ pg_lock_count{datname,mode}  GAUGE    Number of locks
+# ┃ pg_xact_xmin{}  GAUGE    earliest txid that is still active
+# ┃ pg_xact_xmax{}  GAUGE    first as-yet-unassigned txid. txid >= this are invisible.
+# ┃ pg_xact_xnum{}  GAUGE    current active transaction count
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-pg_lock:
-  name: pg_lock
-  desc: OpenGauss lock distribution by mode
+pg_xact:
+  name: pg_xact
+  desc: opengauss transaction identifier information
   query:
-    - name: pg_lock
+    - name: pg_xact
       sql: |-
-        SELECT datname, mode, coalesce(count, 0) AS count
-        FROM (
-          SELECT d.oid AS database, d.datname, l.mode
-          FROM pg_database d,unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']) l(mode)
-          WHERE d.datname NOT IN ('template0','template1')) base
-        LEFT JOIN (SELECT database, mode, count(1) AS count
-                   FROM pg_locks
-                   WHERE database IS NOT NULL GROUP BY database, mode) cnt
-        USING (database, mode);
+        WITH snap(v) AS (SELECT txid_current_snapshot()),
+         xset(v) AS  (SELECT txid_snapshot_xip(v) FROM snap),
+         xnum(v) AS (SELECT count(*) from xset),
+         xmin(v) AS (SELECT txid_snapshot_xmin(v) FROM snap),
+         xmax(v) AS (SELECT txid_snapshot_xmin(v) FROM snap)
+        SELECT xmin.v AS xmin, xmax.v AS xmax, xnum.v AS xnum FROM xmin, xmax, xnum;
       version: '>=0.0.0'
       timeout: 1
-      ttl: 60
+      ttl: 5
       status: enable
+      dbRole: ""
   metrics:
-    - name: datname
-      description: Name of this database
-      usage: LABEL
-    - name: mode
-      description: Type of Lock
-      usage: LABEL
-    - name: count
-      description: Number of locks
+    - name: xmin
+      description: earliest txid that is still active
+      usage: GAUGE
+    - name: xmax
+      description: first as-yet-unassigned txid. txid >= this are invisible.
+      usage: GAUGE
+    - name: xnum
+      description: current active transaction count
       usage: GAUGE
   status: enable
-  ttl: 60
+  ttl: 5
   timeout: 1
 
 
@@ -211,7 +215,6 @@ pg_lock:
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ 60
 # ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ LABEL    datname                        Name of this database
 # ┃ LABEL    state                          connection state
@@ -254,6 +257,7 @@ pg_stat_activity:
       timeout: 1
       ttl: 60
       status: enable
+      dbRole: ""
   metrics:
     - name: datname
       description: Name of this database
@@ -281,83 +285,11 @@ pg_stat_activity:
 
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ┃ pg_database
-# ┃ OpenGauss Database size
-# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ TTL      ┆ 60
-# ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
-# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ LABEL    datname                        Name of this database
-# ┃ GAUGE    size_bytes                     Disk space used by the database
-# ┃ GAUGE    age                            database age calculated by age(datfrozenxid64)
-# ┃ GAUGE    is_template                    1 for template db and 0 for normal db
-# ┃ GAUGE    allow_conn                     1 allow connection and 0 does not allow
-# ┃ GAUGE    conn_limit                     connection limit, -1 for no limit
-# ┃ GAUGE    frozen_xid                     tuple with xmin below this will always be visable (until wrap around)
-# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ pg_database_size_bytes{datname}   GAUGE    Disk space used by the database
-# ┃ pg_database_age{datname}          GAUGE    database age calculated by age(datfrozenxid64)
-# ┃ pg_database_is_template{datname}  GAUGE    1 for template db and 0 for normal db
-# ┃ pg_database_allow_conn{datname}   GAUGE    1 allow connection and 0 does not allow
-# ┃ pg_database_conn_limit{datname}   GAUGE    connection limit, -1 for no limit
-# ┃ pg_database_frozen_xid{datname}   GAUGE    tuple with xmin below this will always be visable (until wrap around)
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-pg_database:
-  name: pg_database
-  desc: OpenGauss Database size
-  query:
-    - name: pg_database
-      sql: |-
-        SELECT datname,
-          pg_database_size(pg_database.datname) as size_bytes,
-          age(datfrozenxid64)          AS age,
-          datistemplate              AS is_template,
-          datallowconn               AS allow_conn,
-          datconnlimit               AS conn_limit,
-          datfrozenxid::TEXT::BIGINT as frozen_xid
-        FROM pg_database
-        where datname NOT IN ('template0','template1');
-      version: '>=0.0.0'
-      timeout: 1
-      ttl: 60
-      status: enable
-  metrics:
-    - name: datname
-      description: Name of this database
-      usage: LABEL
-    - name: size_bytes
-      description: Disk space used by the database
-      usage: GAUGE
-    - name: age
-      description: database age calculated by age(datfrozenxid64)
-      usage: GAUGE
-    - name: is_template
-      description: 1 for template db and 0 for normal db
-      usage: GAUGE
-    - name: allow_conn
-      description: 1 allow connection and 0 does not allow
-      usage: GAUGE
-    - name: conn_limit
-      description: connection limit, -1 for no limit
-      usage: GAUGE
-    - name: frozen_xid
-      description: tuple with xmin below this will always be visable (until wrap around)
-      usage: GAUGE
-  status: enable
-  ttl: 60
-  timeout: 1
-
-
-
-
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ┃ pg_replication_slots
-# ┃ 
+# ┃
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ 60
 # ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ LABEL    slot_name                      Slot name
 # ┃ LABEL    plugin                         Logical plugin
@@ -396,6 +328,7 @@ pg_replication_slots:
       timeout: 1
       ttl: 60
       status: enable
+      dbRole: ""
   metrics:
     - name: slot_name
       description: Slot name
@@ -438,12 +371,277 @@ pg_replication_slots:
 
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ┃ pg_stat_replication
-# ┃ 
+# ┃ pg_database
+# ┃ OpenGauss Database size
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ 60
 # ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ LABEL    datname                        Name of this database
+# ┃ GAUGE    size_bytes                     Disk space used by the database
+# ┃ GAUGE    age                            database age calculated by age(datfrozenxid64)
+# ┃ GAUGE    is_template                    1 for template db and 0 for normal db
+# ┃ GAUGE    allow_conn                     1 allow connection and 0 does not allow
+# ┃ GAUGE    conn_limit                     connection limit, -1 for no limit
+# ┃ GAUGE    frozen_xid                     tuple with xmin below this will always be visable (until wrap around)
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ pg_database_size_bytes{datname}   GAUGE    Disk space used by the database
+# ┃ pg_database_age{datname}          GAUGE    database age calculated by age(datfrozenxid64)
+# ┃ pg_database_is_template{datname}  GAUGE    1 for template db and 0 for normal db
+# ┃ pg_database_allow_conn{datname}   GAUGE    1 allow connection and 0 does not allow
+# ┃ pg_database_conn_limit{datname}   GAUGE    connection limit, -1 for no limit
+# ┃ pg_database_frozen_xid{datname}   GAUGE    tuple with xmin below this will always be visable (until wrap around)
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pg_database:
+  name: pg_database
+  desc: OpenGauss Database size
+  query:
+    - name: pg_database
+      sql: |-
+        SELECT datname,
+          pg_database_size(pg_database.datname) as size_bytes,
+          age(datfrozenxid64)          AS age,
+          datistemplate              AS is_template,
+          datallowconn               AS allow_conn,
+          datconnlimit               AS conn_limit,
+          datfrozenxid::TEXT::BIGINT as frozen_xid
+        FROM pg_database
+        where datname NOT IN ('template0','template1');
+      version: '>=0.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+      dbRole: ""
+  metrics:
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: size_bytes
+      description: Disk space used by the database
+      usage: GAUGE
+    - name: age
+      description: database age calculated by age(datfrozenxid64)
+      usage: GAUGE
+    - name: is_template
+      description: 1 for template db and 0 for normal db
+      usage: GAUGE
+    - name: allow_conn
+      description: 1 allow connection and 0 does not allow
+      usage: GAUGE
+    - name: conn_limit
+      description: connection limit, -1 for no limit
+      usage: GAUGE
+    - name: frozen_xid
+      description: tuple with xmin below this will always be visable (until wrap around)
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 1
+
+
+
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ┃ pg_checkpoint
+# ┃ checkpoint information from pg_control_checkpoint since 10
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ TTL      ┆ 5
+# ┃ Timeout  ┆ 1s
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ COUNTER  checkpoint_lsn                 lsn of checkpoint
+# ┃ COUNTER  redo_lsn                       redo start LSN
+# ┃ GAUGE    tli                            current WAL timeline
+# ┃ GAUGE    prev_tli                       previous WAL timeline
+# ┃ GAUGE    full_page_writes               is full page write enabled ?
+# ┃ GAUGE    next_xid_epoch                 next xid epoch since this checkpoint
+# ┃ GAUGE    next_xid                       next xid since this checkpoint
+# ┃ GAUGE    next_oid                       next object id since this checkpoint
+# ┃ GAUGE    next_multixact_id              next multixact id of this checkpoint
+# ┃ GAUGE    next_multi_offset              next multixact id offset of this checkpoint
+# ┃ GAUGE    oldest_xid                     oldest existing xid of the checkpoint
+# ┃ GAUGE    oldest_xid_dbid                which db contains the oldest xid
+# ┃ GAUGE    oldest_active_xid              oldest active xid of the checkpoint
+# ┃ GAUGE    oldest_multi_xid               oldest active multi xid of the checkpoint
+# ┃ GAUGE    oldest_multi_dbid              which db contins the oldest multi xid
+# ┃ GAUGE    oldest_commit_ts_xid           xid with oldest commit ts by the checkpoint
+# ┃ GAUGE    newest_commit_ts_xid           xid with newest commit ts by the checkpoint
+# ┃ GAUGE    time                           timestamp of this checkpoint
+# ┃ GAUGE    elapse                         time elapsed since this checkpoint in seconds
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ pg_checkpoint_checkpoint_lsn{}        COUNTER  lsn of checkpoint
+# ┃ pg_checkpoint_redo_lsn{}              COUNTER  redo start LSN
+# ┃ pg_checkpoint_tli{}                   GAUGE    current WAL timeline
+# ┃ pg_checkpoint_prev_tli{}              GAUGE    previous WAL timeline
+# ┃ pg_checkpoint_full_page_writes{}      GAUGE    is full page write enabled ?
+# ┃ pg_checkpoint_next_xid_epoch{}        GAUGE    next xid epoch since this checkpoint
+# ┃ pg_checkpoint_next_xid{}              GAUGE    next xid since this checkpoint
+# ┃ pg_checkpoint_next_oid{}              GAUGE    next object id since this checkpoint
+# ┃ pg_checkpoint_next_multixact_id{}     GAUGE    next multixact id of this checkpoint
+# ┃ pg_checkpoint_next_multi_offset{}     GAUGE    next multixact id offset of this checkpoint
+# ┃ pg_checkpoint_oldest_xid{}            GAUGE    oldest existing xid of the checkpoint
+# ┃ pg_checkpoint_oldest_xid_dbid{}       GAUGE    which db contains the oldest xid
+# ┃ pg_checkpoint_oldest_active_xid{}     GAUGE    oldest active xid of the checkpoint
+# ┃ pg_checkpoint_oldest_multi_xid{}      GAUGE    oldest active multi xid of the checkpoint
+# ┃ pg_checkpoint_oldest_multi_dbid{}     GAUGE    which db contins the oldest multi xid
+# ┃ pg_checkpoint_oldest_commit_ts_xid{}  GAUGE    xid with oldest commit ts by the checkpoint
+# ┃ pg_checkpoint_newest_commit_ts_xid{}  GAUGE    xid with newest commit ts by the checkpoint
+# ┃ pg_checkpoint_time{}                  GAUGE    timestamp of this checkpoint
+# ┃ pg_checkpoint_elapse{}                GAUGE    time elapsed since this checkpoint in seconds
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pg_checkpoint:
+  name: pg_checkpoint
+  desc: checkpoint information from pg_control_checkpoint since 10
+  query:
+    - name: pg_checkpoint
+      sql: |-
+        SELECT timeline_id                                 AS tli,
+           full_page_writes,
+           next_oid::BIGINT,
+           next_multixact_id::text::BIGINT,
+           next_multi_offset::text::BIGINT,
+           oldest_xid::text::BIGINT,
+           oldest_xid_dbid::text::BIGINT,
+           oldest_active_xid::text::BIGINT,
+           checkpoint_time                             AS time,
+           extract(epoch from now() - checkpoint_time) AS elapse
+        FROM pg_control_checkpoint();
+      version: '>=0.0.0'
+      timeout: 1
+      ttl: 5
+      status: enable
+      dbRole: ""
+  metrics:
+    - name: checkpoint_lsn
+      description: lsn of checkpoint
+      usage: COUNTER
+    - name: redo_lsn
+      description: redo start LSN
+      usage: COUNTER
+    - name: tli
+      description: current WAL timeline
+      usage: GAUGE
+    - name: prev_tli
+      description: previous WAL timeline
+      usage: GAUGE
+    - name: full_page_writes
+      description: is full page write enabled ?
+      usage: GAUGE
+    - name: next_xid_epoch
+      description: next xid epoch since this checkpoint
+      usage: GAUGE
+    - name: next_xid
+      description: next xid since this checkpoint
+      usage: GAUGE
+    - name: next_oid
+      description: next object id since this checkpoint
+      usage: GAUGE
+    - name: next_multixact_id
+      description: next multixact id of this checkpoint
+      usage: GAUGE
+    - name: next_multi_offset
+      description: next multixact id offset of this checkpoint
+      usage: GAUGE
+    - name: oldest_xid
+      description: oldest existing xid of the checkpoint
+      usage: GAUGE
+    - name: oldest_xid_dbid
+      description: which db contains the oldest xid
+      usage: GAUGE
+    - name: oldest_active_xid
+      description: oldest active xid of the checkpoint
+      usage: GAUGE
+    - name: oldest_multi_xid
+      description: oldest active multi xid of the checkpoint
+      usage: GAUGE
+    - name: oldest_multi_dbid
+      description: which db contins the oldest multi xid
+      usage: GAUGE
+    - name: oldest_commit_ts_xid
+      description: xid with oldest commit ts by the checkpoint
+      usage: GAUGE
+    - name: newest_commit_ts_xid
+      description: xid with newest commit ts by the checkpoint
+      usage: GAUGE
+    - name: time
+      description: timestamp of this checkpoint
+      usage: GAUGE
+    - name: elapse
+      description: time elapsed since this checkpoint in seconds
+      usage: GAUGE
+  status: enable
+  ttl: 5
+  timeout: 1
+
+
+
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ┃ pg_stat_database_conflicts
+# ┃ OpenGauss database statistics conflicts
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ TTL      ┆ 60
+# ┃ Timeout  ┆ 1s
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ LABEL    datid                          OID of a database
+# ┃ LABEL    datname                        Name of this database
+# ┃ COUNTER  confl_tablespace               Number of queries in this database that have been canceled due to dropped tablespaces
+# ┃ COUNTER  confl_lock                     Number of queries in this database that have been canceled due to lock timeouts
+# ┃ COUNTER  confl_snapshot                 Number of queries in this database that have been canceled due to old snapshots
+# ┃ COUNTER  confl_bufferpin                Number of queries in this database that have been canceled due to pinned buffers
+# ┃ COUNTER  confl_deadlock                 Number of queries in this database that have been canceled due to deadlocks
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ pg_stat_database_conflicts_confl_tablespace{datid,datname}  COUNTER  Number of queries in this database that have been canceled due to dropped tablespaces
+# ┃ pg_stat_database_conflicts_confl_lock{datid,datname}        COUNTER  Number of queries in this database that have been canceled due to lock timeouts
+# ┃ pg_stat_database_conflicts_confl_snapshot{datid,datname}    COUNTER  Number of queries in this database that have been canceled due to old snapshots
+# ┃ pg_stat_database_conflicts_confl_bufferpin{datid,datname}   COUNTER  Number of queries in this database that have been canceled due to pinned buffers
+# ┃ pg_stat_database_conflicts_confl_deadlock{datid,datname}    COUNTER  Number of queries in this database that have been canceled due to deadlocks
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pg_stat_database_conflicts:
+  name: pg_stat_database_conflicts
+  desc: OpenGauss database statistics conflicts
+  query:
+    - name: pg_stat_database_conflicts
+      sql: select * from pg_stat_database_conflicts where datname NOT IN ('template0','template1');
+      version: '>=0.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+      dbRole: ""
+  metrics:
+    - name: datid
+      description: OID of a database
+      usage: LABEL
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: confl_tablespace
+      description: Number of queries in this database that have been canceled due to dropped tablespaces
+      usage: COUNTER
+    - name: confl_lock
+      description: Number of queries in this database that have been canceled due to lock timeouts
+      usage: COUNTER
+    - name: confl_snapshot
+      description: Number of queries in this database that have been canceled due to old snapshots
+      usage: COUNTER
+    - name: confl_bufferpin
+      description: Number of queries in this database that have been canceled due to pinned buffers
+      usage: COUNTER
+    - name: confl_deadlock
+      description: Number of queries in this database that have been canceled due to deadlocks
+      usage: COUNTER
+  status: enable
+  ttl: 60
+  timeout: 1
+
+
+
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ┃ pg_stat_replication
+# ┃
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ TTL      ┆ 60
+# ┃ Timeout  ┆ 1s
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ LABEL    pid                            unique walsender pid
 # ┃ LABEL    client_addr                    client address of wal receiver
@@ -513,6 +711,7 @@ pg_stat_replication:
       timeout: 1
       ttl: 60
       status: enable
+      dbRole: ""
   metrics:
     - name: pid
       description: unique walsender pid
@@ -582,118 +781,92 @@ pg_stat_replication:
 
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ┃ pg_stat_database
-# ┃ OpenGauss database statistics
+# ┃ pg_stat_bgwriter
+# ┃ OpenGauss background writer metrics
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ -1
-# ┃ Timeout  ┆ 3s
-# ┃ Primary  ┆ false
+# ┃ Timeout  ┆ 1s
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ LABEL    datid                          OID of a database
-# ┃ LABEL    datname                        Name of this database
-# ┃ GAUGE    numbackends                    Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
-# ┃ COUNTER  xact_commit                    Number of transactions in this database that have been committed
-# ┃ COUNTER  xact_rollback                  Number of transactions in this database that have been rolled back
-# ┃ COUNTER  blks_read                      Number of disk blocks read in this database
-# ┃ COUNTER  blks_hit                       Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
-# ┃ COUNTER  tup_returned                   Number of rows returned by queries in this database
-# ┃ COUNTER  tup_fetched                    Number of rows fetched by queries in this database
-# ┃ COUNTER  tup_inserted                   Number of rows inserted by queries in this database
-# ┃ COUNTER  tup_updated                    Number of rows updated by queries in this database
-# ┃ COUNTER  tup_deleted                    Number of rows deleted by queries in this database
-# ┃ COUNTER  conflicts                      Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
-# ┃ COUNTER  temp_files                     Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
-# ┃ COUNTER  temp_bytes                     Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
-# ┃ COUNTER  deadlocks                      Number of deadlocks detected in this database
-# ┃ COUNTER  blk_read_time                  Time spent reading data file blocks by backends in this database, in milliseconds
-# ┃ COUNTER  blk_write_time                 Time spent writing data file blocks by backends in this database, in milliseconds
-# ┃ COUNTER  stats_reset                    Time at which these statistics were last reset
+# ┃ COUNTER  checkpoints_timed              scheduled checkpoints that have been performed
+# ┃ COUNTER  checkpoints_req                requested checkpoints that have been performed
+# ┃ COUNTER  checkpoint_write_time          time spending on writing files to disk, in µs
+# ┃ COUNTER  checkpoint_sync_time           time spending on syncing files to disk, in µs
+# ┃ COUNTER  buffers_checkpoint             buffers written during checkpoints
+# ┃ COUNTER  buffers_clean                  buffers written by the background writer
+# ┃ COUNTER  buffers_backend                buffers written directly by a backend
+# ┃ COUNTER  maxwritten_clean               times that bgwriter stopped a cleaning scan
+# ┃ COUNTER  buffers_backend_fsync          times a backend had to execute its own fsync
+# ┃ COUNTER  buffers_alloc                  buffers allocated
+# ┃ COUNTER  stats_reset                    time when statistics were last reset
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ pg_stat_database_numbackends{datid,datname}     GAUGE    Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
-# ┃ pg_stat_database_xact_commit{datid,datname}     COUNTER  Number of transactions in this database that have been committed
-# ┃ pg_stat_database_xact_rollback{datid,datname}   COUNTER  Number of transactions in this database that have been rolled back
-# ┃ pg_stat_database_blks_read{datid,datname}       COUNTER  Number of disk blocks read in this database
-# ┃ pg_stat_database_blks_hit{datid,datname}        COUNTER  Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
-# ┃ pg_stat_database_tup_returned{datid,datname}    COUNTER  Number of rows returned by queries in this database
-# ┃ pg_stat_database_tup_fetched{datid,datname}     COUNTER  Number of rows fetched by queries in this database
-# ┃ pg_stat_database_tup_inserted{datid,datname}    COUNTER  Number of rows inserted by queries in this database
-# ┃ pg_stat_database_tup_updated{datid,datname}     COUNTER  Number of rows updated by queries in this database
-# ┃ pg_stat_database_tup_deleted{datid,datname}     COUNTER  Number of rows deleted by queries in this database
-# ┃ pg_stat_database_conflicts{datid,datname}       COUNTER  Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
-# ┃ pg_stat_database_temp_files{datid,datname}      COUNTER  Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
-# ┃ pg_stat_database_temp_bytes{datid,datname}      COUNTER  Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
-# ┃ pg_stat_database_deadlocks{datid,datname}       COUNTER  Number of deadlocks detected in this database
-# ┃ pg_stat_database_blk_read_time{datid,datname}   COUNTER  Time spent reading data file blocks by backends in this database, in milliseconds
-# ┃ pg_stat_database_blk_write_time{datid,datname}  COUNTER  Time spent writing data file blocks by backends in this database, in milliseconds
-# ┃ pg_stat_database_stats_reset{datid,datname}     COUNTER  Time at which these statistics were last reset
+# ┃ pg_stat_bgwriter_checkpoints_timed{}      COUNTER  scheduled checkpoints that have been performed
+# ┃ pg_stat_bgwriter_checkpoints_req{}        COUNTER  requested checkpoints that have been performed
+# ┃ pg_stat_bgwriter_checkpoint_write_time{}  COUNTER  time spending on writing files to disk, in µs
+# ┃ pg_stat_bgwriter_checkpoint_sync_time{}   COUNTER  time spending on syncing files to disk, in µs
+# ┃ pg_stat_bgwriter_buffers_checkpoint{}     COUNTER  buffers written during checkpoints
+# ┃ pg_stat_bgwriter_buffers_clean{}          COUNTER  buffers written by the background writer
+# ┃ pg_stat_bgwriter_buffers_backend{}        COUNTER  buffers written directly by a backend
+# ┃ pg_stat_bgwriter_maxwritten_clean{}       COUNTER  times that bgwriter stopped a cleaning scan
+# ┃ pg_stat_bgwriter_buffers_backend_fsync{}  COUNTER  times a backend had to execute its own fsync
+# ┃ pg_stat_bgwriter_buffers_alloc{}          COUNTER  buffers allocated
+# ┃ pg_stat_bgwriter_stats_reset{}            COUNTER  time when statistics were last reset
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-pg_stat_database:
-  name: pg_stat_database
-  desc: OpenGauss database statistics
+pg_stat_bgwriter:
+  name: pg_stat_bgwriter
+  desc: OpenGauss background writer metrics
   query:
-    - name: pg_stat_database
-      sql: select * from pg_stat_database where datname NOT IN ('template0','template1')
+    - name: pg_stat_bgwriter
+      sql: |-
+        SELECT checkpoints_timed,
+          checkpoints_req,
+          checkpoint_write_time,
+          checkpoint_sync_time,
+          buffers_checkpoint,
+          buffers_clean,
+          buffers_backend,
+          maxwritten_clean,
+          buffers_backend_fsync,
+          buffers_alloc,
+          stats_reset
+        FROM pg_stat_bgwriter
       version: '>=0.0.0'
       timeout: 1
       ttl: -1
       status: enable
+      dbRole: ""
   metrics:
-    - name: datid
-      description: OID of a database
-      usage: LABEL
-    - name: datname
-      description: Name of this database
-      usage: LABEL
-    - name: numbackends
-      description: Number of backends currently connected to this database. This is the only column in this view that returns a value reflecting current state; all other columns return the accumulated values since the last reset.
-      usage: GAUGE
-    - name: xact_commit
-      description: Number of transactions in this database that have been committed
+    - name: checkpoints_timed
+      description: scheduled checkpoints that have been performed
       usage: COUNTER
-    - name: xact_rollback
-      description: Number of transactions in this database that have been rolled back
+    - name: checkpoints_req
+      description: requested checkpoints that have been performed
       usage: COUNTER
-    - name: blks_read
-      description: Number of disk blocks read in this database
+    - name: checkpoint_write_time
+      description: time spending on writing files to disk, in µs
       usage: COUNTER
-    - name: blks_hit
-      description: Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the OpenGauss buffer cache, not the operating system's file system cache)
+    - name: checkpoint_sync_time
+      description: time spending on syncing files to disk, in µs
       usage: COUNTER
-    - name: tup_returned
-      description: Number of rows returned by queries in this database
+    - name: buffers_checkpoint
+      description: buffers written during checkpoints
       usage: COUNTER
-    - name: tup_fetched
-      description: Number of rows fetched by queries in this database
+    - name: buffers_clean
+      description: buffers written by the background writer
       usage: COUNTER
-    - name: tup_inserted
-      description: Number of rows inserted by queries in this database
+    - name: buffers_backend
+      description: buffers written directly by a backend
       usage: COUNTER
-    - name: tup_updated
-      description: Number of rows updated by queries in this database
+    - name: maxwritten_clean
+      description: times that bgwriter stopped a cleaning scan
       usage: COUNTER
-    - name: tup_deleted
-      description: Number of rows deleted by queries in this database
+    - name: buffers_backend_fsync
+      description: times a backend had to execute its own fsync
       usage: COUNTER
-    - name: conflicts
-      description: Number of queries canceled due to conflicts with recovery in this database. (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)
-      usage: COUNTER
-    - name: temp_files
-      description: Number of temporary files created by queries in this database. All temporary files are counted, regardless of why the temporary file was created (e.g., sorting or hashing), and regardless of the log_temp_files setting.
-      usage: COUNTER
-    - name: temp_bytes
-      description: Total amount of data written to temporary files by queries in this database. All temporary files are counted, regardless of why the temporary file was created, and regardless of the log_temp_files setting.
-      usage: COUNTER
-    - name: deadlocks
-      description: Number of deadlocks detected in this database
-      usage: COUNTER
-    - name: blk_read_time
-      description: Time spent reading data file blocks by backends in this database, in milliseconds
-      usage: COUNTER
-    - name: blk_write_time
-      description: Time spent writing data file blocks by backends in this database, in milliseconds
+    - name: buffers_alloc
+      description: buffers allocated
       usage: COUNTER
     - name: stats_reset
-      description: Time at which these statistics were last reset
+      description: time when statistics were last reset
       usage: COUNTER
   status: enable
   ttl: -1
@@ -708,7 +881,6 @@ pg_stat_database:
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ TTL      ┆ 60
 # ┃ Timeout  ┆ 1s
-# ┃ Primary  ┆ false
 # ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
 # ┃ LABEL    run_name                       Name of cluster
 # ┃ GAUGE    db_role                        Role of database
@@ -727,6 +899,7 @@ pg_run_times:
       timeout: 1
       ttl: 60
       status: enable
+      dbRole: ""
   metrics:
     - name: run_name
       description: Name of cluster
@@ -742,3 +915,322 @@ pg_run_times:
   timeout: 1
 
 
+
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ┃ pg
+# ┃ openGauss basic information
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ TTL      ┆ 60
+# ┃ Timeout  ┆ 100ms
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ GAUGE    timestamp                      current database timestamp in unix epoch
+# ┃ GAUGE    uptime                         seconds since postmaster start
+# ┃ GAUGE    boot_time                      postmaster boot timestamp in unix epoch
+# ┃ COUNTER  lsn                            log sequence number, current write location
+# ┃ COUNTER  insert_lsn                     primary only, location of current wal inserting
+# ┃ COUNTER  write_lsn                      primary only, location of current wal writing
+# ┃ COUNTER  flush_lsn                      primary only, location of current wal syncing
+# ┃ COUNTER  receive_lsn                    replica only, location of wal synced to disk
+# ┃ COUNTER  replay_lsn                     replica only, location of wal applied
+# ┃ GAUGE    conf_reload_time               seconds since last configuration reload
+# ┃ GAUGE    last_replay_time               time when last transaction been replayed
+# ┃ GAUGE    lag                            replica only, replication lag in seconds
+# ┃ GAUGE    is_in_recovery                 1 if in recovery mode
+# ┃ GAUGE    is_wal_replay_paused           1 if wal play is paused
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ pg_timestamp{}             GAUGE    current database timestamp in unix epoch
+# ┃ pg_uptime{}                GAUGE    seconds since postmaster start
+# ┃ pg_boot_time{}             GAUGE    postmaster boot timestamp in unix epoch
+# ┃ pg_lsn{}                   COUNTER  log sequence number, current write location
+# ┃ pg_insert_lsn{}            COUNTER  primary only, location of current wal inserting
+# ┃ pg_write_lsn{}             COUNTER  primary only, location of current wal writing
+# ┃ pg_flush_lsn{}             COUNTER  primary only, location of current wal syncing
+# ┃ pg_receive_lsn{}           COUNTER  replica only, location of wal synced to disk
+# ┃ pg_replay_lsn{}            COUNTER  replica only, location of wal applied
+# ┃ pg_conf_reload_time{}      GAUGE    seconds since last configuration reload
+# ┃ pg_last_replay_time{}      GAUGE    time when last transaction been replayed
+# ┃ pg_lag{}                   GAUGE    replica only, replication lag in seconds
+# ┃ pg_is_in_recovery{}        GAUGE    1 if in recovery mode
+# ┃ pg_is_wal_replay_paused{}  GAUGE    1 if wal play is paused
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pg:
+  name: pg
+  desc: openGauss basic information
+  query:
+    - name: pg
+      desc: 'primary database '
+      sql: |
+        SELECT extract(EPOCH FROM CURRENT_TIMESTAMP)                        AS timestamp,
+           extract(EPOCH FROM now() - pg_postmaster_start_time())       AS uptime,
+           extract(EPOCH FROM pg_postmaster_start_time())               AS boot_time,
+           pg_xlog_location_diff(pg_current_xlog_location() , '0/0')      AS lsn,
+           pg_xlog_location_diff(pg_current_xlog_insert_location(),'0/0')   AS insert_lsn,
+           pg_xlog_location_diff(pg_current_xlog_location() , '0/0')        AS write_lsn,
+           pg_xlog_location_diff(pg_current_xlog_location() , '0/0')    AS flush_lsn,
+           NULL::BIGINT                                           AS receive_lsn,
+           NULL::BIGINT                                           AS replay_lsn,
+           extract(EPOCH FROM now() - pg_conf_load_time())        AS conf_reload_time,
+           NULL::FLOAT                                            AS last_replay_time,
+           0::FLOAT                                               AS lag,
+           pg_is_in_recovery()                                    AS is_in_recovery,
+           FALSE                                                  AS is_wal_replay_paused
+           -- ,
+           --pg_is_in_backup()                                      AS is_in_backup,
+           --extract(EPOCH FROM now() - pg_backup_start_time())     AS backup_time
+           ;
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 10
+      status: enable
+      dbRole: primary
+    - name: pg
+      desc: 'standby database '
+      sql: |
+        SELECT extract(EPOCH FROM CURRENT_TIMESTAMP)                                AS timestamp,
+           extract(EPOCH FROM now() - pg_postmaster_start_time())                   AS uptime,
+           extract(EPOCH FROM pg_postmaster_start_time())                           AS boot_time,
+           pg_xlog_location_diff(pg_last_xlog_receive_location() , '0/0')           AS lsn,
+           NULL::BIGINT                                                             AS insert_lsn,
+           NULL::BIGINT                                                             AS write_lsn,
+           NULL::BIGINT                                                             AS flush_lsn,
+           pg_xlog_location_diff(pg_last_xlog_receive_location() , '0/0')           AS receive_lsn,
+           pg_xlog_location_diff(pg_last_xlog_receive_location() , '0/0')           AS replay_lsn,
+           extract(EPOCH FROM now() - pg_conf_load_time())                          AS conf_reload_time,
+           extract(EPOCH FROM pg_last_xact_replay_timestamp())                      AS last_replay_time,
+           --CASE
+           --    WHEN pg_last_xlog_receive_location() = pg_last_xlog_replay_location() THEN 0
+           --    ELSE EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp()) END AS lag,
+           pg_is_in_recovery()                                                      AS is_in_recovery
+           --pg_is_wal_replay_paused()                                                AS is_wal_replay_paused
+           --,
+           --pg_is_in_backup()                                                        AS is_in_backup,
+           --extract(EPOCH FROM now() - pg_backup_start_time())                       AS backup_time
+           ;
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 10
+      status: enable
+      dbRole: standby
+  metrics:
+    - name: timestamp
+      description: current database timestamp in unix epoch
+      usage: GAUGE
+    - name: uptime
+      description: seconds since postmaster start
+      usage: GAUGE
+    - name: boot_time
+      description: postmaster boot timestamp in unix epoch
+      usage: GAUGE
+    - name: lsn
+      description: log sequence number, current write location
+      usage: COUNTER
+    - name: insert_lsn
+      description: primary only, location of current wal inserting
+      usage: COUNTER
+    - name: write_lsn
+      description: primary only, location of current wal writing
+      usage: COUNTER
+    - name: flush_lsn
+      description: primary only, location of current wal syncing
+      usage: COUNTER
+    - name: receive_lsn
+      description: replica only, location of wal synced to disk
+      usage: COUNTER
+    - name: replay_lsn
+      description: replica only, location of wal applied
+      usage: COUNTER
+    - name: conf_reload_time
+      description: seconds since last configuration reload
+      usage: GAUGE
+    - name: last_replay_time
+      description: time when last transaction been replayed
+      usage: GAUGE
+    - name: lag
+      description: replica only, replication lag in seconds
+      usage: GAUGE
+    - name: is_in_recovery
+      description: 1 if in recovery mode
+      usage: GAUGE
+    - name: is_wal_replay_paused
+      description: 1 if wal play is paused
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 0.1
+
+
+
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ┃ pg_sync_standby
+# ┃ openGauss synchronous standby status and names
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ TTL      ┆ 60
+# ┃ Timeout  ┆ 100ms
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ LABEL    names                          a list of standby servers that can support synchronous replication, empty if not enabled
+# ┃ GAUGE    disabled                       1 if disabled, 0 if enabled
+# ┃ GAUGE    enabled                        1 if enabled, 0 if disabled
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ pg_sync_standby_disabled{names}  GAUGE    1 if disabled, 0 if enabled
+# ┃ pg_sync_standby_enabled{names}   GAUGE    1 if enabled, 0 if disabled
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pg_sync_standby:
+  name: pg_sync_standby
+  desc: openGauss synchronous standby status and names
+  query:
+    - name: pg_sync_standby
+      sql: |
+        SELECT CASE names WHEN NULL THEN '""' WHEN '' THEN 'null' ELSE names END AS names,
+           CASE names WHEN NULL THEN 1 WHEN '' THEN 1 ELSE 0 END               AS disabled,
+           CASE names WHEN NULL THEN 0 WHEN '' THEN 0 ELSE 1 END               AS enabled
+        FROM (SELECT current_setting('synchronous_standby_names') AS names) t;
+      version: '>=0.0.0'
+      timeout: 0.1
+      ttl: 10
+      status: enable
+      dbRole: ""
+  metrics:
+    - name: names
+      description: a list of standby servers that can support synchronous replication, empty if not enabled
+      usage: LABEL
+    - name: disabled
+      description: 1 if disabled, 0 if enabled
+      usage: GAUGE
+    - name: enabled
+      description: 1 if enabled, 0 if disabled
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 0.1
+
+
+
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ┃ pg_lock
+# ┃ OpenGauss lock distribution by mode
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ TTL      ┆ 60
+# ┃ Timeout  ┆ 1s
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ LABEL    datname                        Name of this database
+# ┃ LABEL    mode                           Type of Lock
+# ┃ GAUGE    count                          Number of locks
+# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+# ┃ pg_lock_count{datname,mode}  GAUGE    Number of locks
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pg_lock:
+  name: pg_lock
+  desc: OpenGauss lock distribution by mode
+  query:
+    - name: pg_lock
+      sql: |-
+        SELECT datname, mode, coalesce(count, 0) AS count
+        FROM (
+          SELECT d.oid AS database, d.datname, l.mode
+          FROM pg_database d,unnest(ARRAY ['AccessShareLock','RowShareLock','RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','ShareRowExclusiveLock','ExclusiveLock','AccessExclusiveLock']) l(mode)
+          WHERE d.datname NOT IN ('template0','template1')) base
+        LEFT JOIN (SELECT database, mode, count(1) AS count
+                   FROM pg_locks
+                   WHERE database IS NOT NULL GROUP BY database, mode) cnt
+        USING (database, mode);
+      version: '>=0.0.0'
+      timeout: 1
+      ttl: 60
+      status: enable
+      dbRole: ""
+  metrics:
+    - name: datname
+      description: Name of this database
+      usage: LABEL
+    - name: mode
+      description: Type of Lock
+      usage: LABEL
+    - name: count
+      description: Number of locks
+      usage: GAUGE
+  status: enable
+  ttl: 60
+  timeout: 1
+
+
+pg_sql_history:
+  name: pg_sql_history
+  desc: OpenGauss history query statement
+  query:
+    - name: pg_sql_history
+      sql: select unique_sql_id,n_calls,cpu_time,min_elapse_time,max_elapse_time,total_elapse_time,query from dbe_perf.statement where n_calls > 10000 order by total_elapse_time desc limit 10;
+      version: '>=0.0.0'
+      timeout: 1
+      status: enable
+  metrics:
+    - name: unique_sql_id
+      description: Name of database
+      usage: LABEL
+    - name: n_calls
+      description: Name of user
+      usage: GAUGE
+    - name: cpu_time
+      description: Client address
+      usage: GAUGE
+    - name: min_elapse_time
+      description: Query start time
+      usage: LABEL
+    - name: max_elapse_time
+      description: Query running time
+      usage: GAUGE
+    - name: total_elapse_time
+      description: Start time of transaction
+      usage: GAUGE
+    - name: query
+      description: transaction running time
+      usage: LABEL
+  status: enable
+  ttl: -1
+  timeout: 1
+
+pg_active_slowsql:
+  name: pg_active_slowsql
+  desc: OpenGauss active slow query
+  query:
+    - name: pg_active_slowsql
+      sql: select datname,usename,client_addr,pid,query_start::text,extract(epoch from (now() - query_start)) as query_runtime,xact_start::text,extract(epoch from(now() - xact_start)) as xact_runtime,state,query from pg_stat_activity where state not in('idle') and query_start is not null;
+      version: '>=0.0.0'
+      timeout: 1
+      status: enable
+  metrics:
+    - name: datname
+      description: Name of database
+      usage: LABEL
+    - name: usename
+      description: Name of user
+      usage: LABEL
+    - name: client_addr
+      description: Client address
+      usage: LABEL
+    - name: pid
+      description: Client address
+      usage: LABEL
+    - name: query_start
+      description: Query start time
+      usage: LABEL
+    - name: query_runtime
+      description: Query running time
+      usage: GAUGE
+    - name: xact_start
+      description: Start time of transaction
+      usage: LABEL
+    - name: xact_runtime
+      description: transaction running time
+      usage: LABEL
+    - name: state
+      description: Query state
+      usage: LABEL
+    - name: query
+      description: Query sql
+      usage: LABEL
+  status: enable
+  ttl: -1
+  timeout: 1

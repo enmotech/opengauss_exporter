@@ -339,6 +339,7 @@ pg_replication_slots:
       sql: |-
         select slot_name,
             database                    as datname,
+            database                    as datname,
             coalesce(plugin,'_') as plugin,
             slot_type,datoid,coalesce(database,'_') as database,
             active,

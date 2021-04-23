@@ -1,0 +1,760 @@
+---
+#==============================================================#
+# File      :   pgsql.yml
+# Ctime     :   2020-04-22
+# Mtime     :   2020-12-03
+# Desc      :   Record and alert rules for postgres
+# Path      :   /etc/prometheus/rules/pgsql.yml
+# Copyright (C) 2018-2021 Ruohang Feng
+#==============================================================#
+
+groups:
+
+  ################################################################
+  #                         PgSQL Rules                          #
+  ################################################################
+  - name: pgsql-rules
+    rules:
+
+      # #==============================================================#
+      # #                        Aliveness                             #
+      # #==============================================================#
+      # # TODO: change these to your pg_exporter & pgbouncer_exporter port
+      # - record: pg_exporter_up
+      #   expr: up{instance=~".*:9185"}
+
+      # - record: pgbouncer_exporter_up
+      #   expr: up{instance=~".*:9127"}
+
+
+      # #==============================================================#
+      # #                        Identity                              #
+      # #==============================================================#
+      # - record: pg_is_primary
+      #   expr: 1 - pg_in_recovery
+      # - record: pg_is_replica
+      #   expr: pg_in_recovery
+      # - record: pg_status
+      #   expr: (pg_up{} * 2) +  (1 - pg_in_recovery{})
+      # # encoded: 0:replica[DOWN] 1:primary[DOWN] 2:replica 3:primary
+
+
+      #==============================================================#
+      #                            Age                               #
+      #==============================================================#
+      # age
+      - record: og:ins:age
+        expr: max without (datname) (pg_database_age{datname!~"template[0-9]"})
+      - record: og:cls:age
+        expr: max by (cls) (og:ins:age)
+      - record: og:all:age
+        expr: max(og:cls:age)
+
+      # age derive and prediction
+      - record: og:db:age_deriv_1h
+        expr: deriv(pg_database_age{}[1h])
+      - record: og:db:age_exhaust
+        expr: (2147483648 - pg_database_age{}) / og:db:age_deriv_1h
+
+
+
+      #==============================================================#
+      #                         Sessions                             #
+      #==============================================================#
+      # session count (by state)
+      - record: og:db:sessions
+        expr: pg_stat_activity_count
+      - record: og:ins:sessions
+        expr: sum without (datname) (og:db:sessions)
+      - record: og:svc:sessions
+        expr: sum by (cls, role, state) (og:ins:sessions)
+      - record: og:cls:sessions
+        expr: sum by (cls, state) (og:ins:sessions)
+      - record: og:all:sessions
+        expr: sum by (state) (og:cls:sessions)
+
+      # backends
+      - record: og:db:backends
+        expr: pg_stat_database_numbackends
+      - record: og:ins:backends
+        expr: sum without (datname) (og_db_numbackends)
+      - record: og:svc:backends
+        expr: sum by (cls, role) (og:ins:backends)
+      - record: og:cls:backends
+        expr: sum by (cls) (og:ins:backends)
+      - record: og:all:backends
+        expr: sum(og:cls:backends)
+
+      # active backends
+      - record: og:ins:active_backends
+        expr: og:ins:sessions{state="active"}
+      - record: og:svc:active_backends
+        expr: sum by (cls, role) (og:ins:active_backends)
+      - record: og:cls:active_backends
+        expr: sum by (cls) (og:ins:active_backends)
+      - record: og:all:active_backends
+        expr: sum(og:cls:active_backends)
+
+      # idle in xact backends (including abort)
+      - record: og:ins:ixact_backends
+        expr: og:ins:sessions{state=~"idle in.*"}
+      - record: og:svc:ixact_backends
+        expr: sum by (cls, role) (og:ins:active_backends)
+      - record: og:cls:ixact_backends
+        expr: sum by (cls) (og:ins:active_backends)
+      - record: og:all:ixact_backends
+        expr: sum(og:cls:active_backends)
+
+
+      #==============================================================#
+      #                       Transactions                           #
+      #==============================================================#
+      # commits (realtime)
+      - record: og:db:commits_realtime
+        expr: irate(pg_stat_database_xact_commit{}[1m])
+      - record: og:ins:commits_realtime
+        expr: sum without (datname) (og:db:commits_realtime)
+      - record: og:svc:commits_realtime
+        expr: sum by (cls, role) (og:ins:commits_realtime)
+      - record: og:cls:commits_realtime
+        expr: sum by (cls) (og:ins:commits_realtime)
+      - record: og:all:commits_realtime
+        expr: sum(og:cls:commits_realtime)
+
+      # commits (rate1m)
+      - record: og:db:commits
+        expr: rate(pg_stat_database_xact_commit{}[1m])
+      - record: og:ins:commits
+        expr: sum without (datname) (og:db:commits)
+      - record: og:svc:commits
+        expr: sum by (cls, role) (og:ins:commits)
+      - record: og:cls:commits
+        expr: sum by (cls) (og:ins:commits)
+      - record: og:all:commits
+        expr: sum(og:cls:commits)
+
+      # rollbacks realtime
+      - record: og:db:rollbacks_realtime
+        expr: irate(pg_stat_database_xact_rollback{}[1m])
+      - record: og:ins:rollbacks_realtime
+        expr: sum without (datname) (og:db:rollbacks_realtime)
+      - record: og:svc:rollbacks_realtime
+        expr: sum by (cls, role) (og:ins:rollbacks_realtime)
+      - record: og:cls:rollbacks_realtime
+        expr: sum by (cls) (og:ins:rollbacks_realtime)
+      - record: og:all:rollbacks_realtime
+        expr: sum(og:cls:rollbacks_realtime)
+      # rollbacks
+      - record: og:db:rollbacks
+        expr: rate(pg_stat_database_xact_rollback{}[1m])
+      - record: og:ins:rollbacks
+        expr: sum without (datname) (og:db:rollbacks)
+      - record: og:svc:rollbacks
+        expr: sum by (cls, role) (og:ins:rollbacks)
+      - record: og:cls:rollbacks
+        expr: sum by (cls) (og:ins:rollbacks)
+      - record: og:all:rollbacks
+        expr: sum(og:cls:rollbacks)
+
+      # xacts (realtime)
+      - record: og:db:xacts_realtime
+        expr: irate(pg_stat_database_xact_commit{}[1m])
+      - record: og:ins:xacts_realtime
+        expr: sum without (datname) (og:db:xacts_realtime)
+      - record: og:svc:xacts_realtime
+        expr: sum by (cls, role) (og:ins:xacts_realtime)
+      - record: og:cls:xacts_realtime
+        expr: sum by (cls) (og:ins:xacts_realtime)
+      - record: og:all:xacts_realtime
+        expr: sum(og:cls:xacts_realtime)
+      # xacts (rate1m)
+      - record: og:db:xacts
+        expr: rate(pg_stat_database_xact_commit{}[1m])
+      - record: og:ins:xacts
+        expr: sum without (datname) (og:db:xacts)
+      - record: og:svc:xacts
+        expr: sum by (cls, role) (og:ins:xacts)
+      - record: og:cls:xacts
+        expr: sum by (cls) (og:ins:xacts)
+      - record: og:all:xacts
+        expr: sum(og:cls:xacts)
+      # xacts avg30m
+      - record: og:db:xacts_avg30m
+        expr: avg_over_time(og:db:xacts[30m])
+      - record: og:ins:xacts_avg30m
+        expr: avg_over_time(og:ins:xacts[30m])
+      - record: og:svc:xacts_avg30m
+        expr: avg_over_time(og:svc:xacts[30m])
+      - record: og:cls:xacts_avg30m
+        expr: avg_over_time(og:cls:xacts[30m])
+      - record: og:all:xacts_avg30m
+        expr: avg_over_time(og:all:xacts[30m])
+      # xacts µ
+      - record: og:db:xacts_mu
+        expr: avg_over_time(og:db:xacts_avg30m[30m])
+      - record: og:ins:xacts_mu
+        expr: avg_over_time(og:ins:xacts_avg30m[30m])
+      - record: og:svc:xacts_mu
+        expr: avg_over_time(og:svc:xacts_avg30m[30m])
+      - record: og:cls:xacts_mu
+        expr: avg_over_time(og:cls:xacts_avg30m[30m])
+      - record: og:all:xacts_mu
+        expr: avg_over_time(og:all:xacts_avg30m[30m])
+      # xacts σ: sigma
+      - record: og:db:xacts_sigma
+        expr: stddev_over_time(og:db:xacts[30m])
+      - record: og:ins:xacts_sigma
+        expr: stddev_over_time(og:ins:xacts[30m])
+      - record: og:svc:xacts_sigma
+        expr: stddev_over_time(og:svc:xacts[30m])
+      - record: og:cls:xacts_sigma
+        expr: stddev_over_time(og:cls:xacts[30m])
+      - record: og:all:xacts_sigma
+        expr: stddev_over_time(og:all:xacts[30m])
+
+
+      #==============================================================#
+      #                          CRUD                                #
+      #==============================================================#
+      # rows touched
+      - record: og:db:tup_touched
+        expr: irate(pg_stat_database_tup_fetched{}[1m])
+      - record: og:ins:tup_touched
+        expr: sum without(datname) (og:db:tup_touched)
+      - record: og:svc:tup_touched
+        expr: sum by (cls, role) (og:ins:tup_touched)
+      - record: og:cls:tup_touched
+        expr: sum by (cls) (og:ins:tup_touched)
+      - record: og:all:tup_touched
+        expr: sum(og:cls:tup_touched)
+
+      # selected
+      - record: og:db:tup_selected
+        expr: irate(pg_stat_database_tup_returned{}[1m])
+      - record: og:ins:tup_selected
+        expr: sum without(datname) (og:db:tup_selected)
+      - record: og:svc:tup_selected
+        expr: sum by (cls, role) (og:ins:tup_selected)
+      - record: og:cls:tup_selected
+        expr: sum by (cls) (og:ins:tup_selected)
+      - record: og:all:tup_selected
+        expr: sum(og:cls:tup_selected)
+
+      # inserted
+      - record: og:db:tup_inserted
+        expr: irate(pg_stat_database_tup_inserted{}[1m])
+      - record: og:ins:tup_inserted
+        expr: sum without(datname) (og:db:tup_inserted)
+      - record: og:svc:tup_inserted
+        expr: sum by (cls, role) (og:ins:tup_inserted)
+      - record: og:cls:tup_inserted
+        expr: sum by (cls) (og:ins:tup_inserted{role="primary"})
+      - record: og:all:tup_inserted
+        expr: sum(og:cls:tup_inserted)
+
+      # updated
+      - record: og:db:tup_updated
+        expr: irate(pg_stat_database_tup_updated{}[1m])
+      - record: og:ins:tup_updated
+        expr: sum without(datname) (og:db:tup_updated)
+      - record: og:svc:tup_updated
+        expr: sum by (cls, role) (og:ins:tup_updated)
+      - record: og:cls:tup_updated
+        expr: sum by (cls) (og:ins:tup_updated{role="primary"})
+      - record: og:all:tup_updated
+        expr: sum(og:cls:tup_updated)
+
+      # deleted
+      - record: og:db:tup_deleted
+        expr: irate(pg_stat_database_tup_deleted{}[1m])
+      - record: og:ins:tup_deleted
+        expr: sum without(datname) (og:db:tup_deleted)
+      - record: og:svc:tup_deleted
+        expr: sum by (cls, role) (og:ins:tup_deleted)
+      - record: og:cls:tup_deleted
+        expr: sum by (cls) (og:ins:tup_deleted{role="primary"})
+      - record: og:all:tup_deleted
+        expr: sum(og:cls:tup_deleted)
+
+      # modified
+      - record: og:db:tup_modified
+        expr: irate(pg_stat_database_tup_modified{}[1m])
+      - record: og:ins:tup_modified
+        expr: sum without(datname) (og:db:tup_modified)
+      - record: og:svc:tup_modified
+        expr: sum by (cls, role) (og:ins:tup_modified)
+      - record: og:cls:tup_modified
+        expr: sum by (cls) (og:ins:tup_modified{role="primary"})
+      - record: og:all:tup_modified
+        expr: sum(og:cls:tup_deleted)
+
+
+      #==============================================================#
+      #                      Object Access                           #
+      #==============================================================#
+      # table access
+      - record: og:table:idx_scan
+        expr: rate(pg_table_idx_scan{}[1m])
+      - record: og:table:seq_scan
+        expr: rate(pg_table_seq_scan{}[1m])
+      - record: og:table:qps_realtime
+        expr: irate(pg_table_idx_scan{}[1m])
+
+      # index access
+      - record: og:index:idx_scan
+        expr: rate(pg_index_idx_scan{}[1m])
+      - record: og:index:qps_realtime
+        expr: irate(pg_index_idx_scan{}[1m])
+
+      # func access
+      - record: og:func:call
+        expr: rate(pg_func_calls{}[1m])
+      - record: og:func:rt
+        expr: rate(pg_func_total_time{}[1m]) / og:func:call
+
+      # query access
+      - record: og:query:call
+        expr: rate(pg_sql_history_n_calls{}[1m])
+      - record: og:query:rt
+        expr: rate(pg_sql_history_total_elapse_time{}[1m]) / og:query:call / 1000
+
+
+
+      #==============================================================#
+      #                        Blocks IO                             #
+      #==============================================================#
+      # blocks read/hit/access in 1min
+      - record: og:db:blks_read_1m
+        expr: increase(pg_stat_database_blks_read{}[1m])
+      - record: og:db:blks_hit_1m
+        expr: increase(pg_stat_database_blks_hit{}[1m])
+      - record: og:db:blks_access_1m
+        expr: increase(pg_db_blks_access{}[1m])
+
+      # buffer hit rate (1m)
+      - record: og:db:buffer_hit_rate
+        expr: og:db:blks_hit_1m / og:db:blks_access_1m
+      - record: og:ins:hit_rate
+        expr: sum without(datname) (og:db:blks_hit_1m) / sum without(datname) (og:db:blks_access_1m)
+
+      # read/write time usage
+      - record: og:db:read_time_usage
+        expr: rate(pg_stat_database_blk_read_time[1m])
+      - record: og:db:write_time_usage
+        expr: rate(pg_stat_database_blk_write_time[1m])
+      - record: og:db:io_time_usage
+        expr: og:db:read_time_usage + og:db:write_time_usage
+
+
+      #==============================================================#
+      #                          Lock                                #
+      #==============================================================#
+      # lock count by mode
+      - record: og:db:locks
+        expr: pg_lock_count
+      - record: og:ins:locks
+        expr: sum without(datname) (og:db:locks)
+      - record: og:svc:locks
+        expr: sum by (cls, role, mode) (og:ins:locks)
+      - record: og:cls:locks
+        expr: sum by (cls, mode) (og:ins:locks)
+
+      # total lock count
+      - record: og:db:lock_count
+        expr: sum without (mode) (pg_lock_count{})
+      - record: og:ins:lock_count
+        expr: sum without(datname) (og:db:lock_count)
+      - record: og:svc:lock_count
+        expr: sum by (cls, role) (og:ins:lock_count)
+      - record: og:cls:lock_count
+        expr: sum by (cls) (og:ins:lock_count)
+
+      # read category lock
+      - record: og:db:rlock
+        expr: sum without (mode) (pg_lock_count{mode="AccessShareLock"})
+      - record: og:ins:rlock
+        expr: sum without(datname) (og:db:rlock)
+      - record: og:svc:rlock
+        expr: sum by (cls, role) (og:ins:rlock)
+      - record: og:cls:rlock
+        expr: sum by (cls) (og:ins:rlock)
+
+      # write category lock (insert|update|delete)
+      - record: og:db:wlock
+        expr: sum without (mode) (pg_lock_count{mode=~"RowShareLock|RowExclusiveLock"})
+      - record: og:ins:wlock
+        expr: sum without(datname) (og:db:wlock)
+      - record: og:svc:wlock
+        expr: sum by (cls, role) (og:ins:wlock)
+      - record: og:cls:wlock
+        expr: sum by (cls) (og:ins:wlock)
+
+      # exclusive category lock
+      - record: og:db:xlock
+        expr: sum without (mode) (pg_lock_count{mode=~"AccessExclusiveLock|ExclusiveLock|ShareRowExclusiveLock|ShareLock|ShareUpdateExclusiveLock"})
+      - record: og:ins:xlock
+        expr: sum without(datname) (og:db:xlock)
+      - record: og:svc:xlock
+        expr: sum by (cls, role) (og:ins:xlock)
+      - record: og:cls:xlock
+        expr: sum by (cls) (og:ins:xlock)
+
+
+      #==============================================================#
+      #                          Temp                                #
+      #==============================================================#
+      # temp files and bytes
+      - record: og:db:temp_bytes
+        expr: rate(pg_stat_database_temp_bytes{}[1m])
+      - record: og:ins:temp_bytes
+        expr: sum without(datname) (og:db:temp_bytes)
+      - record: og:svc:temp_bytes
+        expr: sum by (cls, role) (og:ins:temp_bytes)
+      - record: og:cls:temp_bytes
+        expr: sum by (cls) (og:ins:temp_bytes)
+
+      # temp file count in last 1m
+      - record: og:db:temp_files
+        expr: increase(pg_stat_database_temp_files{}[1m])
+      - record: og:ins:temp_files
+        expr: sum without(datname) (og:db:temp_files)
+      - record: og:svc:temp_files
+        expr: sum by (cls, role) (og:ins:temp_files)
+      - record: og:cls:temp_files
+        expr: sum by (cls) (og:ins:temp_files)
+
+
+
+      #==============================================================#
+      #                           Size                               #
+      #==============================================================#
+      # database size
+      - record: og:ins:db_size
+        expr: pg_database_size_bytes
+      - record: og:cls:db_size
+        expr: sum by (cls) (og:ins:db_size)
+      # wal size
+      - record: og:ins:wal_size
+        expr: pg_size_wal
+      - record: og:cls:wal_size
+        expr: sum by (cls) (og:ins:wal_size)
+      # log size
+      - record: og:ins:log_size
+        expr: pg_size_log
+      - record: og:cls:log_size
+        expr: sum by (cls) (pg_size_log)
+
+
+
+      #==============================================================#
+      #                        Checkpoint                            #
+      #==============================================================#
+      # checkpoint stats
+      - record: og:ins:last_ckpt
+        expr: pg_checkpoint_elapse
+      - record: og:ins:ckpt_timed
+        expr: increase(pg_stat_bgwriter_checkpoints_timed{}[30s])
+      - record: og:ins:ckpt_req
+        expr: increase(pg_stat_bgwriter_checkpoints_req{}[30s])
+      - record: og:cls:ckpt_1h
+        expr: increase(og:ins:ckpt_timed[1h]) + increase(og:ins:ckpt_req[1h])
+
+      # buffer flush & alloc
+      - record: og:ins:buf_flush_backend
+        expr: irate(pg_stat_bgwriter_buffers_backend{}[1m]) * 8192
+      - record: og:ins:buf_flush_checkpoint
+        expr: irate(pg_stat_bgwriter_buffers_checkpoint{}[1m]) * 8192
+
+      - record: og:ins:buf_flush
+        expr: og:ins:buf_flush_backend + og:ins:buf_flush_checkpoint
+      - record: og:svc:buf_flush
+        expr: sum by (cls, role) (og:ins:buf_flush)
+      - record: og:cls:buf_flush
+        expr: sum by (cls) (og:ins:buf_flush)
+      - record: og:all:buf_flush
+        expr: sum(og:cls:buf_flush)
+
+      - record: og:ins:buf_alloc
+        expr: irate(pg_stat_bgwriter_buffers_alloc{}[1m]) * 8192
+      - record: og:svc:buf_alloc
+        expr: sum by (cls, role) (og:ins:buf_alloc)
+      - record: og:cls:buf_alloc
+        expr: sum by (cls) (og:ins:buf_alloc)
+      - record: og:all:buf_alloc
+        expr: sum(og:cls:buf_alloc)
+
+
+
+
+      #==============================================================#
+      #                           LSN                                #
+      #==============================================================#
+      # timeline & LSN
+      - record: pg_timeline
+        expr: pg_checkpoint_tli
+      - record: og:ins:redo_lsn
+        expr: pg_checkpoint_redo_lsn
+      - record: og:ins:checkpoint_lsn
+        expr: pg_checkpoint_checkpoint_lsn
+
+      # wal rate
+      - record: og:ins:wal_rate
+        expr: rate(pg_lsn[1m])
+      - record: og:cls:wal_rate
+        expr: max by (cls) (og:ins:wal_rate{role="primary"})
+      - record: og:all:wal_rate
+        expr: sum(og:cls:wal_rate)
+
+
+
+      #==============================================================#
+      #                       Replication                            #
+      #==============================================================#
+      # lag time from replica's view
+      - record: og:ins:lag_seconds
+        expr: pg_lag
+      - record: og:cls:lag_seconds
+        expr: max by (cls) (og:ins:lag_seconds)
+      - record: og:all:lag_seconds
+        expr: max(og:cls:lag_seconds)
+
+      # sync status
+      - record: og:ins:sync_status # application_name must set to replica ins name
+        expr: max by (ins, svc, cls) (label_replace(pg_stat_replication_sync_status, "ins", "$1", "application_name", "(.+)"))
+
+      # lag of self (application_name must set to standby ins name)
+      - record: og:ins:lag_bytes
+        expr: max by (ins, svc, cls, role) (label_replace(pg_stat_replication_lsn{} - pg_stat_replication_replay_lsn{}, "ins", "$1", "application_name", "(.+)"))
+      - record: og:cls:lag_bytes
+        expr: max by (cls) (og:ins:lag_bytes)
+      - record: og:all:lag_bytes
+        expr: max(og:cls:lag_bytes)
+
+      # replication slot retained bytes
+      - record: og:ins:slot_retained_bytes
+        expr: pg_replication_slots_retained_bytes
+
+      # # replica walreceiver
+      # - record: og:ins:recv_init_lsn
+      #   expr: pg_walreceiver_init_lsn
+      # - record: og:ins:recv_last_lsn
+      #   expr: pg_walreceiver_last_lsn
+      # - record: og:ins:recv_init_tli
+      #   expr: pg_walreceiver_init_tli
+      # - record: og:ins:recv_last_tli
+      #   expr: pg_walreceiver_last_tli
+
+
+
+
+      #==============================================================#
+      # Cluster Level Metrics
+      #==============================================================#
+      # cluster member count
+      - record: og:cls:leader
+        expr: count by (cls, ins) (max by (cls, ins) (pg_status{}) == 3)
+      - record: og:cls:size
+        expr: count by (cls) (max by (cls, ins) (pg_up{}))
+      - record: og:cls:timeline
+        expr: max by (cls) (pg_checkpoint_tli{})
+      - record: og:cls:primarys
+        expr: count by (cls) (max by (cls, ins) (pg_in_recovery{}) == 0)
+      - record: og:cls:replicas
+        expr: count by (cls) (max by (cls, ins) (pg_in_recovery{}) == 1)
+      - record: og:cls:synchronous
+        expr: max by (cls) (pg_sync_standby_enabled) > bool 0
+      - record: og:cls:bridging_instances
+        expr: count by (cls, role, ins, ip) (pg_stat_replication_lsn{state="streaming", role!="primary"} > 0)
+      - record: og:cls:bridging
+        expr: count by (cls) (og:cls:bridging_instances)
+      - record: og:cls:cascading
+        expr: count by (cls) (pg_stat_replication_lsn{state="streaming", role!="primary"})
+
+
+
+
+  # ################################################################
+  # #                         PgSQL Alert                          #
+  # ################################################################
+  # - name: pgsql-alert
+  #   rules:
+
+  #     #==============================================================#
+  #     #                     Error / Aliveness                        #
+  #     #==============================================================#
+  #     # cluster size change triggers a P0 alert (warn: auto heal in 5min)
+  #     - alert: PGSQL_CLUSTER_SHRINK
+  #       expr: delta(og:cls:size{}[5m]) < 0
+  #       for: 15s
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: 'delta(og:cls:size{cls={{ $labels.cls }}}[15s]) = {{ $value | printf "%.0f" }} < 0'
+  #         description: |
+  #           http://g.pigsty/d/pg-cluster&from=now-10m&to=now&var-cls={{ $labels.cls }}
+
+
+  #     # postgres down for 15s triggers a P0 alert
+  #     - alert: PGSQL_DOWN
+  #       expr: PGSQL_up{} == 0
+  #       labels:
+  #         severity: P0
+  #       annotations:
+  #         summary: "[P0] PGSQL_DOWN: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           PGSQL_up[ins={{ $labels.ins }}] = {{ $value }} == 0
+  #           http://g.pigsty/d/pg-instance&from=now-10m&to=now&var-ins={{ $labels.ins }}
+
+  #     # pgbouncer down for 15s triggers a P0 alert
+  #     - alert: PGBOUNCER_DOWN
+  #       expr: pgbouncer_up{} == 0
+  #       labels:
+  #         severity: P0
+  #       annotations:
+  #         summary: "P0 Pgbouncer Down: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           pgbouncer_up[ins={{ $labels.ins }}] = {{ $value }} == 0
+  #           http://g.pigsty/d/pg-pgbouncer&from=now-10m&to=now&var-ins={{ $labels.ins }}
+
+  #     # pg/pgbouncer exporter down for 1m triggers a P1 alert
+  #     - alert: PGSQL_EXPORTER_DOWN
+  #       expr: up{instance=~"^.*:(9630|9631)$"} == 0
+  #       for: 1m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG/PGB Exporter Down: {{ $labels.ins }} {{ $labels.instance }} {{ $value }}"
+  #         description: |
+  #           up[instance={{ $labels.instance }}] = {{ $value }} == 0
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=262&fullscreen&var-ins={{ $labels.ins }}
+
+
+
+  #     #==============================================================#
+  #     #                         Latency                              #
+  #     #==============================================================#
+  #     # replication break for 1m triggers a P1 alert (warn: heal in 5m)
+  #     - alert: PGSQL_REPLICATION_BREAK
+  #       expr: delta(PGSQL_downstream_count{state="streaming"}[5m]) < 0
+  #       for: 1m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG Replication Break: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           PGSQL_downstream_count_delta[ins={{ $labels.ins }}] = {{ $value }} < 0
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=180&fullscreen&var-ins={{ $labels.ins }}
+
+  #     # replication lag greater than 8 second for 3m triggers a P1 alert
+  #     - alert: PGSQL_REPLICATION_LAG
+  #       expr: PGSQL_replication_replay_lag{application_name!='PGSQL_receivewal'} > 8
+  #       for: 3m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG Replication Lagged: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           PGSQL_replication_replay_lag[ins={{ $labels.ins }}] = {{ $value }} > 8s
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=384&fullscreen&var-ins={{ $labels.ins }}
+
+  #     # pg avg response time > 16ms
+  #     - alert: PGSQL_QUERY_RT_HIGH
+  #       expr: og:ins:query_rt > 0.016
+  #       for: 1m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG Query Response Time High: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           og:ins:query_rt[ins={{ $labels.ins }}] = {{ $value }} > 16ms
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=137&fullscreen&var-ins={{ $labels.ins }}
+
+
+  #     #==============================================================#
+  #     #                        Saturation                            #
+  #     #==============================================================#
+  #     # pg load1 high than 70% for 3m triggers a P1 alert
+  #     - alert: PGSQL_LOAD_HIGH
+  #       expr: og:ins:load1{} > 0.70
+  #       for: 3m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG Load High: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           og:ins:load1[ins={{ $labels.ins }}] = {{ $value }} > 70%
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=210&fullscreen&var-ins={{ $labels.ins }}
+
+  #     # pg active backend more than 2 times of available cpu cores for 3m triggers a P1 alert
+  #     - alert: PGSQL_BACKEND_HIGH
+  #       expr: og:ins:active_backends / on(ins) node:ins:cpu_count > 2
+  #       for: 3m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG Backend High: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           og:ins:active_backends/node:ins:cpu_count[ins={{ $labels.ins }}] = {{ $value }} > 2
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=150&fullscreen&var-ins={{ $labels.ins }}
+
+  #     # max idle xact duration exceed 3m
+  #     - alert: PGSQL_IDLE_XACT_BACKEND_HIGH
+  #       expr: og:ins:ixact_backends > 1
+  #       for: 3m
+  #       labels:
+  #         severity: P2
+  #       annotations:
+  #         summary: "P1 PG Idle In Transaction Backend High: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           og:ins:ixact_backends[ins={{ $labels.ins }}] = {{ $value }} > 1
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=161&fullscreen&var-ins={{ $labels.ins }}
+
+
+  #     # 2 waiting clients for 3m triggers a P1 alert
+  #     - alert: PGSQL_CLIENT_QUEUING
+  #       expr: og:ins:waiting_clients > 2
+  #       for: 3m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG Client Queuing: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           og:ins:waiting_clients[ins={{ $labels.ins }}] = {{ $value }} > 2
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=159&fullscreen&var-ins={{ $labels.ins }}
+
+  #     # age wrap around (near half) triggers a P1 alert
+  #     - alert: PGSQL_AGE_HIGH
+  #       expr: og:ins:age > 1000000000
+  #       for: 3m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 PG Age High: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           og:ins:age[ins={{ $labels.ins }}] = {{ $value }} > 1000000000
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=172&fullscreen&var-ins={{ $labels.ins }}
+
+
+
+  #     #==============================================================#
+  #     #                         Traffic                              #
+  #     #==============================================================#
+  #     # more than 30k TPS lasts for 3m triggers a P1 (pgbouncer bottleneck)
+  #     - alert: PGSQL_TPS_HIGH
+  #       expr: og:ins:xacts > 30000
+  #       for: 3m
+  #       labels:
+  #         severity: P1
+  #       annotations:
+  #         summary: "P1 Postgres TPS High: {{ $labels.ins }} {{ $value }}"
+  #         description: |
+  #           og:ins:xacts[ins={{ $labels.ins }}] = {{ $value }} > 30000
+  #           http://g.pigsty/d/pg-instance?from=now-10m&to=now&viewPanel=125&fullscreen&var-ins={{ $labels.ins }}
+
+
+
+
+
+
+
+...
