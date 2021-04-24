@@ -221,10 +221,6 @@ func runApp(args *Args) {
 		log.Errorf("fail to reload exporter: %s", err.Error())
 		return
 	}
-	if err = ogExporter.Check(); err != nil {
-		log.Fatalf("fail creating og_exporter: %s", err.Error())
-		os.Exit(2)
-	}
 
 	if *args.DryRun {
 		queryList, err := ogExporter.PrintMetricsList()

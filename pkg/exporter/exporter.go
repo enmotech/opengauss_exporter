@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -22,22 +23,32 @@ type Exporter struct {
 	namespace              string
 	servers                *Servers
 	metricMap              map[string]*QueryInstance
+	constantLabels         prometheus.Labels // 用户定义标签
 
-	constantLabels  prometheus.Labels    // 用户定义标签
-	duration        prometheus.Gauge     // 采集时间
-	error           prometheus.Gauge     // 采集指标时错误统计
-	up              prometheus.Gauge     //
-	configFileError *prometheus.GaugeVec // 读取配置文件失败采集
-	totalScrapes    prometheus.Counter   // 采集次数
-	timeToString    bool
-	parallel        int
+	lock sync.RWMutex // export lock
+
+	scrapeBegin time.Time // server level scrape begin
+	scrapeDone  time.Time // server last scrape done
+	exportInit  time.Time // server init timestamp
+
+	configFileError  *prometheus.GaugeVec // 读取配置文件失败采集
+	exporterUp       prometheus.Gauge     // exporter level: always set ot 1
+	exporterUptime   prometheus.Gauge     // exporter level: primary target server uptime (exporter itself)
+	lastScrapeTime   prometheus.Gauge     // exporter level: last scrape timestamp
+	scrapeDuration   prometheus.Gauge     // exporter level: seconds spend on scrape
+	scrapeTotalCount prometheus.Counter   // exporter level: total scrape count of this server
+	scrapeErrorCount prometheus.Counter   // exporter level: error scrape count
+
+	timeToString bool
+	parallel     int
 }
 
 // NewExporter New Exporter
 func NewExporter(opts ...Opt) (e *Exporter, err error) {
 	e = &Exporter{
-		metricMap: defaultMonList, // default metric
-		parallel:  1,
+		metricMap:  defaultMonList, // default metric
+		parallel:   1,
+		exportInit: time.Now(),
 	}
 	for _, opt := range opts {
 		opt(e)
@@ -90,46 +101,6 @@ func (e *Exporter) loadConfig() error {
 	return nil
 }
 
-// setupInternalMetrics setup Internal Metrics
-func (e *Exporter) setupInternalMetrics() {
-
-	e.duration = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace:   e.namespace,
-		Subsystem:   "exporter",
-		Name:        "last_scrape_duration_seconds",
-		Help:        "Duration of the last scrape of metrics from OpenGauss.",
-		ConstLabels: e.constantLabels,
-	})
-	e.totalScrapes = prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace:   e.namespace,
-		Subsystem:   "exporter",
-		Name:        "scrapes_total",
-		Help:        "Total number of times OpenGauss was scraped for metrics.",
-		ConstLabels: e.constantLabels,
-	})
-	// 采集指标错误
-	e.error = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace:   e.namespace,
-		Subsystem:   "exporter",
-		Name:        "last_scrape_error",
-		Help:        "Whether the last scrape of metrics from OpenGauss resulted in an error (1 for error, 0 for success).",
-		ConstLabels: e.constantLabels,
-	})
-	e.up = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace:   e.namespace,
-		Name:        "up",
-		Help:        "Whether the last scrape of metrics from OpenGauss was able to connect to the server (1 for yes, 0 for no).",
-		ConstLabels: e.constantLabels,
-	})
-	e.configFileError = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace:   e.namespace,
-		Subsystem:   "exporter",
-		Name:        "use_config_load_error",
-		Help:        "Whether the user config file was loaded and parsed successfully (1 for error, 0 for success).",
-		ConstLabels: e.constantLabels,
-	}, []string{"filename", "hashsum"})
-}
-
 func (e *Exporter) setupServers() {
 	e.servers = NewServers(ServerWithLabels(e.constantLabels),
 		ServerWithNamespace(e.namespace),
@@ -167,21 +138,15 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // 				-> checkMapVersions
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.scrape(ch)
-
-	ch <- e.duration
-	ch <- e.totalScrapes
-	ch <- e.error
-	ch <- e.up
-	e.configFileError.Collect(ch)
+	e.collectServerMetrics()
+	e.collectInternalMetrics(ch)
 }
 
 func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
-	// 设置采集持续时间指标
-	defer func(begun time.Time) {
-		e.duration.Set(time.Since(begun).Seconds())
-	}(time.Now())
-
-	e.totalScrapes.Inc()
+	e.lock.Lock()
+	defer e.lock.Unlock()
+	// 设置采集开始时间
+	e.scrapeBegin = time.Now()
 
 	dsnList := e.dsn
 	if e.autoDiscovery {
@@ -203,22 +168,34 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 			}
 		}
 	}
-
-	switch {
-	case connectionErrorsCount >= len(dsnList):
-		e.up.Set(0)
-	default:
-		e.up.Set(1) // Didn't fail, can mark connection as up for this scrape.
-	}
+	// 设置结束开始时间
+	e.scrapeDone = time.Now()
+	// 最后采集时间
+	e.lastScrapeTime.Set(float64(e.scrapeDone.Unix()))
+	// 采集耗时
+	e.scrapeDuration.Set(e.scrapeDone.Sub(e.scrapeBegin).Seconds())
+	// 在线时间
+	e.exporterUptime.Set(time.Now().Sub(e.exportInit).Seconds())
+	// 在线
+	e.exporterUp.Set(1)
 	log.Debugf("the errorsCount %v ", errorsCount)
-	switch errorsCount {
-	case 0:
-		e.error.Set(0)
-	default:
-		e.error.Set(1)
+}
+func (e *Exporter) collectServerMetrics() {
+	for _, s := range e.servers.servers {
+		e.scrapeTotalCount.Add(float64(s.ScrapeTotalCount))
+		e.scrapeErrorCount.Add(float64(s.ScrapeErrorCount))
 	}
 }
+func (e *Exporter) collectInternalMetrics(ch chan<- prometheus.Metric) {
 
+	ch <- e.exporterUp
+	ch <- e.exporterUptime
+	ch <- e.lastScrapeTime
+	ch <- e.scrapeTotalCount
+	ch <- e.scrapeErrorCount
+	ch <- e.scrapeDuration
+
+}
 func (e *Exporter) discoverDatabaseDSNs() []string {
 	result := []string{}
 	for _, dsn := range e.dsn {
@@ -249,7 +226,6 @@ func (e *Exporter) discoverDatabaseDSNs() []string {
 	}
 	return result
 }
-
 func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 	server, err := e.servers.GetServer(dsn)
 
@@ -259,21 +235,8 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 
 	server.queryInstanceMap = e.metricMap
 
-	versionDesc := prometheus.NewDesc(fmt.Sprintf("%s_%s", e.namespace, staticLabelName),
-		"Version string as reported by OpenGauss", []string{"version", "short_version"}, server.labels)
-
-	// if server.primary {
-	ch <- prometheus.MustNewConstMetric(versionDesc,
-		prometheus.UntypedValue, 1, server.lastMapVersion.String(), server.lastMapVersion.String())
-	// }
-
 	return server.Scrape(ch)
 }
-
-func (e *Exporter) Check() error {
-	return nil
-}
-
 func (e *Exporter) Close() {
 	e.servers.Close()
 }

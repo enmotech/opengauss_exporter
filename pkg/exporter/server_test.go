@@ -250,7 +250,7 @@ func Test_Server(t *testing.T) {
 				Patch: 0,
 			},
 			queryInstanceMap: defaultMonList,
-			mappingMtx:       sync.RWMutex{},
+			lock:             sync.RWMutex{},
 			metricCache:      map[string]*cachedMetrics{},
 			cacheMtx:         sync.Mutex{},
 		}

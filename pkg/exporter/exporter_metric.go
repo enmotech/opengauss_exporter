@@ -3,9 +3,47 @@
 package exporter
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
 	"strings"
 )
+
+// setupInternalMetrics setup Internal Metrics
+func (e *Exporter) setupInternalMetrics() {
+
+	e.configFileError = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   e.namespace,
+		Subsystem:   "exporter",
+		Name:        "use_config_load_error",
+		Help:        "Whether the user config file was loaded and parsed successfully (1 for error, 0 for success).",
+		ConstLabels: e.constantLabels,
+	}, []string{"filename", "hashsum"})
+	// exporter level metrics
+	e.exporterUp = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: e.namespace, ConstLabels: e.constantLabels,
+		Subsystem: "exporter", Name: "up", Help: "always be 1 if your could retrieve metrics",
+	})
+	e.exporterUptime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: e.namespace, ConstLabels: e.constantLabels,
+		Subsystem: "exporter", Name: "uptime", Help: "seconds since exporter primary server inited",
+	})
+	e.scrapeTotalCount = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: e.namespace, ConstLabels: e.constantLabels,
+		Subsystem: "exporter", Name: "scrape_total_count", Help: "times exporter was scraped for metrics",
+	})
+	e.scrapeErrorCount = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: e.namespace, ConstLabels: e.constantLabels,
+		Subsystem: "exporter", Name: "scrape_error_count", Help: "times exporter was scraped for metrics and failed",
+	})
+	e.scrapeDuration = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: e.namespace, ConstLabels: e.constantLabels,
+		Subsystem: "exporter", Name: "scrape_duration", Help: "seconds exporter spending on scrapping",
+	})
+	e.lastScrapeTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: e.namespace, ConstLabels: e.constantLabels,
+		Subsystem: "exporter", Name: "last_scrape_time", Help: "seconds exporter spending on scrapping",
+	})
+}
 
 // GetMetricsList Get Metrics List
 func (e *Exporter) GetMetricsList() map[string]*QueryInstance {

@@ -32,6 +32,8 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 			err := s.queryMetric(ch, queryInst)
 			if err != nil {
 				metricErrors[metricName] = err
+				// 采集失败个数
+				s.ScrapeErrorCount++
 			}
 		}()
 
@@ -60,6 +62,10 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		log.Debugf("Collect Metric %s disable. skip", metric)
 		return nil
 	}
+
+	// 记录采集成功个数
+	s.ScrapeTotalCount++
+
 	// Determine whether to enable caching and cache expiration 判断是否启用缓存和缓存过期
 	if !s.disableCache {
 		var found bool
