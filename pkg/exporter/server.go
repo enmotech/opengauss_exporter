@@ -68,6 +68,7 @@ func ServerWithParallel(i int) ServerOpt {
 }
 
 type Server struct {
+	fingerprint            string
 	dsn                    string
 	db                     *sql.DB
 	labels                 prometheus.Labels
@@ -112,6 +113,8 @@ func (s *Server) Close() error {
 	if s.db == nil {
 		return nil
 	}
+	s.UP = false
+
 	return s.db.Close()
 }
 
@@ -303,6 +306,10 @@ func (s *Server) ConnectDatabase() error {
 		s.UP = false
 		return err
 	}
+
+	if err = s.Ping(); err != nil {
+		return err
+	}
 	s.db.SetConnMaxIdleTime(120 * time.Second)
 	s.UP = true
 	return nil
@@ -318,8 +325,9 @@ func NewServer(dsn string, opts ...ServerOpt) (*Server, error) {
 	log.Infof("Established new database connection to %q.", fingerprint)
 
 	s := &Server{
-		dsn:     dsn,
-		primary: false,
+		fingerprint: fingerprint,
+		dsn:         dsn,
+		primary:     false,
 		labels: prometheus.Labels{
 			serverLabelName: fingerprint,
 		},
@@ -368,6 +376,7 @@ func (s *Servers) GetServer(dsn string) (*Server, error) {
 		if !ok {
 			server, err = NewServer(dsn, s.opts...)
 			if err != nil {
+				log.Errorf("new server %s err %s", server.fingerprint, err)
 				time.Sleep(time.Duration(errCount) * time.Second)
 				continue
 			}
@@ -375,12 +384,14 @@ func (s *Servers) GetServer(dsn string) (*Server, error) {
 		}
 		if !server.UP {
 			if err = server.ConnectDatabase(); err != nil {
+				log.Errorf("new server %s err %s", server.fingerprint, err)
 				time.Sleep(time.Duration(errCount) * time.Second)
 				continue
 			}
 		}
 		if err = server.Ping(); err != nil {
 			// delete(s.servers, dsn)
+			log.Errorf("ping %s err %s", server.fingerprint, err)
 			time.Sleep(time.Duration(errCount) * time.Second)
 			continue
 		}

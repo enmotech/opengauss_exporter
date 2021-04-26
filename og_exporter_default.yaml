@@ -139,7 +139,7 @@ pg_downstream:
     - name: pg_downstream
       sql: |
         SELECT l.state, coalesce(count, 0 ) AS count
-          FROM unnest(ARRAY ['streaming','startup','catchup', 'backup', 'stopping']) l(state)
+        FROM unnest(ARRAY ['Streaming','Startup','Catchup', 'Backup', 'Stopping']) l(state)
         LEFT JOIN (SELECT state, count(*) AS count FROM pg_stat_replication GROUP BY state)r ON l.state =  r.state
       version: '>=0.0.0'
       timeout: 0.1
@@ -685,28 +685,43 @@ pg_stat_replication:
   query:
     - name: pg_stat_replication
       sql: |-
-        SELECT pid,client_addr,application_name,state,sync_state,lsn,
-                   lsn - sent_location   as sent_diff,
-           lsn - write_location  as write_diff,
-           lsn - flush_location  as flush_diff,
-           lsn - replay_location as replay_diff,
-           sent_location,write_location,flush_location,replay_location,
-           backend_uptime,sync_priority
-           FROM (
-           SELECT pid,
-             client_addr,
-             application_name,
-             state,
-             sync_state,
-             pg_xlog_location_diff(CASE WHEN pg_is_in_recovery() THEN pg_last_xlog_receive_location() ELSE pg_current_xlog_location() END, '0/0') AS lsn,
-             pg_xlog_location_diff(sender_sent_location,'0/0')                          AS sent_location,
-             pg_xlog_location_diff(receiver_write_location,'0/0')                         AS write_location,
-             pg_xlog_location_diff(receiver_flush_location,'0/0')                         AS flush_location,
-             pg_xlog_location_diff(receiver_replay_location,'0/0')                        AS replay_location,
-             pg_xlog_location_diff(receiver_replay_location,pg_current_xlog_location())   AS replay_lag,
-             extract(EPOCH FROM now() - backend_start) AS backend_uptime,
-             sync_priority
-        FROM pg_stat_replication) t;
+        select
+        	pid,
+        	client_addr,
+        	application_name,
+        	state,
+        	sync_state,
+        	lsn,
+        	lsn - sent_lsn as sent_diff,
+        	lsn - write_lsn as write_diff,
+        	lsn - flush_lsn as flush_diff,
+        	lsn - replay_lsn as replay_diff,
+        	sent_lsn,
+        	write_lsn,
+        	flush_lsn,
+        	replay_lsn,
+            replay_lag,
+        	backend_uptime,
+        	sync_priority
+        from
+        	(
+        	select
+        		pr.pid,
+        		client_addr,
+        		application_name,
+        		pr.state,
+        		pr.sync_state,
+        		pg_xlog_location_diff (case when pg_is_in_recovery() then pg_last_xlog_receive_location() else pg_current_xlog_location() end, '0/0') as lsn,
+        		pg_xlog_location_diff(pr.sender_sent_location,'0/0') as sent_lsn,
+        		pg_xlog_location_diff(pr.receiver_write_location,'0/0') as write_lsn,
+        		pg_xlog_location_diff(pr.receiver_flush_location,'0/0') as flush_lsn,
+        		pg_xlog_location_diff(pr.receiver_replay_location,'0/0') as replay_lsn,
+        		pg_xlog_location_diff(pr.receiver_replay_location, pg_current_xlog_location()) as replay_lag,
+        		extract(EPOCH from now() - backend_start) as backend_uptime,
+        		pr.sync_priority
+        	from
+        		pg_stat_replication pr
+        );
       version: '>=1.0.0'
       timeout: 1
       ttl: 60

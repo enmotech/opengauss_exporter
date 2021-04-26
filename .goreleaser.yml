@@ -42,49 +42,49 @@ changelog:
       - Merge branch
       - go mod tidy
       - bump version
-dockers:
-  - image_templates:
-      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
-    dockerfile: Dockerfile_goreleaser
-    use_buildx: true
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-    extra_files:
-      - scripts/docker-entrypoint.sh
-      - og_exporter_default.yaml
-    skip_push: false
-  - image_templates:
-      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
-    dockerfile: Dockerfile_goreleaser
-    use_buildx: true
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-    goarch: arm64
-    extra_files:
-      - scripts/docker-entrypoint.sh
-      - og_exporter_default.yaml
-    skip_push: false
-docker_manifests:
-  - name_template: 'enmotech/opengauss_exporter:{{ .Tag }}'
-    image_templates:
-      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
-      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
-  - name_template: 'enmotech/opengauss_exporter:latest'
-    image_templates:
-      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
-      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
+#dockers:
+#  - image_templates:
+#      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
+#    dockerfile: Dockerfile_goreleaser
+#    use_buildx: true
+#    build_flag_templates:
+#      - "--pull"
+#      - "--label=org.opencontainers.image.created={{.Date}}"
+#      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+#      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#      - "--label=org.opencontainers.image.version={{.Version}}"
+#      - "--label=org.opencontainers.image.source={{.GitURL}}"
+#      - "--platform=linux/amd64"
+#    extra_files:
+#      - scripts/docker-entrypoint.sh
+#      - og_exporter_default.yaml
+#    skip_push: false
+#  - image_templates:
+#      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
+#    dockerfile: Dockerfile_goreleaser
+#    use_buildx: true
+#    build_flag_templates:
+#      - "--pull"
+#      - "--label=org.opencontainers.image.created={{.Date}}"
+#      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+#      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#      - "--label=org.opencontainers.image.version={{.Version}}"
+#      - "--label=org.opencontainers.image.source={{.GitURL}}"
+#      - "--platform=linux/arm64"
+#    goarch: arm64
+#    extra_files:
+#      - scripts/docker-entrypoint.sh
+#      - og_exporter_default.yaml
+#    skip_push: false
+#docker_manifests:
+#  - name_template: 'enmotech/opengauss_exporter:{{ .Tag }}'
+#    image_templates:
+#      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
+#      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
+#  - name_template: 'enmotech/opengauss_exporter:latest'
+#    image_templates:
+#      - 'enmotech/opengauss_exporter:{{ .Tag }}-amd64'
+#      - 'enmotech/opengauss_exporter:{{ .Tag }}-arm64'
 archives:
   - id: export-archive
     format: zip

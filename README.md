@@ -153,7 +153,7 @@ cd test;sh test.sh ../bin/opengauss_exporter <config_file>
 ### Monitor user
 
 ```bash
-CREATE USER monitor with login monadmin PASSWORD 'Mon@1234';
+CREATE USER dbuser_monitor with login monadmin PASSWORD 'Mon@1234';
 grant usage on schema dbe_perf to dbuser_monitor;
 grant select on pg_stat_replication to dbuser_monitor;
 
