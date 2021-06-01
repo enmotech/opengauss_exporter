@@ -4704,7 +4704,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pg_exporter_query_scrape_total_count{instance=\"$instance\"}",
+          "expr": "irate(pg_exporter_query_scrape_total_count{instance=\"$instance\"}[5m])",
           "interval": "",
           "legendFormat": "{{ server }}",
           "refId": "A"
@@ -7206,9 +7206,13 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "192.168.2.209:1111",
-          "value": "192.168.2.209:1111"
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "datasource": "Prometheus",
         "definition": "label_values(pg_exporter_up, instance)",
@@ -7235,10 +7239,10 @@
         "current": {
           "selected": true,
           "text": [
-            "postgres"
+            "All"
           ],
           "value": [
-            "postgres"
+            "$__all"
           ]
         },
         "datasource": "Prometheus",

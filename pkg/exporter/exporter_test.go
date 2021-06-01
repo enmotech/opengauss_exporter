@@ -44,9 +44,9 @@ func Test_Exporter(t *testing.T) {
 		exporter.Collect(ch)
 		close(ch)
 	})
-	t.Run("Close", func(t *testing.T) {
-		exporter.Check()
-	})
+	// t.Run("Close", func(t *testing.T) {
+	// 	exporter.Check()
+	// })
 	t.Run("Close", func(t *testing.T) {
 		exporter.Close()
 	})
