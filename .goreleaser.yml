@@ -3,7 +3,7 @@
 env:
   - GO111MODULE=on
   - GOPROXY=https://goproxy.cn
-  - BETA_VERSION=v0.0.7
+  - BETA_VERSION=v0.0.9
   - DOCKER_CLI_EXPERIMENTAL=enabled
 before:
   hooks:
