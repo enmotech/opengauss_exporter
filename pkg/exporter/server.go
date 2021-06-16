@@ -311,6 +311,8 @@ func (s *Server) ConnectDatabase() error {
 		return err
 	}
 	s.db.SetConnMaxIdleTime(120 * time.Second)
+	s.db.SetMaxIdleConns(s.parallel)
+	s.db.SetMaxOpenConns(s.parallel)
 	s.UP = true
 	return nil
 }

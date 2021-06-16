@@ -20,6 +20,9 @@ GOCOVXML = gocov-xml
 GO2XUNIT = go2xunit
 CHGLOG = git-chglog
 
+## global env
+export GOPROXY=https://goproxy.cn
+
 BUILD_DATE 		= $(shell date '+%Y-%m-%d %H:%M:%S')
 GIT_COMMIT 		= $(shell git rev-parse HEAD)
 GIT_SHA    		= $(shell git rev-parse --short HEAD)

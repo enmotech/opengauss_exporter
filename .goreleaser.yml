@@ -109,6 +109,21 @@ nfpms:
         type: config
         file_info:
           mode: 0644
+      - src: service/og_exporter.default
+        dst: /etc/og_exporter/og_exporter.default
+        type: config
+        file_info:
+          mode: 0644
+      - src: service/og_exporter.service
+        dst: /etc/systemd/system/og_exporter.service
+        type: config
+        file_info:
+          mode: 0644
+    scripts:
+      preinstall: "scripts/preinstall.sh"
+      postinstall: "scripts/postinstall.sh"
+      preremove: "scripts/preremove.sh"
+      postremove: "scripts/postremove.sh"
 release:
   github:
     owner: enmotech

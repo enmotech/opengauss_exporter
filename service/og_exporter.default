@@ -1,0 +1,13 @@
+OG_EXPORTER_URL='postgres://127.0.0.1:26000/?sslmode=disable&host=/var/run/opengauss/data'
+OG_EXPORTER_CONFIG=/etc/og_exporter/og_exporter.yaml
+OG_EXPORTER_CONSTANT_LABELS=""
+OG_EXPORTER_DISABLE_CACHE=false
+OG_EXPORTER_DISABLE_SETTINGS_METRICS=false
+PG_EXPORTER_AUTO_DISCOVERY=false
+OG_EXPORTER_EXCLUDE_DATABASES="template0,template1"
+OG_EXPORTER_NAMESPACE="pg"
+OG_EXPORTER_PARALLEL=5
+OG_EXPORTER_WEB_LISTEN_ADDRESS=":9187"
+OG_EXPORTER_WEB_TELEMETRY_PATH="/metrics"
+OG_EXPORTER_TIME_TO_STRING=false
+OG_EXPORTER_OPTS='--log.level=info --log.format="logger:syslog?appname=prometheus&local=7"'

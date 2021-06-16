@@ -3,3 +3,4 @@ bin
 .metrics*
 test/coverage*
 /test/profile.out
+/cmd/pg_exporter

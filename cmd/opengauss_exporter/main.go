@@ -141,7 +141,7 @@ func initArgs(args *Args) {
 
 	args.TimeToString = kingpin.Flag("time-to-string", "convert database timestamp to date string.").
 		Default("false").
-		Envar("OG_EXPORTER_WEB_TELEMETRY_PATH").
+		Envar("OG_EXPORTER_TIME_TO_STRING").
 		Bool()
 	args.DryRun = kingpin.Flag("dry-run", "dry run and print default configs and user config").
 		Bool()
