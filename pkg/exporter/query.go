@@ -63,7 +63,8 @@ type QueryInstance struct {
 	ColumnNames []string           `yaml:"-"`                  // column names in origin orders
 	LabelNames  []string           `yaml:"-"`                  // column (name) that used as label, sequences matters
 	MetricNames []string           `yaml:"-"`                  // column (name) that used as metric
-
+	Public      bool               `yaml:"public,omitempty"`   // autoDiscover下公用指标,只采集一次
+	// Private     bool               `yaml:"ttl,omitempty"`
 }
 
 type Query struct {

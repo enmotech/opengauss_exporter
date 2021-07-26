@@ -47,28 +47,28 @@ func (e *Exporter) setupInternalMetrics() {
 
 // GetMetricsList Get Metrics List
 func (e *Exporter) GetMetricsList() map[string]*QueryInstance {
-	if e.metricMap == nil {
+	if e.allMetricMap == nil {
 		return nil
 	}
-	return e.metricMap
+	return e.allMetricMap
 }
 
 func (e *Exporter) PrintMetricsList() (string, error) {
-	if e.metricMap == nil {
+	if e.allMetricMap == nil {
 		return "", nil
 	}
 	var metricList []string
-	for _, q := range e.metricMap {
+	for _, q := range e.allMetricMap {
 		metric := q.Explain()
 		metricList = append(metricList, metric)
 	}
 	return strings.Join(metricList, "\n\n"), nil
 }
 func (e *Exporter) PrintMetricsList1() (string, error) {
-	if e.metricMap == nil {
+	if e.allMetricMap == nil {
 		return "", nil
 	}
-	buffer, err := yaml.Marshal(e.metricMap)
+	buffer, err := yaml.Marshal(e.allMetricMap)
 	if err != nil {
 		return "", err
 	}

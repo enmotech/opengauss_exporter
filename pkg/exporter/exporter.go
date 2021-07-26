@@ -22,7 +22,9 @@ type Exporter struct {
 	tags                   []string
 	namespace              string
 	servers                *Servers
-	metricMap              map[string]*QueryInstance
+	allMetricMap           map[string]*QueryInstance // 全部采集指标 不判断Public为true
+	priMetricMap           map[string]*QueryInstance // 私有采集指标 autoDiscover下公用指标,只采集一次
+	collStatus             map[string]bool
 	constantLabels         prometheus.Labels // 用户定义标签
 
 	lock sync.RWMutex // export lock
@@ -46,9 +48,10 @@ type Exporter struct {
 // NewExporter New Exporter
 func NewExporter(opts ...Opt) (e *Exporter, err error) {
 	e = &Exporter{
-		metricMap:  defaultMonList, // default metric
-		parallel:   1,
-		exportInit: time.Now(),
+		allMetricMap: defaultMonList, // default metric
+		priMetricMap: map[string]*QueryInstance{},
+		parallel:     1,
+		exportInit:   time.Now(),
 	}
 	for _, opt := range opts {
 		opt(e)
@@ -70,7 +73,7 @@ func NewExporter(opts ...Opt) (e *Exporter, err error) {
 
 // initDefaultMetric init default metric
 func (e *Exporter) initDefaultMetric() {
-	for _, q := range e.metricMap {
+	for _, q := range e.allMetricMap {
 		_ = q.Check()
 	}
 }
@@ -81,21 +84,35 @@ func (e *Exporter) loadConfig() error {
 	if e.configPath == "" {
 		return nil
 	}
-	queryList, err := LoadConfig(e.configPath)
+	queryMap, err := LoadConfig(e.configPath)
 	if err != nil {
 		return err
 	}
-	for name, query := range queryList {
-		var found bool
-		for defName, defQuery := range e.metricMap {
+	for name, query := range queryMap {
+		var found, found1 bool
+		for defName, defQuery := range e.allMetricMap {
 			if strings.EqualFold(defQuery.Name, query.Name) {
-				e.metricMap[defName] = query
+				e.allMetricMap[defName] = query
 				found = true
 				break
 			}
 		}
 		if !found {
-			e.metricMap[name] = query
+			e.allMetricMap[name] = query
+		}
+		// 如果是通用指标不判断私有
+		if query.Public {
+			continue
+		}
+		for defName, defQuery := range e.priMetricMap {
+			if strings.EqualFold(defQuery.Name, query.Name) {
+				e.priMetricMap[defName] = query
+				found1 = true
+				break
+			}
+		}
+		if !found1 {
+			e.priMetricMap[name] = query
 		}
 	}
 	return nil
@@ -155,7 +172,8 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 
 	var errorsCount int
 	var connectionErrorsCount int
-
+	// 重置采集状态
+	e.collStatus = map[string]bool{}
 	for _, dsn := range dsnList {
 		// log.Debugf(dsn)
 		if err := e.scrapeDSN(ch, dsn); err != nil {
@@ -233,7 +251,15 @@ func (e *Exporter) scrapeDSN(ch chan<- prometheus.Metric, dsn string) error {
 		return &ErrorConnectToServer{fmt.Sprintf("Error opening connection to database (%s): %s", ShadowDSN(dsn), err.Error())}
 	}
 
-	server.queryInstanceMap = e.metricMap
+	_, ok := e.collStatus[server.fingerprint]
+	// 如果同一个ip+端口采集过一次,说明公共指标已采集,不需要在采集了
+	if ok {
+		server.queryInstanceMap = e.priMetricMap
+		server.notCollInternalMetrics = true
+	} else {
+		server.queryInstanceMap = e.allMetricMap
+		defer func() { e.collStatus[server.fingerprint] = true }()
+	}
 
 	return server.Scrape(ch)
 }

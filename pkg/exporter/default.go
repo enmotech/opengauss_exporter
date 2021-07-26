@@ -30,6 +30,7 @@ WHERE database IS NOT NULL GROUP BY database, mode) cnt USING (database, mode);`
 			{Name: "mode", Desc: "Type of Lock", Usage: LABEL},
 			{Name: "count", Desc: "Number of locks", Usage: GAUGE},
 		},
+		Public: true,
 	}
 	pgStatReplication = &QueryInstance{
 		Name: "pg_stat_replication",
@@ -94,6 +95,7 @@ FROM pg_stat_replication`,
 			{Name: "flush_lag", Usage: DISCARD, Desc: "Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written and flushed it (but not yet applied it). This can be used to gauge the delay that synchronous_commit level remote_flush incurred while committing if this server was configured as a synchronous standby."},
 			{Name: "replay_lag", Usage: DISCARD, Desc: "Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written, flushed and applied it. This can be used to gauge the delay that synchronous_commit level remote_apply incurred while committing if this server was configured as a synchronous standby."},
 		},
+		Public: true,
 	}
 	pgStatActivity = &QueryInstance{
 		Name: "pg_stat_activity",
@@ -130,6 +132,7 @@ FROM (SELECT d.oid AS database, d.datname, a.state
 			{Name: "max_tx_duration", Usage: GAUGE, Desc: "max duration in seconds any active transaction has been running"},
 			{Name: "max_conn_duration", Usage: GAUGE, Desc: "max backend session duration since state change among (datname, state)"},
 		},
+		Public: true,
 	}
 	pgDatabase = &QueryInstance{
 		Name: "pg_database",
@@ -144,6 +147,7 @@ FROM (SELECT d.oid AS database, d.datname, a.state
 			{Name: "datname", Usage: LABEL, Desc: "Name of this database"},
 			{Name: "size_bytes", Usage: GAUGE, Desc: "Disk space used by the database"},
 		},
+		Public: true,
 	}
 	pgStatBgWriter = &QueryInstance{
 		Name: "pg_stat_bgwriter",
@@ -178,6 +182,7 @@ FROM pg_stat_bgwriter`,
 			{Name: "buffers_alloc", Usage: COUNTER, Desc: "buffers allocated"},
 			{Name: "stats_reset", Usage: COUNTER, Desc: "time when statistics were last reset"},
 		},
+		Public: true,
 	}
 	pgStatDatabase = &QueryInstance{
 		Name: "pg_stat_database",
@@ -209,6 +214,7 @@ FROM pg_stat_bgwriter`,
 			{Name: "blk_write_time", Usage: COUNTER, Desc: "Time spent writing data file blocks by backends in this database, in milliseconds"},
 			{Name: "stats_reset", Usage: COUNTER, Desc: "Time at which these statistics were last reset"},
 		},
+		Public: true,
 	}
 	pgStatDatabaseConflicts = &QueryInstance{
 		Name: "pg_stat_database_conflicts",

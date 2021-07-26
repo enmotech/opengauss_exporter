@@ -116,6 +116,7 @@ pg_stat_database:
   status: enable
   ttl: -1
   timeout: 1
+  public: true
 
 
 
@@ -156,7 +157,7 @@ pg_downstream:
   status: enable
   ttl: 60
   timeout: 0.1
-
+  public: true
 
 
 
@@ -205,7 +206,7 @@ pg_xact:
   status: enable
   ttl: 5
   timeout: 1
-
+  public: true
 
 
 
@@ -280,7 +281,7 @@ pg_stat_activity:
   status: enable
   ttl: 60
   timeout: 1
-
+  public: true
 
 
 
@@ -366,7 +367,7 @@ pg_replication_slots:
   status: enable
   ttl: 60
   timeout: 1
-
+  public: true
 
 
 
@@ -437,7 +438,7 @@ pg_database:
   status: enable
   ttl: 60
   timeout: 1
-
+  public: true
 
 
 
@@ -571,7 +572,7 @@ pg_checkpoint:
   status: enable
   ttl: 5
   timeout: 1
-
+  public: true
 
 
 
@@ -632,7 +633,7 @@ pg_stat_database_conflicts:
   status: enable
   ttl: 60
   timeout: 1
-
+  public: true
 
 
 
@@ -791,7 +792,7 @@ pg_stat_replication:
   status: enable
   ttl: 60
   timeout: 1
-
+  public: true
 
 
 
@@ -886,7 +887,7 @@ pg_stat_bgwriter:
   status: enable
   ttl: -1
   timeout: 1
-
+  public: true
 
 
 
@@ -928,7 +929,7 @@ pg_run_times:
   status: enable
   ttl: 60
   timeout: 1
-
+  public: true
 
 
 
@@ -1073,7 +1074,7 @@ pg:
   status: enable
   ttl: 60
   timeout: 0.1
-
+  public: true
 
 
 
@@ -1119,7 +1120,7 @@ pg_sync_standby:
   status: enable
   ttl: 60
   timeout: 0.1
-
+  public: true
 
 
 
@@ -1169,7 +1170,7 @@ pg_lock:
   status: enable
   ttl: 60
   timeout: 1
-
+  public: true
 
 pg_sql_history:
   name: pg_sql_history

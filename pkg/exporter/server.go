@@ -75,9 +75,11 @@ type Server struct {
 	primary                bool
 	namespace              string // default prometheus namespace from cmd args
 	disableSettingsMetrics bool
+	notCollInternalMetrics bool // 不采集部分指标
 	disableCache           bool
 	timeToString           bool
-	parallel               int
+
+	parallel int
 	// Last version used to calculate metric map. If mismatch on scrape,
 	// then maps are recalculated.
 	lastMapVersion semver.Version
@@ -142,12 +144,14 @@ func (s *Server) Scrape(ch chan<- prometheus.Metric) error {
 
 	s.lock.RLock()
 	defer s.lock.RUnlock()
-	_ = s.setupServerInternalMetrics()
+	if !s.notCollInternalMetrics {
+		_ = s.setupServerInternalMetrics()
+	}
 	s.scrapeBegin = time.Now()
 
 	var err error
 
-	if !s.disableSettingsMetrics {
+	if !s.disableSettingsMetrics && !s.notCollInternalMetrics {
 		if err = s.querySettings(ch); err != nil {
 			err = fmt.Errorf("error retrieving settings: %s", err)
 		}
@@ -157,13 +161,15 @@ func (s *Server) Scrape(ch chan<- prometheus.Metric) error {
 	if len(errMap) > 0 {
 		err = fmt.Errorf("queryMetrics returned %d errors", len(errMap))
 	}
-	s.scrapeDone = time.Now()
-	// 最后采集时间
-	s.lastScrapeTime.Set(float64(s.scrapeDone.Unix()))
-	// 采集耗时
-	s.scrapeDuration.Set(s.scrapeDone.Sub(s.scrapeBegin).Seconds())
+	if !s.notCollInternalMetrics {
+		s.scrapeDone = time.Now()
+		// 最后采集时间
+		s.lastScrapeTime.Set(float64(s.scrapeDone.Unix()))
+		// 采集耗时
+		s.scrapeDuration.Set(s.scrapeDone.Sub(s.scrapeBegin).Seconds())
 
-	s.collectorServerInternalMetrics(ch)
+		s.collectorServerInternalMetrics(ch)
+	}
 
 	return err
 }
@@ -198,6 +204,9 @@ func (s *Server) setupServerInternalMetrics() error {
 }
 
 func (s *Server) collectorServerInternalMetrics(ch chan<- prometheus.Metric) {
+	if s.notCollInternalMetrics {
+		return
+	}
 	if s.UP {
 		s.up.Set(1)
 		if s.primary {
