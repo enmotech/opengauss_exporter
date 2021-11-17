@@ -1177,7 +1177,7 @@ pg_sql_history:
   desc: OpenGauss history query statement
   query:
     - name: pg_sql_history
-      sql: select unique_sql_id,n_calls,cpu_time,min_elapse_time,max_elapse_time,total_elapse_time,query from dbe_perf.statement where n_calls > 10000 order by total_elapse_time desc limit 10;
+      sql: select unique_sql_id,n_calls,cpu_time,min_elapse_time,max_elapse_time,total_elapse_time,query from dbe_perf.statement where n_calls > 1 order by total_elapse_time desc limit 10;
       version: '>=0.0.0'
       timeout: 1
       status: enable
@@ -1206,6 +1206,7 @@ pg_sql_history:
   status: enable
   ttl: -1
   timeout: 1
+  public: true
 
 pg_active_slowsql:
   name: pg_active_slowsql

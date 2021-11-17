@@ -45,7 +45,7 @@ func (s *Server) queryMetrics(ch chan<- prometheus.Metric) map[string]error {
 
 func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryInstance) error {
 	var (
-		metric         = queryInstance.Name
+		metricName     = queryInstance.Name
 		scrapeMetric   = false // Whether to collect indicators from the database 是否从数据库里采集指标
 		cachedMetric   = &cachedMetrics{}
 		metrics        []prometheus.Metric
@@ -55,11 +55,11 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 
 	querySQL := queryInstance.GetQuerySQL(s.lastMapVersion, s.primary)
 	if querySQL == nil {
-		log.Errorf("Collect Metric %s not define querySQL for version %s on %s database ", metric, s.lastMapVersion.String(), s.DBRole())
+		log.Errorf("Collect Metric %s not define querySQL for version %s on %s database ", metricName, s.lastMapVersion.String(), s.DBRole())
 		return nil
 	}
 	if strings.EqualFold(querySQL.Status, statusDisable) {
-		log.Debugf("Collect Metric %s disable. skip", metric)
+		log.Debugf("Collect Metric %s disable. skip", metricName)
 		return nil
 	}
 
@@ -71,7 +71,7 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 		var found bool
 		// Check if the metric is cached
 		s.cacheMtx.Lock()
-		cachedMetric, found = s.metricCache[metric]
+		cachedMetric, found = s.metricCache[metricName]
 		s.cacheMtx.Unlock()
 		// If found, check if needs refresh from cache
 		if !found {
@@ -88,34 +88,34 @@ func (s *Server) queryMetric(ch chan<- prometheus.Metric, queryInstance *QueryIn
 	if scrapeMetric {
 		metrics, nonFatalErrors, err = s.doCollectMetric(queryInstance)
 	} else {
-		log.Debugf("Collect Metric [%s] use cache", metric)
+		log.Debugf("Collect Metric [%s] use cache", metricName)
 		metrics, nonFatalErrors = cachedMetric.metrics, cachedMetric.nonFatalErrors
 	}
 
 	// Serious error - a namespace disappeared
 	if err != nil {
 		nonFatalErrors = append(nonFatalErrors, err)
-		log.Errorf("Collect Metric [%s] err %s", metric, err)
+		log.Errorf("Collect Metric [%s] err %s", metricName, err)
 	}
 	// Non-serious errors - likely version or parsing problems.
 	if len(nonFatalErrors) > 0 {
 		var errText string
 		for _, err := range nonFatalErrors {
-			log.Errorf("Collect Metric [%s] nonFatalErrors err %s", metric, err)
+			log.Errorf("Collect Metric [%s] nonFatalErrors err %s", metricName, err)
 			errText += err.Error()
 		}
 		err = errors.New(errText)
 	}
 
 	// Emit the metrics into the channel
-	for _, metric := range metrics {
-		ch <- metric
+	for _, m := range metrics {
+		ch <- m
 	}
 
 	if scrapeMetric && queryInstance.TTL > 0 {
 		// Only cache if metric is meaningfully cacheable
 		s.cacheMtx.Lock()
-		s.metricCache[metric] = &cachedMetrics{
+		s.metricCache[metricName] = &cachedMetrics{
 			metrics:        metrics,
 			lastScrape:     time.Now(), // 改为查询完时间
 			nonFatalErrors: nonFatalErrors,
